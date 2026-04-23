@@ -80,7 +80,7 @@
             <span>⚠️</span><span>{{ error }}</span>
           </div>
           <div v-if="success" class="flex items-start gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl px-4 py-3 text-sm">
-            <span>✅</span><span>¡Perfil creado! Redirigiendo al login...</span>
+            <span></span><span>¡Perfil creado! Redirigiendo al login...</span>
           </div>
 
           <button type="submit" class="btn-primary btn-lg w-full" :disabled="loading || passwordMismatch">
@@ -162,4 +162,3 @@ async function handleRegister() {
   }
 }
 </script>
-

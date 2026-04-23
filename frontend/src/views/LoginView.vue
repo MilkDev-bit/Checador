@@ -9,15 +9,6 @@
     </div>
 
     <div class="relative w-full max-w-md animate-in">
-      <!-- Logo -->
-      <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-4"
-          style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
-          <span class="text-3xl">✅</span>
-        </div>
-        <h1 class="text-3xl font-bold text-gradient">PaseLista</h1>
-        <p class="text-slate-400 mt-1 text-sm">Checador en Línea</p>
-      </div>
 
       <!-- Card -->
       <div class="glass-card p-8" style="background: rgba(20,29,53,0.9);">
