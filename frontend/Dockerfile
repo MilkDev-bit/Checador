@@ -4,7 +4,7 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-RUN node node_modules/.bin/vite build
+RUN node node_modules/vite/bin/vite.js build
 
 FROM nginx:alpine
 COPY --from=builder /app/dist /usr/share/nginx/html
