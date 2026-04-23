@@ -13,14 +13,19 @@ import (
 var DB *sql.DB
 
 func Connect() {
-	dsn := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
-		getEnv("DB_HOST", "localhost"),
-		getEnv("DB_PORT", "5432"),
-		getEnv("DB_USER", "postgres"),
-		getEnv("DB_PASSWORD", "postgres"),
-		getEnv("DB_NAME", "paselista"),
-	)
+	// Railway provides DATABASE_URL as a full connection string (preferred)
+	// Fall back to individual env vars for local development
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		dsn = fmt.Sprintf(
+			"host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+			mustEnv("DB_HOST"),
+			getEnv("DB_PORT", "5432"),
+			mustEnv("DB_USER"),
+			mustEnv("DB_PASSWORD"),
+			mustEnv("DB_NAME"),
+		)
+	}
 
 	var err error
 	DB, err = sql.Open("postgres", dsn)
@@ -76,8 +81,8 @@ func Migrate() {
 }
 
 func SeedAdmin() {
-	email := getEnv("ADMIN_EMAIL", "admin@paselista.com")
-	password := getEnv("ADMIN_PASSWORD", "Admin1234!")
+	email := mustEnv("ADMIN_EMAIL")
+	password := mustEnv("ADMIN_PASSWORD")
 
 	var count int
 	DB.QueryRow(`SELECT COUNT(*) FROM users WHERE role = 'admin'`).Scan(&count)
@@ -103,9 +108,20 @@ func SeedAdmin() {
 	log.Printf("Admin user created: %s", email)
 }
 
+// getEnv returns the env var value or a non-sensitive default (e.g. port numbers).
 func getEnv(key, fallback string) string {
 	if v := os.Getenv(key); v != "" {
 		return v
 	}
 	return fallback
+}
+
+// mustEnv returns the env var value or terminates the process.
+// Use this for any variable that contains credentials or required config.
+func mustEnv(key string) string {
+	v := os.Getenv(key)
+	if v == "" {
+		log.Fatalf("Required environment variable %q is not set", key)
+	}
+	return v
 }

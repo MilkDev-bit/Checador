@@ -1,0 +1,29 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# Go binaries
+backend/*.exe
+backend/paselista
+backend/test_build.exe
+
+# Environment files with real credentials — NEVER commit these
+.env
+.env.local
+.env.production
+backend/.env
+backend/.env.local
+frontend/.env
+frontend/.env.local
+
+# Uploaded files
+backend/uploads/
+
+# OS / IDE
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/settings.json

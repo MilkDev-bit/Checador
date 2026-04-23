@@ -10,6 +10,11 @@ import (
 func Register(r *gin.Engine) {
 	api := r.Group("/api")
 
+	// Health check (used by Railway)
+	api.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "ok"})
+	})
+
 	// Public routes
 	api.POST("/auth/register", handlers.Register)
 	api.POST("/auth/login", handlers.Login)

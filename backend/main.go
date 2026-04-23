@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 	"os"
+	"strings"
 
 	"paselista/database"
 	"paselista/routes"
@@ -23,8 +24,24 @@ func main() {
 
 	r := gin.Default()
 
+	// CORS: allowed origins come exclusively from the FRONTEND_URL env var.
+	// Set it to a comma-separated list of origins, e.g.:
+	//   FRONTEND_URL=http://localhost:5173,https://myapp.up.railway.app
+	allowedOrigins := []string{}
+	if frontendURL := os.Getenv("FRONTEND_URL"); frontendURL != "" {
+		for _, u := range strings.Split(frontendURL, ",") {
+			u = strings.TrimSpace(u)
+			if u != "" {
+				allowedOrigins = append(allowedOrigins, u)
+			}
+		}
+	}
+	if len(allowedOrigins) == 0 {
+		log.Fatal("Required environment variable FRONTEND_URL is not set")
+	}
+
 	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:5173", "http://localhost:3000"},
+		AllowOrigins:     allowedOrigins,
 		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
