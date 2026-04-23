@@ -1,0 +1,547 @@
+<template>
+  <div class="admin-layout min-h-screen min-h-dvh" style="background-color: #080d1a; color: #e2e8f0;">
+
+    <!-- Sidebar Desktop -->
+    <aside class="sidebar hidden lg:flex flex-col fixed left-0 top-0 h-full z-30 w-64"
+      style="background: rgba(12,18,35,0.97); border-right: 1px solid rgba(255,255,255,0.06);">
+      <!-- Logo -->
+      <div class="px-6 py-6 border-b border-white/6">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
+            style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">✅</div>
+          <div>
+            <p class="text-white font-bold text-base leading-none">PaseLista</p>
+            <p class="text-slate-500 text-xs mt-0.5">Panel Admin</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Nav -->
+      <nav class="flex-1 px-3 py-4 space-y-1">
+        <button v-for="item in navItems" :key="item.id"
+          @click="activeTab = item.id"
+          :class="activeTab === item.id ? 'text-white' : 'text-slate-400 hover:text-white hover:bg-white/5'"
+          class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all">
+          <span class="text-lg">{{ item.icon }}</span>
+          <span>{{ item.label }}</span>
+          <div v-if="activeTab === item.id" class="ml-auto w-1.5 h-1.5 rounded-full bg-brand-400"></div>
+        </button>
+        <div v-if="activeTab !== 'users' && activeTab !== 'overview'" class="absolute left-64 top-0 bottom-0 w-0.5 bg-brand-500/20 pointer-events-none"></div>
+      </nav>
+
+      <!-- Admin info + logout -->
+      <div class="px-4 py-4 border-t border-white/6">
+        <div class="flex items-center gap-3 mb-3">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold"
+            style="background: linear-gradient(135deg, rgba(99,102,241,0.4), rgba(139,92,246,0.4)); border: 1px solid rgba(99,102,241,0.3);">
+            {{ auth.user?.first_name?.[0] }}
+          </div>
+          <div class="min-w-0">
+            <p class="text-white text-sm font-medium truncate">{{ auth.user?.first_name }} {{ auth.user?.last_name }}</p>
+            <p class="text-slate-500 text-xs truncate">Administrador</p>
+          </div>
+        </div>
+        <button @click="handleLogout" class="btn-secondary btn-sm w-full text-rose-400 border-rose-500/20 hover:bg-rose-500/10">
+          Cerrar Sesión
+        </button>
+      </div>
+    </aside>
+
+    <!-- Mobile top bar -->
+    <header class="lg:hidden sticky top-0 z-20 px-4 py-3 flex items-center justify-between"
+      style="background: rgba(8,13,26,0.95); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.06);">
+      <div class="flex items-center gap-2">
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center"
+          style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">✅</div>
+        <span class="text-white font-bold text-sm">Admin · PaseLista</span>
+      </div>
+      <button @click="handleLogout" class="text-rose-400 text-sm font-medium">Salir</button>
+    </header>
+
+    <!-- Main content -->
+    <main class="lg:pl-64 min-h-screen">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+
+        <!-- Page header -->
+        <div class="mb-6 animate-in">
+          <h1 class="text-2xl font-bold text-white">
+            {{ currentNavItem?.label }}
+          </h1>
+          <p class="text-slate-400 text-sm mt-0.5">{{ currentNavItem?.description }}</p>
+        </div>
+
+        <!-- ===== OVERVIEW TAB ===== -->
+        <div v-if="activeTab === 'overview'" class="space-y-6 animate-in">
+          <!-- Date filter -->
+          <div class="flex flex-wrap items-center gap-3">
+            <div class="flex items-center gap-2">
+              <label class="text-slate-400 text-sm">Fecha:</label>
+              <input type="date" v-model="filters.date" @change="loadAll"
+                class="input text-sm py-2 w-40" />
+            </div>
+            <button @click="setToday" class="badge-blue cursor-pointer hover:opacity-80 transition-opacity">Hoy</button>
+            <button @click="clearDate" class="badge-gray cursor-pointer hover:opacity-80 transition-opacity">Todos</button>
+          </div>
+
+          <!-- Stats grid -->
+          <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
+            <div class="stat-card col-span-2 lg:col-span-1" style="background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.25);">
+              <p class="stat-label">👥 Usuarios</p>
+              <p class="stat-value text-brand-400">{{ stats.total_users }}</p>
+            </div>
+            <div class="stat-card" style="background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.25);">
+              <p class="stat-label">📍 Entradas</p>
+              <p class="stat-value text-emerald-400">{{ stats.entries_total }}</p>
+            </div>
+            <div class="stat-card" style="background: rgba(244,63,94,0.1); border-color: rgba(244,63,94,0.25);">
+              <p class="stat-label">🚪 Salidas</p>
+              <p class="stat-value text-rose-400">{{ stats.exits_total }}</p>
+            </div>
+            <div class="stat-card" style="background: rgba(251,191,36,0.1); border-color: rgba(251,191,36,0.25);">
+              <p class="stat-label">🟢 Activos</p>
+              <p class="stat-value text-amber-400">{{ stats.active_now }}</p>
+            </div>
+            <div class="stat-card" style="background: rgba(6,182,212,0.1); border-color: rgba(6,182,212,0.25);">
+              <p class="stat-label">📋 Registros</p>
+              <p class="stat-value text-cyan-400">{{ stats.records_today }}</p>
+            </div>
+          </div>
+
+          <!-- Recent records -->
+          <div class="glass-card overflow-hidden" style="background: rgba(12,18,35,0.85);">
+            <div class="px-5 py-4 border-b border-white/6 flex items-center justify-between">
+              <h3 class="text-white font-semibold">Registros recientes</h3>
+              <button @click="activeTab = 'records'" class="text-brand-400 text-sm hover:text-brand-300 transition-colors">
+                Ver todos →
+              </button>
+            </div>
+            <div class="overflow-x-auto custom-scroll">
+              <RecordsTable :records="records.slice(0, 8)" @view-route="openRouteModal" @view-photos="openPhotosModal" />
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== RECORDS TAB ===== -->
+        <div v-if="activeTab === 'records'" class="space-y-5 animate-in">
+          <!-- Filter bar -->
+          <div class="glass-card p-4" style="background: rgba(12,18,35,0.85);">
+            <div class="flex flex-wrap gap-3">
+              <div class="flex items-center gap-2 flex-1 min-w-[150px]">
+                <span class="text-slate-500 text-sm">📅</span>
+                <input type="date" v-model="filters.date" @change="loadRecords"
+                  class="input text-sm py-2 flex-1" placeholder="Fecha" />
+              </div>
+              <div class="flex items-center gap-2 flex-1 min-w-[150px]">
+                <span class="text-slate-500 text-sm">🏗️</span>
+                <select v-model="filters.project" @change="loadRecords"
+                  class="input text-sm py-2 flex-1">
+                  <option value="">Todos los proyectos</option>
+                  <option v-for="p in projects" :key="p" :value="p">{{ p }}</option>
+                </select>
+              </div>
+              <div class="flex items-center gap-2">
+                <select v-model="filters.type" @change="loadRecords"
+                  class="input text-sm py-2 w-36">
+                  <option value="">Entradas y salidas</option>
+                  <option value="entry">Solo entradas</option>
+                  <option value="exit">Solo salidas</option>
+                </select>
+              </div>
+              <div class="flex items-center gap-2 flex-1 min-w-[180px]">
+                <span class="text-slate-500 text-sm">🔍</span>
+                <input v-model="filters.search" @input="debouncedLoad" type="text"
+                  class="input text-sm py-2 flex-1" placeholder="Buscar por nombre o email..." />
+              </div>
+              <button @click="clearFilters" class="btn-secondary btn-sm">Limpiar</button>
+            </div>
+          </div>
+
+          <!-- Count -->
+          <div class="flex items-center justify-between">
+            <p class="text-slate-400 text-sm">
+              <span class="text-white font-semibold">{{ records.length }}</span> registros encontrados
+            </p>
+            <div v-if="loadingRecords" class="flex items-center gap-2 text-slate-500 text-sm">
+              <div class="w-3 h-3 border border-brand-500/40 border-t-brand-500 rounded-full animate-spin"></div>
+              Cargando...
+            </div>
+          </div>
+
+          <!-- Table -->
+          <div class="glass-card overflow-hidden" style="background: rgba(12,18,35,0.85);">
+            <div v-if="records.length === 0 && !loadingRecords" class="text-center py-16">
+              <div class="text-5xl mb-3 opacity-30">📋</div>
+              <p class="text-slate-400 font-medium">Sin resultados</p>
+              <p class="text-slate-600 text-sm mt-1">Intenta cambiar los filtros</p>
+            </div>
+            <div v-else class="overflow-x-auto custom-scroll">
+              <RecordsTable :records="records" @view-route="openRouteModal" @view-photos="openPhotosModal" />
+            </div>
+          </div>
+        </div>
+
+        <!-- ===== USERS TAB ===== -->
+        <div v-if="activeTab === 'users'" class="space-y-5 animate-in">
+          <!-- Filter -->
+          <div class="glass-card p-4" style="background: rgba(12,18,35,0.85);">
+            <div class="flex flex-wrap gap-3 items-center">
+              <select v-model="filters.project" @change="loadUsers"
+                class="input text-sm py-2 w-52">
+                <option value="">Todos los proyectos</option>
+                <option v-for="p in projects" :key="p" :value="p">{{ p }}</option>
+              </select>
+              <p class="text-slate-400 text-sm ml-auto">
+                <span class="text-white font-semibold">{{ users.length }}</span> usuarios registrados
+              </p>
+            </div>
+          </div>
+
+          <!-- Users grid -->
+          <div v-if="users.length === 0" class="glass-card p-12 text-center" style="background: rgba(12,18,35,0.85);">
+            <div class="text-5xl mb-3 opacity-30">👤</div>
+            <p class="text-slate-400">Sin usuarios registrados</p>
+          </div>
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div v-for="(user, i) in users" :key="user.id"
+              class="glass-card p-5 animate-in"
+              :style="`background: rgba(12,18,35,0.85); animation-delay: ${i * 0.03}s`">
+              <div class="flex items-start gap-3 mb-4">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold flex-shrink-0"
+                  style="background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.3)); border: 1px solid rgba(99,102,241,0.25);">
+                  {{ user.first_name[0] }}{{ user.last_name[0] }}
+                </div>
+                <div class="min-w-0">
+                  <p class="text-white font-semibold truncate">{{ user.first_name }} {{ user.last_name }}</p>
+                  <p class="text-slate-400 text-xs truncate">{{ user.email }}</p>
+                </div>
+              </div>
+              <div class="space-y-2">
+                <div class="flex items-center gap-2">
+                  <span class="text-slate-600 text-xs w-16">Proyecto</span>
+                  <span class="text-slate-300 text-xs truncate">{{ user.project_name }}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-slate-600 text-xs w-16">Registros</span>
+                  <span class="badge-blue">{{ user.total_checks }}</span>
+                </div>
+                <div class="flex items-center gap-2">
+                  <span class="text-slate-600 text-xs w-16">Registro</span>
+                  <span class="text-slate-400 text-xs">{{ formatDateShort(user.created_at) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </main>
+
+    <!-- Mobile bottom nav -->
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-20 px-2 py-2 safe-bottom flex justify-around"
+      style="background: rgba(8,13,26,0.97); backdrop-filter: blur(12px); border-top: 1px solid rgba(255,255,255,0.06);">
+      <button v-for="item in navItems" :key="item.id"
+        @click="activeTab = item.id"
+        :class="activeTab === item.id ? 'text-brand-400' : 'text-slate-500'"
+        class="flex flex-col items-center gap-1 px-4 py-1 transition-colors">
+        <span class="text-xl">{{ item.icon }}</span>
+        <span class="text-xs font-medium">{{ item.label }}</span>
+      </button>
+    </nav>
+
+    <!-- ===== MODALS ===== -->
+    <Teleport to="body">
+
+      <!-- Route modal -->
+      <Transition name="modal">
+        <div v-if="routeModal.show" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0"
+          style="background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);">
+          <div class="w-full max-w-md glass-card max-h-[80vh] flex flex-col animate-in"
+            style="background: rgba(12,18,35,0.99);">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-white/8 flex-shrink-0">
+              <div>
+                <h3 class="font-bold text-white">Recorrido GPS</h3>
+                <p class="text-slate-500 text-xs mt-0.5">
+                  {{ routeModal.user }} · {{ routeModal.points.length }} puntos
+                </p>
+              </div>
+              <button @click="routeModal.show = false"
+                class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/8 transition-all">
+                ✕
+              </button>
+            </div>
+            <div class="overflow-y-auto flex-1 custom-scroll">
+              <div v-if="routeModal.points.length === 0" class="text-center py-8 text-slate-500 text-sm">
+                Sin puntos GPS registrados
+              </div>
+              <div v-for="(point, i) in routeModal.points" :key="point.id"
+                class="flex items-start gap-3 px-5 py-3 border-b border-white/5 last:border-0">
+                <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5"
+                  :style="i === 0 ? 'background: linear-gradient(135deg, #059669, #10b981);' : i === routeModal.points.length - 1 ? 'background: linear-gradient(135deg, #dc2626, #f43f5e);' : 'background: linear-gradient(135deg, #6366f1, #8b5cf6);'">
+                  {{ i + 1 }}
+                </div>
+                <div>
+                  <p class="text-white text-sm font-mono">{{ point.latitude.toFixed(6) }}, {{ point.longitude.toFixed(6) }}</p>
+                  <p class="text-slate-500 text-xs mt-0.5">
+                    {{ formatDate(point.recorded_at) }} · ±{{ Math.round(point.accuracy) }}m
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+
+      <!-- Photos modal -->
+      <Transition name="modal">
+        <div v-if="photosModal.show" class="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style="background: rgba(0,0,0,0.9); backdrop-filter: blur(8px);">
+          <div class="w-full max-w-lg glass-card animate-in" style="background: rgba(12,18,35,0.99);">
+            <div class="flex items-center justify-between px-5 py-4 border-b border-white/8">
+              <div>
+                <h3 class="font-bold text-white">Fotografías</h3>
+                <p class="text-slate-500 text-xs mt-0.5">{{ photosModal.user }} · {{ photosModal.date }}</p>
+              </div>
+              <button @click="photosModal.show = false"
+                class="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/8 transition-all">
+                ✕
+              </button>
+            </div>
+            <div class="p-5 grid grid-cols-2 gap-4">
+              <div>
+                <p class="text-slate-400 text-xs mb-2 flex items-center gap-1"><span>🏗️</span> Fotografía del sitio</p>
+                <div v-if="photosModal.site" class="rounded-xl overflow-hidden">
+                  <img :src="photosModal.site" class="w-full aspect-square object-cover" />
+                </div>
+                <div v-else class="rounded-xl flex items-center justify-center aspect-square text-slate-600 text-sm"
+                  style="background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.1);">
+                  Sin foto
+                </div>
+              </div>
+              <div>
+                <p class="text-slate-400 text-xs mb-2 flex items-center gap-1"><span>🤳</span> Selfie</p>
+                <div v-if="photosModal.selfie" class="rounded-xl overflow-hidden">
+                  <img :src="photosModal.selfie" class="w-full aspect-square object-cover" />
+                </div>
+                <div v-else class="rounded-xl flex items-center justify-center aspect-square text-slate-600 text-sm"
+                  style="background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.1);">
+                  Sin foto
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+
+    </Teleport>
+  </div>
+</template>
+
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
+import api from '@/api'
+
+// Inline records table component
+const RecordsTable = {
+  props: ['records'],
+  emits: ['view-route', 'view-photos'],
+  template: `
+    <table class="data-table w-full">
+      <thead>
+        <tr>
+          <th>Usuario</th>
+          <th class="hidden sm:table-cell">Proyecto</th>
+          <th>Tipo</th>
+          <th>Fecha / Hora</th>
+          <th class="hidden md:table-cell">GPS</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-if="records.length === 0">
+          <td colspan="6" class="text-center py-8 text-slate-500">Sin registros</td>
+        </tr>
+        <tr v-for="r in records" :key="r.record_id">
+          <td>
+            <div>
+              <p class="text-white font-medium text-sm">{{ r.first_name }} {{ r.last_name }}</p>
+              <p class="text-slate-500 text-xs">{{ r.email }}</p>
+            </div>
+          </td>
+          <td class="hidden sm:table-cell">
+            <span class="text-slate-300 text-xs line-clamp-1 max-w-[140px] block">{{ r.project_name }}</span>
+          </td>
+          <td>
+            <span :class="r.type === 'entry' ? 'badge-green' : 'badge-red'" class="badge whitespace-nowrap">
+              {{ r.type === 'entry' ? '📍 Entrada' : '🚪 Salida' }}
+            </span>
+          </td>
+          <td>
+            <p class="text-slate-300 text-xs whitespace-nowrap">{{ formatDate(r.timestamp) }}</p>
+          </td>
+          <td class="hidden md:table-cell">
+            <span :class="r.location_count > 0 ? 'badge-blue' : 'badge-gray'" class="badge">
+              {{ r.location_count }} pts
+            </span>
+          </td>
+          <td>
+            <div class="flex items-center gap-1">
+              <button @click="$emit('view-photos', r)"
+                class="text-xs px-2 py-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/8 transition-all">
+                📸
+              </button>
+              <button @click="$emit('view-route', r)"
+                class="text-xs px-2 py-1 rounded-lg text-slate-400 hover:text-white hover:bg-white/8 transition-all">
+                🗺️
+              </button>
+            </div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  `,
+  methods: {
+    formatDate(iso) {
+      return new Date(iso).toLocaleString('es-MX', {
+        month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      })
+    }
+  }
+}
+
+const auth = useAuthStore()
+const router = useRouter()
+
+const activeTab = ref('overview')
+const navItems = [
+  { id: 'overview', icon: '📊', label: 'Resumen', description: 'Vista general del día' },
+  { id: 'records', icon: '📋', label: 'Registros', description: 'Todas las entradas y salidas' },
+  { id: 'users', icon: '👥', label: 'Usuarios', description: 'Personas registradas en el sistema' }
+]
+const currentNavItem = computed(() => navItems.find(n => n.id === activeTab.value))
+
+// Data
+const stats = ref({ total_users: 0, records_today: 0, entries_total: 0, exits_total: 0, active_now: 0 })
+const records = ref([])
+const users = ref([])
+const projects = ref([])
+const loadingRecords = ref(false)
+
+const filters = ref({ date: todayISO(), project: '', type: '', search: '' })
+
+function todayISO() {
+  return new Date().toISOString().split('T')[0]
+}
+
+function setToday() { filters.value.date = todayISO(); loadAll() }
+function clearDate() { filters.value.date = ''; loadAll() }
+
+function clearFilters() {
+  filters.value = { date: todayISO(), project: '', type: '', search: '' }
+  loadAll()
+}
+
+let searchTimer = null
+function debouncedLoad() {
+  clearTimeout(searchTimer)
+  searchTimer = setTimeout(loadRecords, 400)
+}
+
+async function loadAll() {
+  await Promise.all([loadStats(), loadRecords(), loadUsers(), loadProjects()])
+}
+
+async function loadStats() {
+  try {
+    const params = filters.value.date ? { date: filters.value.date } : {}
+    const { data } = await api.get('/admin/stats', { params })
+    stats.value = data
+  } catch {}
+}
+
+async function loadRecords() {
+  loadingRecords.value = true
+  try {
+    const params = {}
+    if (filters.value.date) params.date = filters.value.date
+    if (filters.value.project) params.project = filters.value.project
+    if (filters.value.type) params.type = filters.value.type
+    if (filters.value.search) params.search = filters.value.search
+    const { data } = await api.get('/admin/records', { params })
+    records.value = data
+  } catch {} finally {
+    loadingRecords.value = false
+  }
+}
+
+async function loadUsers() {
+  try {
+    const params = filters.value.project ? { project: filters.value.project } : {}
+    const { data } = await api.get('/admin/users', { params })
+    users.value = data
+  } catch {}
+}
+
+async function loadProjects() {
+  try {
+    const { data } = await api.get('/admin/projects')
+    projects.value = data
+  } catch {}
+}
+
+// Route modal
+const routeModal = ref({ show: false, user: '', points: [] })
+async function openRouteModal(record) {
+  try {
+    const { data } = await api.get(`/admin/records/${record.record_id}/route`)
+    routeModal.value = {
+      show: true,
+      user: `${record.first_name} ${record.last_name}`,
+      points: data
+    }
+  } catch {}
+}
+
+// Photos modal
+const photosModal = ref({ show: false, user: '', date: '', site: '', selfie: '' })
+function openPhotosModal(record) {
+  photosModal.value = {
+    show: true,
+    user: `${record.first_name} ${record.last_name}`,
+    date: formatDate(record.timestamp),
+    site: record.photo_site_path || '',
+    selfie: record.photo_selfie_path || ''
+  }
+}
+
+function formatDate(iso) {
+  return new Date(iso).toLocaleString('es-MX', {
+    year: 'numeric', month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  })
+}
+
+function formatDateShort(iso) {
+  return new Date(iso).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+function handleLogout() {
+  auth.logout()
+  router.push('/login')
+}
+
+onMounted(() => loadAll())
+</script>
+
+<style scoped>
+.modal-enter-active, .modal-leave-active { transition: opacity 0.25s ease; }
+.modal-enter-from, .modal-leave-to { opacity: 0; }
+.safe-bottom { padding-bottom: max(8px, env(safe-area-inset-bottom)); }
+.line-clamp-1 { display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden; }
+
+@media (min-width: 1024px) {
+  .admin-layout { display: block; }
+}
+</style>

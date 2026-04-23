@@ -16,7 +16,7 @@ func Register(r *gin.Engine) {
 	api.GET("/qr", handlers.GenerateQR)
 	api.GET("/checkin-url", handlers.GetCheckinURL)
 
-	// Protected routes
+	// User protected routes
 	auth := api.Group("/")
 	auth.Use(middleware.AuthRequired())
 	{
@@ -25,5 +25,16 @@ func Register(r *gin.Engine) {
 		auth.GET("/checks", handlers.GetMyRecords)
 		auth.GET("/checks/:id/route", handlers.GetRecordRoute)
 		auth.POST("/location-points", handlers.AddLocationPoint)
+	}
+
+	// Admin protected routes
+	admin := api.Group("/admin")
+	admin.Use(middleware.AdminRequired())
+	{
+		admin.GET("/stats", handlers.AdminGetStats)
+		admin.GET("/records", handlers.AdminGetRecords)
+		admin.GET("/records/:id/route", handlers.AdminGetRecordRoute)
+		admin.GET("/users", handlers.AdminGetUsers)
+		admin.GET("/projects", handlers.AdminGetProjects)
 	}
 }

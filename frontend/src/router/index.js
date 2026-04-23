@@ -35,6 +35,12 @@ const routes = [
     name: 'QR',
     component: () => import('@/views/QRView.vue'),
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/admin',
+    name: 'Admin',
+    component: () => import('@/views/admin/AdminDashboardView.vue'),
+    meta: { requiresAdmin: true }
   }
 ]
 
@@ -45,11 +51,19 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
   const auth = useAuthStore()
+  if (to.meta.requiresAdmin) {
+    if (!auth.isLoggedIn) return next('/login')
+    if (!auth.isAdmin) return next('/checkin')
+    return next()
+  }
   if (to.meta.requiresAuth && !auth.isLoggedIn) {
     return next('/login')
   }
+  if (to.meta.requiresAuth && auth.isAdmin) {
+    return next('/admin')
+  }
   if (to.meta.guest && auth.isLoggedIn) {
-    return next('/checkin')
+    return next(auth.isAdmin ? '/admin' : '/checkin')
   }
   next()
 })

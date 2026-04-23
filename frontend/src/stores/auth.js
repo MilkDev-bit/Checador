@@ -7,6 +7,7 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref(JSON.parse(localStorage.getItem('user') || 'null'))
 
   const isLoggedIn = computed(() => !!token.value)
+  const isAdmin = computed(() => user.value?.role === 'admin')
 
   async function login(email, password) {
     const { data } = await api.post('/auth/login', { email, password })
@@ -29,5 +30,5 @@ export const useAuthStore = defineStore('auth', () => {
     localStorage.removeItem('user')
   }
 
-  return { token, user, isLoggedIn, login, register, logout }
+  return { token, user, isLoggedIn, isAdmin, login, register, logout }
 })

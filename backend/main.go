@@ -19,6 +19,7 @@ func main() {
 
 	database.Connect()
 	database.Migrate()
+	database.SeedAdmin()
 
 	r := gin.Default()
 
