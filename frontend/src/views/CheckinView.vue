@@ -123,6 +123,107 @@
     <!-- ===== Modals ===== -->
     <Teleport to="body">
 
+      <!-- Location pre-permission modal -->
+      <Transition name="modal">
+        <div v-if="showLocationModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0"
+          style="background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);">
+          <div class="w-full max-w-sm glass-card p-7 text-center animate-in">
+            <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
+              style="background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(6,182,212,0.3)); border: 1px solid rgba(99,102,241,0.3);">
+              <MapPinIcon class="w-8 h-8 text-brand-400" />
+            </div>
+            <h3 class="text-xl font-bold mb-2" style="color: var(--text);">Permitir Ubicación</h3>
+            <p class="text-sm mb-4 leading-relaxed" style="color: var(--text-muted);">
+              Para registrar tu {{ checkType === 'entry' ? 'entrada' : 'salida' }} necesitamos acceder a tu ubicación GPS y registrar el recorrido completo.
+            </p>
+            <div class="text-left space-y-2 mb-5 px-1">
+              <p class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                <span class="w-5 h-5 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center flex-shrink-0 font-bold text-xs mt-0.5">1</span>
+                Aparecerá una ventana preguntando si permites la ubicación.
+              </p>
+              <p class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                <span class="w-5 h-5 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center flex-shrink-0 font-bold text-xs mt-0.5">2</span>
+                Selecciona <strong style="color: var(--text);">"Permitir"</strong> o <strong style="color: var(--text);">"Allow"</strong> para continuar.
+              </p>
+            </div>
+            <div class="space-y-3">
+              <button @click="requestLocation" class="btn-primary btn-lg w-full">
+                <MapPinIcon class="w-5 h-5" /> Continuar
+              </button>
+              <button @click="cancelProcess" class="btn-secondary btn-md w-full">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+
+      <!-- Location error / guide modal -->
+      <Transition name="modal">
+        <div v-if="showLocationErrorModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0"
+          style="background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);">
+          <div class="w-full max-w-sm glass-card p-6 animate-in">
+            <div class="flex items-center gap-3 mb-4">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3);">
+                <MapPinIcon class="w-5 h-5 text-rose-400" />
+              </div>
+              <div>
+                <h3 class="font-bold text-base" style="color: var(--text);">Ubicación bloqueada</h3>
+                <p class="text-xs" style="color: var(--text-muted);">Sigue estos pasos para activarla</p>
+              </div>
+            </div>
+
+            <!-- iOS instructions -->
+            <div class="rounded-xl p-4 mb-3" style="background: rgba(99,102,241,0.07); border: 1px solid rgba(99,102,241,0.2);">
+              <p class="text-xs font-semibold mb-2 text-brand-400">En iPhone (Safari / Chrome)</p>
+              <ol class="space-y-1.5">
+                <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                  <span class="font-bold text-brand-400 flex-shrink-0">1.</span>
+                  Abre <strong style="color: var(--text);">Configuración</strong> del iPhone.
+                </li>
+                <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                  <span class="font-bold text-brand-400 flex-shrink-0">2.</span>
+                  Busca y entra a <strong style="color: var(--text);">Safari</strong> (o Chrome).
+                </li>
+                <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                  <span class="font-bold text-brand-400 flex-shrink-0">3.</span>
+                  Toca <strong style="color: var(--text);">Ubicación</strong> → selecciona <strong style="color: var(--text);">"Al usar la app"</strong>.
+                </li>
+                <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                  <span class="font-bold text-brand-400 flex-shrink-0">4.</span>
+                  Regresa aquí y vuelve a intentarlo.
+                </li>
+              </ol>
+            </div>
+
+            <!-- Android instructions -->
+            <div class="rounded-xl p-4 mb-5" style="background: rgba(16,185,129,0.07); border: 1px solid rgba(16,185,129,0.2);">
+              <p class="text-xs font-semibold mb-2 text-emerald-400">En Android (Chrome)</p>
+              <ol class="space-y-1.5">
+                <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                  <span class="font-bold text-emerald-400 flex-shrink-0">1.</span>
+                  Toca el ícono de <strong style="color: var(--text);">candado</strong> o <strong style="color: var(--text);">info</strong> junto a la URL.
+                </li>
+                <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                  <span class="font-bold text-emerald-400 flex-shrink-0">2.</span>
+                  Toca <strong style="color: var(--text);">Permisos</strong> → <strong style="color: var(--text);">Ubicación</strong> → <strong style="color: var(--text);">"Permitir"</strong>.
+                </li>
+                <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                  <span class="font-bold text-emerald-400 flex-shrink-0">3.</span>
+                  Recarga la página y vuelve a intentarlo.
+                </li>
+              </ol>
+            </div>
+
+            <div class="space-y-2">
+              <button @click="showLocationErrorModal = false; startCheckProcess(checkType)" class="btn-primary btn-lg w-full">
+                <ArrowPathRoundedSquareIcon class="w-5 h-5" /> Reintentar
+              </button>
+              <button @click="cancelProcess" class="btn-secondary btn-md w-full">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+
       <!-- Camera modal -->
       <div v-if="showCameraModal" class="fixed inset-0 bg-black z-50 flex flex-col">
         <!-- Camera instruction bar -->
@@ -224,7 +325,7 @@
       </Transition>
 
       <!-- Processing spinner -->
-      <div v-if="processing && !showCameraModal && !showSuccessModal"
+      <div v-if="processing && !showLocationModal && !showLocationErrorModal && !showCameraModal && !showSuccessModal"
         class="fixed inset-0 z-50 flex items-center justify-center"
         style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
         <div class="glass-card p-6 text-center">
@@ -245,7 +346,8 @@ import api from '@/api'
 import {
   CheckCircleIcon, HandRaisedIcon, MapPinIcon, ArrowRightOnRectangleIcon,
   ExclamationTriangleIcon, XMarkIcon, LockClosedIcon, CloudArrowUpIcon,
-  SignalIcon, MinusCircleIcon, CameraIcon, UserCircleIcon, BoltIcon, ArrowPathIcon
+  SignalIcon, MinusCircleIcon, CameraIcon, UserCircleIcon, BoltIcon, ArrowPathIcon,
+  InformationCircleIcon, DevicePhoneMobileIcon, ArrowPathRoundedSquareIcon
 } from '@heroicons/vue/24/outline'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 
@@ -268,6 +370,8 @@ const activeRecordId = ref(localStorage.getItem('activeRecordId') || null)
 const entryTime = ref(localStorage.getItem('entryTime') || null)
 const processing = ref(false)
 const checkType = ref('entry')
+const showLocationModal = ref(false)
+const showLocationErrorModal = ref(false)
 const showCameraModal = ref(false)
 const showSuccessModal = ref(false)
 const registeredAt = ref('')
@@ -278,14 +382,17 @@ const locationPoints = []
 
 function startCheckProcess(type) {
   checkType.value = type
-  requestLocation()
+  showLocationModal.value = true
 }
 
 function cancelProcess() {
+  showLocationModal.value = false
+  showLocationErrorModal.value = false
   processing.value = false
 }
 
 async function requestLocation() {
+  showLocationModal.value = false
   processing.value = true
   try {
     await new Promise((resolve, reject) =>
@@ -305,8 +412,8 @@ async function requestLocation() {
     showCameraModal.value = true
     processing.value = false
   } catch {
-    alert('No se pudo obtener la ubicación. Por favor permite el acceso en tu navegador.')
     processing.value = false
+    showLocationErrorModal.value = true
   }
 }
 
