@@ -46,8 +46,11 @@
         </div>
 
         <!-- reCAPTCHA v2 Container -->
-        <div class="flex justify-center py-2 animate-fade-in" style="animation-delay: 0.3s">
-          <div id="recaptcha-container" class="shadow-sm rounded-lg overflow-hidden border border-slate-100"></div>
+        <div class="space-y-1 animate-fade-in" style="animation-delay: 0.3s">
+          <label class="block text-sm font-bold text-slate-700 ml-1">Verificación de seguridad</label>
+          <div class="flex items-center justify-center bg-slate-100/50 rounded-2xl border border-transparent p-4 min-h-[100px] overflow-hidden group-focus-within:border-blue-400 transition-all duration-300">
+            <div id="recaptcha-container" class="scale-[0.85] sm:scale-100 origin-center"></div>
+          </div>
         </div>
 
         <Transition name="fade">
