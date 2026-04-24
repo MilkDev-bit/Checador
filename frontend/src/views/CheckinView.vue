@@ -123,33 +123,6 @@
     <!-- ===== Modals ===== -->
     <Teleport to="body">
 
-      <!-- Location permission modal -->
-      <Transition name="modal">
-        <div v-if="showLocationModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0"
-          style="background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);">
-          <div class="w-full max-w-sm glass-card p-7 text-center animate-in"
-            <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-              style="background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(6,182,212,0.3)); border: 1px solid rgba(99,102,241,0.3);">
-              <MapPinIcon class="w-8 h-8 text-brand-400" />
-            </div>
-            <h3 class="text-xl font-bold mb-2" style="color: var(--text);">Compartir Ubicación</h3>
-            <p class="text-sm mb-3 leading-relaxed" style="color: var(--text-muted);">
-              Para registrar tu {{ checkType === 'entry' ? 'entrada' : 'salida' }}, necesitamos tu ubicación en tiempo real para registrar el recorrido completo.
-            </p>
-            <p class="text-amber-400/80 text-xs mb-5 px-3 py-2.5 leading-relaxed rounded-xl"
-              style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);">
-              <InformationCircleIcon class="w-4 h-4 inline-block mr-1 text-amber-400" /> Mantén la app en primer plano para un GPS preciso. Se activará el bloqueo de pantalla automáticamente.
-            </p>
-            <div class="space-y-3">
-              <button @click="requestLocation" class="btn-primary btn-lg w-full">
-                <MapPinIcon class="w-5 h-5" /> Permitir Ubicación
-              </button>
-              <button @click="cancelProcess" class="btn-secondary btn-md w-full">Cancelar</button>
-            </div>
-          </div>
-        </div>
-      </Transition>
-
       <!-- Camera modal -->
       <div v-if="showCameraModal" class="fixed inset-0 bg-black z-50 flex flex-col">
         <!-- Camera instruction bar -->
@@ -252,7 +225,7 @@
       </Transition>
 
       <!-- Processing spinner -->
-      <div v-if="processing && !showLocationModal && !showCameraModal && !showSuccessModal"
+      <div v-if="processing && !showCameraModal && !showSuccessModal"
         class="fixed inset-0 z-50 flex items-center justify-center"
         style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
         <div class="glass-card p-6 text-center">
@@ -273,8 +246,7 @@ import api from '@/api'
 import {
   CheckCircleIcon, HandRaisedIcon, MapPinIcon, ArrowRightOnRectangleIcon,
   ExclamationTriangleIcon, XMarkIcon, LockClosedIcon, CloudArrowUpIcon,
-  SignalIcon, MinusCircleIcon, CameraIcon, UserCircleIcon, BoltIcon, ArrowPathIcon,
-  InformationCircleIcon
+  SignalIcon, MinusCircleIcon, CameraIcon, UserCircleIcon, BoltIcon, ArrowPathIcon
 } from '@heroicons/vue/24/outline'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 
@@ -297,7 +269,6 @@ const activeRecordId = ref(localStorage.getItem('activeRecordId') || null)
 const entryTime = ref(localStorage.getItem('entryTime') || null)
 const processing = ref(false)
 const checkType = ref('entry')
-const showLocationModal = ref(false)
 const showCameraModal = ref(false)
 const showSuccessModal = ref(false)
 const registeredAt = ref('')
@@ -308,16 +279,14 @@ const locationPoints = []
 
 function startCheckProcess(type) {
   checkType.value = type
-  showLocationModal.value = true
+  requestLocation()
 }
 
 function cancelProcess() {
-  showLocationModal.value = false
   processing.value = false
 }
 
 async function requestLocation() {
-  showLocationModal.value = false
   processing.value = true
   try {
     await new Promise((resolve, reject) =>
