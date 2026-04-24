@@ -795,6 +795,11 @@ function formatDateShort(iso) {
   return new Date(iso).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })
 }
 
+function formatTimeOnly(iso) {
+  if (!iso) return '--:--'
+  return new Date(iso).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+}
+
 function handleLogout() {
   auth.logout()
   router.push('/login')
