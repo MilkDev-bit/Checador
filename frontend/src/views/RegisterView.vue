@@ -1,127 +1,164 @@
 <template>
-  <div class="min-h-screen min-h-dvh flex items-center justify-center px-4 py-12 relative overflow-hidden"
-    style="background-color: #0b0e14;">
-    <!-- Grid pattern background -->
-    <div class="absolute inset-0 opacity-20 pointer-events-none"
-      style="background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 40px 40px;">
-    </div>
+  <div class="min-h-screen min-h-dvh flex items-center justify-center p-4 relative overflow-hidden"
+    style="background-color: #030712;">
     
-    <!-- Glow effects -->
-    <div class="absolute -top-40 -left-40 w-96 h-96 rounded-full opacity-30 animate-pulse-slow pointer-events-none"
-      style="background: radial-gradient(circle, #f97316, transparent 70%)"></div>
-    <div class="absolute -bottom-40 -right-40 w-96 h-96 rounded-full opacity-20 animate-pulse-slow pointer-events-none"
-      style="background: radial-gradient(circle, #8b5cf6, transparent 70%); animation-delay: 2s;"></div>
+    <!-- Dynamic Animated Background -->
+    <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
+      <!-- Grid overlay -->
+      <div class="absolute inset-0 opacity-10"
+        style="background-image: linear-gradient(rgba(255,255,255,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.08) 1px, transparent 1px); background-size: 60px 60px;">
+      </div>
+      <!-- Floating glowing orbs -->
+      <div class="absolute w-[500px] h-[500px] rounded-full blur-[100px] opacity-40 bg-gradient-to-br from-cyan-400 to-blue-600 animate-orb-1"></div>
+      <div class="absolute w-[600px] h-[600px] rounded-full blur-[120px] opacity-30 bg-gradient-to-br from-purple-500 to-indigo-600 animate-orb-2"></div>
+      <div class="absolute w-[400px] h-[400px] rounded-full blur-[80px] opacity-20 bg-gradient-to-br from-fuchsia-500 to-pink-500 animate-orb-3"></div>
+    </div>
 
-    <div class="relative w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+    <!-- Main Container -->
+    <div class="relative z-10 w-full max-w-6xl grid grid-cols-1 lg:grid-cols-5 gap-0 items-stretch bg-white/5 backdrop-blur-xl rounded-[2.5rem] border border-white/10 shadow-2xl overflow-hidden animate-in-up my-8">
       
-      <!-- Left side: Branding -->
-      <div class="hidden lg:flex flex-col items-start animate-in">
-        <div class="mb-4">
-          <!-- Logo SVG -->
-          <svg width="120" height="120" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M20 80V30L40 50L60 30V80" stroke="#475569" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M40 80V40L50 50L60 40V80" stroke="#475569" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M10 65C30 65 40 55 50 45C60 35 70 25 90 20" stroke="#f97316" stroke-width="4" stroke-linecap="round"/>
-            <path d="M80 15H95V30" stroke="#f97316" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M20 80H80" stroke="#f97316" stroke-width="6" stroke-linecap="round"/>
-            <path d="M30 80V90 M50 80V90 M70 80V90" stroke="#f97316" stroke-width="4" stroke-linecap="round"/>
-          </svg>
+      <!-- Left side: Interactive Branding area -->
+      <div class="hidden lg:flex lg:col-span-2 relative p-12 flex-col justify-center items-center text-center overflow-hidden border-r border-white/10"
+        style="background: radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent);">
+        <div class="relative z-10 animate-float">
+          <!-- The new generated 3D logo -->
+          <img src="/brand_logo.png" alt="Logo" class="w-56 h-56 object-contain drop-shadow-[0_0_30px_rgba(6,182,212,0.6)] mb-6 transition-transform duration-500 hover:scale-110" />
         </div>
-        <h1 class="text-4xl font-black tracking-wider text-[#f97316] mb-0 leading-none">SOLUCIONES</h1>
-        <h2 class="text-2xl tracking-widest text-[#64748b] mb-8 font-light">EMPRESARIALES</h2>
-        <div class="text-5xl font-bold flex gap-3 items-center">
-          <span class="text-white">Portal</span>
-          <span class="text-[#f97316]">RRHH</span>
+        <div class="relative z-10 mt-4">
+          <h1 class="text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-400 tracking-tight mb-3">
+            PASELISTA
+          </h1>
+          <p class="text-slate-400 text-base font-light max-w-[250px] mx-auto">
+            Únete a la plataforma que revoluciona el control de asistencia.
+          </p>
         </div>
       </div>
 
-      <!-- Right side: Register Card -->
-      <div class="w-full max-w-lg mx-auto animate-in" style="animation-delay: 0.1s;">
-        <!-- Mobile Logo (hidden on desktop) -->
-        <div class="lg:hidden flex flex-col items-center text-center mb-8">
-          <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="mb-2">
-            <path d="M20 80V30L40 50L60 30V80" stroke="#475569" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M40 80V40L50 50L60 40V80" stroke="#475569" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M10 65C30 65 40 55 50 45C60 35 70 25 90 20" stroke="#f97316" stroke-width="4" stroke-linecap="round"/>
-            <path d="M80 15H95V30" stroke="#f97316" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M20 80H80" stroke="#f97316" stroke-width="6" stroke-linecap="round"/>
-          </svg>
-          <div class="text-2xl font-bold flex gap-2 justify-center">
-            <span class="text-white">Portal</span>
-            <span class="text-[#f97316]">RRHH</span>
-          </div>
-        </div>
-
-        <div class="rounded-2xl p-6 sm:p-10"
-          style="background-color: #121621; border: 1px solid rgba(255,255,255,0.05); border-top: 4px solid #f97316; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
-          
-          <div class="text-center mb-6">
-            <h2 class="text-2xl font-bold text-white mb-2">Crear Perfil</h2>
-            <p class="text-sm text-[#94a3b8]">Ingresa tus datos para registrarte</p>
+      <!-- Right side: Register Form -->
+      <div class="lg:col-span-3 p-8 lg:p-12 flex flex-col justify-center relative bg-[#0f172a]/50 h-full max-h-[85vh] overflow-y-auto custom-scrollbar">
+        <div class="max-w-md w-full mx-auto">
+          <!-- Mobile Logo (hidden on desktop) -->
+          <div class="lg:hidden flex flex-col items-center text-center mb-8">
+            <img src="/brand_logo.png" alt="Logo" class="w-24 h-24 object-contain drop-shadow-[0_0_20px_rgba(6,182,212,0.6)] mb-4 animate-float" />
+            <h1 class="text-2xl font-black text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-purple-400 tracking-tight">PASELISTA</h1>
           </div>
 
-          <form @submit.prevent="handleRegister" class="space-y-4">
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <input v-model="form.first_name" type="text" class="w-full px-4 py-3 rounded-xl text-white text-center sm:text-left focus:outline-none transition-all placeholder-[#475569]" style="background-color: #1e293b; border: 1px solid rgba(255,255,255,0.05);" placeholder="Nombre(s)" required onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='rgba(255,255,255,0.05)'" />
-              <input v-model="form.last_name" type="text" class="w-full px-4 py-3 rounded-xl text-white text-center sm:text-left focus:outline-none transition-all placeholder-[#475569]" style="background-color: #1e293b; border: 1px solid rgba(255,255,255,0.05);" placeholder="Apellido(s)" required onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='rgba(255,255,255,0.05)'" />
+          <div class="mb-8 text-center lg:text-left">
+            <h2 class="text-3xl font-bold text-white mb-2">Crear tu cuenta</h2>
+            <p class="text-slate-400">Completa tus datos para comenzar</p>
+          </div>
+
+          <form @submit.prevent="handleRegister" class="space-y-5">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div class="group">
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 group-focus-within:text-cyan-400 transition-colors">Nombre(s)</label>
+                <input v-model="form.first_name" type="text" 
+                  class="w-full px-4 py-3 rounded-2xl text-white bg-slate-900/50 border border-slate-700/50 focus:border-cyan-400 focus:bg-slate-900/80 focus:ring-4 focus:ring-cyan-500/10 transition-all duration-300 outline-none placeholder-slate-600 shadow-inner"
+                  placeholder="Ej. Juan" required />
+              </div>
+              <div class="group">
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 group-focus-within:text-cyan-400 transition-colors">Apellido(s)</label>
+                <input v-model="form.last_name" type="text" 
+                  class="w-full px-4 py-3 rounded-2xl text-white bg-slate-900/50 border border-slate-700/50 focus:border-cyan-400 focus:bg-slate-900/80 focus:ring-4 focus:ring-cyan-500/10 transition-all duration-300 outline-none placeholder-slate-600 shadow-inner"
+                  placeholder="Ej. Pérez" required />
+              </div>
             </div>
 
-            <input v-model="form.project_name" type="text" class="w-full px-4 py-3 rounded-xl text-white text-center focus:outline-none transition-all placeholder-[#475569]" style="background-color: #1e293b; border: 1px solid rgba(255,255,255,0.05);" placeholder="Nombre del Proyecto" required onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='rgba(255,255,255,0.05)'" />
+            <div class="group">
+              <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 group-focus-within:text-cyan-400 transition-colors">Proyecto</label>
+              <input v-model="form.project_name" type="text" 
+                class="w-full px-4 py-3 rounded-2xl text-white bg-slate-900/50 border border-slate-700/50 focus:border-cyan-400 focus:bg-slate-900/80 focus:ring-4 focus:ring-cyan-500/10 transition-all duration-300 outline-none placeholder-slate-600 shadow-inner"
+                placeholder="Nombre de tu proyecto o sucursal" required />
+            </div>
             
-            <input v-model="form.email" type="email" class="w-full px-4 py-3 rounded-xl text-white text-center focus:outline-none transition-all placeholder-[#475569]" style="background-color: #1e293b; border: 1px solid rgba(255,255,255,0.05);" placeholder="correo@ejemplo.com" required autocomplete="email" onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='rgba(255,255,255,0.05)'" />
-
-            <div class="relative">
-              <input v-model="form.password" :type="showPwd ? 'text' : 'password'" class="w-full px-4 py-3 rounded-xl text-white text-center tracking-[0.2em] focus:outline-none transition-all placeholder-[#475569]" style="background-color: #1e293b; border: 1px solid rgba(255,255,255,0.05);" placeholder="••••••••" required minlength="8" onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='rgba(255,255,255,0.05)'" />
-              <button type="button" @click="showPwd = !showPwd" class="absolute right-4 top-1/2 -translate-y-1/2 transition-colors text-[#64748b] hover:text-white">
-                <EyeSlashIcon v-if="showPwd" class="w-5 h-5" />
-                <EyeIcon v-else class="w-5 h-5" />
-              </button>
+            <div class="group">
+              <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 group-focus-within:text-cyan-400 transition-colors">Correo Electrónico</label>
+              <input v-model="form.email" type="email" 
+                class="w-full px-4 py-3 rounded-2xl text-white bg-slate-900/50 border border-slate-700/50 focus:border-cyan-400 focus:bg-slate-900/80 focus:ring-4 focus:ring-cyan-500/10 transition-all duration-300 outline-none placeholder-slate-600 shadow-inner"
+                placeholder="usuario@correo.com" required autocomplete="email" />
             </div>
 
-            <div>
-              <input v-model="form.confirm_password" type="password" class="w-full px-4 py-3 rounded-xl text-white text-center tracking-[0.2em] focus:outline-none transition-all placeholder-[#475569]" style="background-color: #1e293b; border: 1px solid rgba(255,255,255,0.05);" placeholder="Confirmar ••••••••" required onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='rgba(255,255,255,0.05)'" />
-              <p v-if="passwordMismatch" class="text-rose-400 text-xs mt-1.5 flex items-center gap-1 justify-center">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-5">
+              <div class="group">
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 group-focus-within:text-purple-400 transition-colors">Contraseña</label>
+                <div class="relative">
+                  <input v-model="form.password" :type="showPwd ? 'text' : 'password'" 
+                    class="w-full px-4 py-3 rounded-2xl text-white bg-slate-900/50 border border-slate-700/50 focus:border-purple-400 focus:bg-slate-900/80 focus:ring-4 focus:ring-purple-500/10 transition-all duration-300 outline-none placeholder-slate-600 shadow-inner tracking-widest"
+                    placeholder="••••••••" required minlength="8" />
+                  <button type="button" @click="showPwd = !showPwd"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-500 hover:text-white hover:bg-white/10 transition-colors">
+                    <EyeSlashIcon v-if="showPwd" class="w-4 h-4" />
+                    <EyeIcon v-else class="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+
+              <div class="group">
+                <label class="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-2 group-focus-within:text-purple-400 transition-colors">Confirmar</label>
+                <div class="relative">
+                  <input v-model="form.confirm_password" type="password" 
+                    class="w-full px-4 py-3 rounded-2xl text-white bg-slate-900/50 border border-slate-700/50 focus:border-purple-400 focus:bg-slate-900/80 focus:ring-4 focus:ring-purple-500/10 transition-all duration-300 outline-none placeholder-slate-600 shadow-inner tracking-widest"
+                    placeholder="••••••••" required />
+                </div>
+              </div>
+            </div>
+            
+            <Transition name="fade">
+              <p v-if="passwordMismatch" class="text-rose-400 text-xs flex items-center justify-center gap-1.5 animate-shake">
                 <ExclamationTriangleIcon class="w-3.5 h-3.5" /> Las contraseñas no coinciden
               </p>
-            </div>
+            </Transition>
 
-            <!-- Math CAPTCHA -->
-            <div class="rounded-xl p-4 mt-2" style="background-color: rgba(249, 115, 22, 0.05); border: 1px solid rgba(249, 115, 22, 0.2);">
-              <p class="text-xs text-[#94a3b8] mb-3 text-center">Verificación de seguridad</p>
+            <!-- Interactive CAPTCHA -->
+            <div class="rounded-2xl p-4 mt-2 bg-gradient-to-r from-cyan-500/5 to-blue-500/5 border border-cyan-500/20 shadow-inner group transition-all hover:border-cyan-500/40">
+              <p class="text-xs font-semibold text-cyan-400/80 uppercase tracking-wider mb-3 text-center">Verificación Humana</p>
               <div class="flex items-center justify-center gap-3">
-                <div class="px-4 py-2 rounded-lg font-mono text-lg font-bold text-white bg-[#1e293b] border border-gray-700 select-none">
-                  {{ captcha.a }} + {{ captcha.b }} =
+                <div class="px-4 py-2 rounded-xl font-mono text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-300 bg-slate-900/80 shadow-inner select-none min-w-[80px] text-center">
+                  {{ captcha.a }} + {{ captcha.b }}
                 </div>
-                <input v-model="captchaAnswer" type="number" class="w-20 px-3 py-2 rounded-lg text-white text-center focus:outline-none transition-all placeholder-[#475569]" style="background-color: #1e293b; border: 1px solid rgba(255,255,255,0.1);" placeholder="?" required onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'" />
-                <button type="button" @click="refreshCaptcha" class="text-[#64748b] hover:text-[#f97316] transition-colors p-2" title="Nuevo captcha">
+                <span class="text-slate-400 font-bold">=</span>
+                <input v-model="captchaAnswer" type="number" 
+                  class="w-20 px-3 py-2 rounded-xl text-white font-mono text-xl text-center bg-slate-900/50 border border-slate-700/50 focus:border-cyan-400 focus:bg-slate-900/80 focus:ring-4 focus:ring-cyan-500/10 transition-all duration-300 outline-none placeholder-slate-600"
+                  placeholder="?" required />
+                <button type="button" @click="refreshCaptcha" class="text-slate-500 hover:text-cyan-400 transition-colors p-2 rounded-lg hover:bg-cyan-500/10 active:scale-90" title="Nuevo captcha">
                   <ArrowPathIcon class="w-5 h-5" />
                 </button>
               </div>
-              <p v-if="captchaError" class="text-rose-400 text-xs mt-2 flex items-center justify-center gap-1">
-                <ExclamationTriangleIcon class="w-3.5 h-3.5" /> Respuesta incorrecta
-              </p>
+              <Transition name="fade">
+                <p v-if="captchaError" class="text-rose-400 text-xs mt-3 flex items-center justify-center gap-1.5 animate-shake">
+                  <ExclamationTriangleIcon class="w-3.5 h-3.5" /> Respuesta incorrecta, reintenta
+                </p>
+              </Transition>
             </div>
 
-            <div v-if="error" class="flex items-start gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl px-4 py-3 text-sm">
-              <ExclamationTriangleIcon class="w-4 h-4 flex-shrink-0 mt-0.5" /><span>{{ error }}</span>
-            </div>
-            <div v-if="success" class="flex items-start gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl px-4 py-3 text-sm">
-              <CheckCircleIcon class="w-4 h-4 flex-shrink-0 mt-0.5" /><span>¡Perfil creado! Redirigiendo...</span>
-            </div>
+            <Transition name="fade">
+              <div v-if="error" class="flex items-start gap-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-2xl px-5 py-4 text-sm animate-shake">
+                <ExclamationTriangleIcon class="w-5 h-5 flex-shrink-0" />
+                <span>{{ error }}</span>
+              </div>
+            </Transition>
+            <Transition name="fade">
+              <div v-if="success" class="flex items-center justify-center gap-3 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl px-5 py-4 text-sm font-medium">
+                <CheckCircleIcon class="w-6 h-6 flex-shrink-0" />
+                <span>¡Perfil creado! Iniciando sesión...</span>
+              </div>
+            </Transition>
 
-            <button type="submit" class="w-full py-3 rounded-xl font-medium text-white transition-all active:scale-[0.98] mt-4 flex items-center justify-center gap-2" 
-              style="background-color: #1a2235; border: 1px solid rgba(255,255,255,0.05);" :disabled="loading || passwordMismatch">
-              <span v-if="loading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-              <span>{{ loading ? 'Creando perfil...' : 'Crear Perfil' }}</span>
+            <button type="submit" class="relative w-full py-4 rounded-2xl font-bold text-white overflow-hidden group transition-all duration-300 hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-cyan-500/25 mt-4" :disabled="loading || passwordMismatch">
+              <div class="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-600 transition-transform duration-500 group-hover:scale-110"></div>
+              <div class="absolute inset-0 opacity-0 group-hover:opacity-20 bg-white transition-opacity duration-300"></div>
+              <div class="relative flex items-center justify-center gap-3">
+                <span v-if="loading" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                <span class="tracking-wide">{{ loading ? 'CREANDO CUENTA...' : 'REGISTRARME' }}</span>
+              </div>
             </button>
           </form>
 
-          <div class="mt-6 text-center text-xs" style="color: #475569;">
-            ¿Ya tienes cuenta?
-            <router-link to="/login" class="text-[#f97316] font-semibold hover:text-orange-400 ml-1 transition-colors">
-              Iniciar sesión
+          <div class="mt-8 text-center text-sm text-slate-500">
+            ¿Ya tienes una cuenta?
+            <router-link to="/login" class="text-cyan-400 font-semibold hover:text-cyan-300 hover:underline transition-all ml-1">
+              Inicia sesión aquí
             </router-link>
-            <p class="mt-5">MH Soluciones Empresariales © {{ new Date().getFullYear() }}</p>
           </div>
         </div>
       </div>
@@ -133,8 +170,7 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { EyeIcon, EyeSlashIcon, ExclamationTriangleIcon, ArrowPathIcon, UserIcon, CheckCircleIcon } from '@heroicons/vue/24/outline'
-import ThemeToggle from '@/components/ThemeToggle.vue'
+import { EyeIcon, EyeSlashIcon, ExclamationTriangleIcon, ArrowPathIcon, CheckCircleIcon } from '@heroicons/vue/24/outline'
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -193,3 +229,70 @@ async function handleRegister() {
   }
 }
 </script>
+
+<style scoped>
+@keyframes float {
+  0%, 100% { transform: translateY(0) scale(1); }
+  50% { transform: translateY(-15px) scale(1.02); }
+}
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes orb-1 {
+  0%, 100% { transform: translate(-10%, -10%) scale(1); }
+  50% { transform: translate(10%, 20%) scale(1.1); }
+}
+@keyframes orb-2 {
+  0%, 100% { transform: translate(80%, -20%) scale(1); }
+  50% { transform: translate(60%, 10%) scale(0.9); }
+}
+@keyframes orb-3 {
+  0%, 100% { transform: translate(40%, 80%) scale(1); }
+  50% { transform: translate(20%, 60%) scale(1.2); }
+}
+.animate-orb-1 { animation: orb-1 15s ease-in-out infinite alternate; }
+.animate-orb-2 { animation: orb-2 20s ease-in-out infinite alternate-reverse; }
+.animate-orb-3 { animation: orb-3 18s ease-in-out infinite alternate; }
+
+@keyframes in-up {
+  from { opacity: 0; transform: translateY(30px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-in-up {
+  animation: in-up 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-5px); }
+  75% { transform: translateX(5px); }
+}
+.animate-shake {
+  animation: shake 0.4s ease-in-out;
+}
+
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255,255,255,0.1);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(255,255,255,0.2);
+}
+</style>
