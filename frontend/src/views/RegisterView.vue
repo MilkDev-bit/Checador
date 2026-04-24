@@ -1,108 +1,128 @@
 <template>
-  <div class="min-h-screen min-h-dvh flex items-center justify-center px-4 py-8 bg-mesh"
-    style="background-color: var(--bg);">
-    <!-- Background blobs -->
-    <div class="fixed inset-0 overflow-hidden pointer-events-none">
-      <div class="absolute -top-40 -left-40 w-80 h-80 rounded-full opacity-15 animate-pulse-slow"
-        style="background: radial-gradient(circle, #8b5cf6, transparent 70%)"></div>
-      <div class="absolute -bottom-20 -right-20 w-72 h-72 rounded-full opacity-15 animate-float"
-        style="background: radial-gradient(circle, #06b6d4, transparent 70%)"></div>
+  <div class="min-h-screen min-h-dvh flex items-center justify-center px-4 py-12 relative overflow-hidden"
+    style="background-color: #0b0e14;">
+    <!-- Grid pattern background -->
+    <div class="absolute inset-0 opacity-20 pointer-events-none"
+      style="background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px); background-size: 40px 40px;">
     </div>
+    
+    <!-- Glow effects -->
+    <div class="absolute -top-40 -left-40 w-96 h-96 rounded-full opacity-30 animate-pulse-slow pointer-events-none"
+      style="background: radial-gradient(circle, #f97316, transparent 70%)"></div>
+    <div class="absolute -bottom-40 -right-40 w-96 h-96 rounded-full opacity-20 animate-pulse-slow pointer-events-none"
+      style="background: radial-gradient(circle, #8b5cf6, transparent 70%); animation-delay: 2s;"></div>
 
-    <div class="relative w-full max-w-lg animate-in">
-      <!-- Header -->
-      <div class="text-center mb-6">
-        <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl mb-3"
-          style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
-          <UserIcon class="w-7 h-7 text-white" />
+    <div class="relative w-full max-w-6xl grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+      
+      <!-- Left side: Branding -->
+      <div class="hidden lg:flex flex-col items-start animate-in">
+        <div class="mb-4">
+          <!-- Logo SVG -->
+          <svg width="120" height="120" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 80V30L40 50L60 30V80" stroke="#475569" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M40 80V40L50 50L60 40V80" stroke="#475569" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M10 65C30 65 40 55 50 45C60 35 70 25 90 20" stroke="#f97316" stroke-width="4" stroke-linecap="round"/>
+            <path d="M80 15H95V30" stroke="#f97316" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M20 80H80" stroke="#f97316" stroke-width="6" stroke-linecap="round"/>
+            <path d="M30 80V90 M50 80V90 M70 80V90" stroke="#f97316" stroke-width="4" stroke-linecap="round"/>
+          </svg>
         </div>
-        <h1 class="text-2xl font-bold" style="color: var(--text);">Crear Perfil</h1>
-        <p class="text-sm mt-1" style="color: var(--text-muted);">Regístrate para comenzar a checar</p>
+        <h1 class="text-4xl font-black tracking-wider text-[#f97316] mb-0 leading-none">SOLUCIONES</h1>
+        <h2 class="text-2xl tracking-widest text-[#64748b] mb-8 font-light">EMPRESARIALES</h2>
+        <div class="text-5xl font-bold flex gap-3 items-center">
+          <span class="text-white">Portal</span>
+          <span class="text-[#f97316]">RRHH</span>
+        </div>
       </div>
 
-      <div class="glass-card p-7">
-        <div class="flex justify-end mb-2">
-          <ThemeToggle />
+      <!-- Right side: Register Card -->
+      <div class="w-full max-w-lg mx-auto animate-in" style="animation-delay: 0.1s;">
+        <!-- Mobile Logo (hidden on desktop) -->
+        <div class="lg:hidden flex flex-col items-center text-center mb-8">
+          <svg width="80" height="80" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="mb-2">
+            <path d="M20 80V30L40 50L60 30V80" stroke="#475569" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M40 80V40L50 50L60 40V80" stroke="#475569" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M10 65C30 65 40 55 50 45C60 35 70 25 90 20" stroke="#f97316" stroke-width="4" stroke-linecap="round"/>
+            <path d="M80 15H95V30" stroke="#f97316" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M20 80H80" stroke="#f97316" stroke-width="6" stroke-linecap="round"/>
+          </svg>
+          <div class="text-2xl font-bold flex gap-2 justify-center">
+            <span class="text-white">Portal</span>
+            <span class="text-[#f97316]">RRHH</span>
+          </div>
         </div>
-        <form @submit.prevent="handleRegister" class="space-y-4">
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div>
-              <label class="input-label">Nombre(s)</label>
-              <input v-model="form.first_name" type="text" class="input" placeholder="Juan" required />
+
+        <div class="rounded-2xl p-6 sm:p-10"
+          style="background-color: #121621; border: 1px solid rgba(255,255,255,0.05); border-top: 4px solid #f97316; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+          
+          <div class="text-center mb-6">
+            <h2 class="text-2xl font-bold text-white mb-2">Crear Perfil</h2>
+            <p class="text-sm text-[#94a3b8]">Ingresa tus datos para registrarte</p>
+          </div>
+
+          <form @submit.prevent="handleRegister" class="space-y-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <input v-model="form.first_name" type="text" class="w-full px-4 py-3 rounded-xl text-white text-center sm:text-left focus:outline-none transition-all placeholder-[#475569]" style="background-color: #1e293b; border: 1px solid rgba(255,255,255,0.05);" placeholder="Nombre(s)" required onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='rgba(255,255,255,0.05)'" />
+              <input v-model="form.last_name" type="text" class="w-full px-4 py-3 rounded-xl text-white text-center sm:text-left focus:outline-none transition-all placeholder-[#475569]" style="background-color: #1e293b; border: 1px solid rgba(255,255,255,0.05);" placeholder="Apellido(s)" required onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='rgba(255,255,255,0.05)'" />
             </div>
-            <div>
-              <label class="input-label">Apellido(s)</label>
-              <input v-model="form.last_name" type="text" class="input" placeholder="Pérez García" required />
-            </div>
-          </div>
 
-          <div>
-            <label class="input-label">Nombre completo del proyecto</label>
-            <input v-model="form.project_name" type="text" class="input" placeholder="Proyecto de Construcción Centro" required />
-          </div>
+            <input v-model="form.project_name" type="text" class="w-full px-4 py-3 rounded-xl text-white text-center focus:outline-none transition-all placeholder-[#475569]" style="background-color: #1e293b; border: 1px solid rgba(255,255,255,0.05);" placeholder="Nombre del Proyecto" required onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='rgba(255,255,255,0.05)'" />
+            
+            <input v-model="form.email" type="email" class="w-full px-4 py-3 rounded-xl text-white text-center focus:outline-none transition-all placeholder-[#475569]" style="background-color: #1e293b; border: 1px solid rgba(255,255,255,0.05);" placeholder="correo@ejemplo.com" required autocomplete="email" onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='rgba(255,255,255,0.05)'" />
 
-          <div>
-            <label class="input-label">Correo electrónico</label>
-            <input v-model="form.email" type="email" class="input" placeholder="correo@ejemplo.com" required autocomplete="email" />
-          </div>
-
-          <div>
-            <label class="input-label">Contraseña <span class="text-xs font-normal" style="color: var(--text-muted);">(mínimo 8 caracteres)</span></label>
             <div class="relative">
-              <input v-model="form.password" :type="showPwd ? 'text' : 'password'" class="input pr-12" placeholder="••••••••" required minlength="8" />
-              <button type="button" @click="showPwd = !showPwd"
-                class="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-                style="color: var(--text-muted);">
+              <input v-model="form.password" :type="showPwd ? 'text' : 'password'" class="w-full px-4 py-3 rounded-xl text-white text-center tracking-[0.2em] focus:outline-none transition-all placeholder-[#475569]" style="background-color: #1e293b; border: 1px solid rgba(255,255,255,0.05);" placeholder="••••••••" required minlength="8" onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='rgba(255,255,255,0.05)'" />
+              <button type="button" @click="showPwd = !showPwd" class="absolute right-4 top-1/2 -translate-y-1/2 transition-colors text-[#64748b] hover:text-white">
                 <EyeSlashIcon v-if="showPwd" class="w-5 h-5" />
                 <EyeIcon v-else class="w-5 h-5" />
               </button>
             </div>
-          </div>
 
-          <div>
-            <label class="input-label">Confirmar contraseña</label>
-            <input v-model="form.confirm_password" type="password" class="input" placeholder="Repite tu contraseña" required />
-            <p v-if="passwordMismatch" class="text-rose-400 text-xs mt-1.5 flex items-center gap-1">
-              <ExclamationTriangleIcon class="w-3.5 h-3.5" /> Las contraseñas no coinciden
-            </p>
-          </div>
-
-          <!-- Math CAPTCHA -->
-          <div class="rounded-xl p-4 border" style="background: rgba(99,102,241,0.08); border-color: rgba(99,102,241,0.25);">
-            <label class="input-label mb-3">Verificación de seguridad</label>
-            <div class="flex items-center gap-3 flex-wrap">
-              <div class="flex items-center gap-2 px-4 py-2.5 rounded-xl font-mono text-lg font-bold select-none"
-                style="background: rgba(99,102,241,0.2); border: 1px solid rgba(99,102,241,0.3); color: var(--text);">
-                {{ captcha.a }} + {{ captcha.b }} = ?
-              </div>
-              <input v-model="captchaAnswer" type="number" class="input w-24 text-center" placeholder="?" required />
-              <button type="button" @click="refreshCaptcha" class="btn-ghost" title="Nuevo captcha">
-                <ArrowPathIcon class="w-5 h-5" />
-              </button>
+            <div>
+              <input v-model="form.confirm_password" type="password" class="w-full px-4 py-3 rounded-xl text-white text-center tracking-[0.2em] focus:outline-none transition-all placeholder-[#475569]" style="background-color: #1e293b; border: 1px solid rgba(255,255,255,0.05);" placeholder="Confirmar ••••••••" required onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='rgba(255,255,255,0.05)'" />
+              <p v-if="passwordMismatch" class="text-rose-400 text-xs mt-1.5 flex items-center gap-1 justify-center">
+                <ExclamationTriangleIcon class="w-3.5 h-3.5" /> Las contraseñas no coinciden
+              </p>
             </div>
-            <p v-if="captchaError" class="text-rose-400 text-xs mt-2 flex items-center gap-1">
-              <ExclamationTriangleIcon class="w-3.5 h-3.5" /> Respuesta incorrecta, intenta de nuevo
-            </p>
-          </div>
 
-          <div v-if="error" class="flex items-start gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl px-4 py-3 text-sm">
-            <ExclamationTriangleIcon class="w-4 h-4 flex-shrink-0 mt-0.5" /><span>{{ error }}</span>
-          </div>
-          <div v-if="success" class="flex items-start gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl px-4 py-3 text-sm">
-            <CheckCircleIcon class="w-4 h-4 flex-shrink-0 mt-0.5" /><span>¡Perfil creado! Redirigiendo al login...</span>
-          </div>
+            <!-- Math CAPTCHA -->
+            <div class="rounded-xl p-4 mt-2" style="background-color: rgba(249, 115, 22, 0.05); border: 1px solid rgba(249, 115, 22, 0.2);">
+              <p class="text-xs text-[#94a3b8] mb-3 text-center">Verificación de seguridad</p>
+              <div class="flex items-center justify-center gap-3">
+                <div class="px-4 py-2 rounded-lg font-mono text-lg font-bold text-white bg-[#1e293b] border border-gray-700 select-none">
+                  {{ captcha.a }} + {{ captcha.b }} =
+                </div>
+                <input v-model="captchaAnswer" type="number" class="w-20 px-3 py-2 rounded-lg text-white text-center focus:outline-none transition-all placeholder-[#475569]" style="background-color: #1e293b; border: 1px solid rgba(255,255,255,0.1);" placeholder="?" required onfocus="this.style.borderColor='#f97316'" onblur="this.style.borderColor='rgba(255,255,255,0.1)'" />
+                <button type="button" @click="refreshCaptcha" class="text-[#64748b] hover:text-[#f97316] transition-colors p-2" title="Nuevo captcha">
+                  <ArrowPathIcon class="w-5 h-5" />
+                </button>
+              </div>
+              <p v-if="captchaError" class="text-rose-400 text-xs mt-2 flex items-center justify-center gap-1">
+                <ExclamationTriangleIcon class="w-3.5 h-3.5" /> Respuesta incorrecta
+              </p>
+            </div>
 
-          <button type="submit" class="btn-primary btn-lg w-full" :disabled="loading || passwordMismatch">
-            <span v-if="loading" class="inline-block w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-            <span>{{ loading ? 'Creando perfil...' : 'Crear Perfil' }}</span>
-          </button>
-        </form>
+            <div v-if="error" class="flex items-start gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl px-4 py-3 text-sm">
+              <ExclamationTriangleIcon class="w-4 h-4 flex-shrink-0 mt-0.5" /><span>{{ error }}</span>
+            </div>
+            <div v-if="success" class="flex items-start gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl px-4 py-3 text-sm">
+              <CheckCircleIcon class="w-4 h-4 flex-shrink-0 mt-0.5" /><span>¡Perfil creado! Redirigiendo...</span>
+            </div>
 
-        <div class="mt-5 pt-5 text-center text-sm" style="border-top: 1px solid var(--border-subtle); color: var(--text-muted);">
-          ¿Ya tienes cuenta?
-          <router-link to="/login" class="text-brand-400 font-semibold hover:text-brand-300 ml-1 transition-colors">
-            Iniciar sesión →
-          </router-link>
+            <button type="submit" class="w-full py-3 rounded-xl font-medium text-white transition-all active:scale-[0.98] mt-4 flex items-center justify-center gap-2" 
+              style="background-color: #1a2235; border: 1px solid rgba(255,255,255,0.05);" :disabled="loading || passwordMismatch">
+              <span v-if="loading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+              <span>{{ loading ? 'Creando perfil...' : 'Crear Perfil' }}</span>
+            </button>
+          </form>
+
+          <div class="mt-6 text-center text-xs" style="color: #475569;">
+            ¿Ya tienes cuenta?
+            <router-link to="/login" class="text-[#f97316] font-semibold hover:text-orange-400 ml-1 transition-colors">
+              Iniciar sesión
+            </router-link>
+            <p class="mt-5">MH Soluciones Empresariales © {{ new Date().getFullYear() }}</p>
+          </div>
         </div>
       </div>
     </div>
