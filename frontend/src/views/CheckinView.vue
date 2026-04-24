@@ -225,8 +225,8 @@
 
             <!-- Permission denied -->
             <template v-else>
-              <!-- If on iOS, show "open in Safari" first since most users arrive from WhatsApp -->
-              <div v-if="isIOS()" class="rounded-xl p-4 mb-3"
+              <!-- If user came from WhatsApp/app, suggest opening in Safari -->
+              <div v-if="isIOSInAppBrowser()" class="rounded-xl p-4 mb-3"
                 style="background: rgba(99,102,241,0.12); border: 2px solid rgba(99,102,241,0.4);">
                 <p class="text-xs font-bold mb-2 text-brand-300">¿Abriste este enlace desde WhatsApp u otra app?</p>
                 <ol class="space-y-1.5">
@@ -245,7 +245,7 @@
                 </ol>
               </div>
 
-              <p v-if="isIOS()" class="text-xs text-center mb-2" style="color: var(--text-muted);">— o si ya estás en Safari —</p>
+              <p v-if="isIOSInAppBrowser()" class="text-xs text-center mb-2" style="color: var(--text-muted);">— o si ya estás en Safari —</p>
 
               <div class="rounded-xl p-4 mb-3" style="background: rgba(99,102,241,0.07); border: 1px solid rgba(99,102,241,0.2);">
                 <p class="text-xs font-semibold mb-2 text-brand-400">Activar en Configuración (iPhone)</p>
@@ -486,19 +486,9 @@ async function requestLocation() {
   showLocationModal.value = false
   processing.value = true
 
-  // Check permission state first if available (iOS 16+, modern Android)
-  if (navigator.permissions) {
-    try {
-      const perm = await navigator.permissions.query({ name: 'geolocation' })
-      if (perm.state === 'denied') {
-        processing.value = false
-        locationErrorType.value = 'denied'
-        showLocationErrorModal.value = true
-        return
-      }
-    } catch { /* Permissions API not supported */ }
-  }
-
+  // IMPORTANT: On iOS Safari, getCurrentPosition MUST be called synchronously
+  // within the user gesture call stack. Any await before it (e.g. permissions.query)
+  // breaks the gesture chain and iOS auto-denies the request.
   try {
     await new Promise((resolve, reject) =>
       navigator.geolocation.getCurrentPosition(resolve, reject, {
