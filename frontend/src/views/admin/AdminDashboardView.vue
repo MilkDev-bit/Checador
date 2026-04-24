@@ -45,7 +45,7 @@
           <span class="text-xs" style="color: var(--text-muted);">Tema</span>
           <ThemeToggle />
         </div>
-        <button @click="handleLogout" class="btn-secondary btn-sm w-full text-rose-400 border-rose-500/20 hover:bg-rose-500/10">
+        <button @click="showLogoutModal = true" class="btn-secondary btn-sm w-full text-rose-400 border-rose-500/20 hover:bg-rose-500/10">
           Cerrar Sesión
         </button>
       </div>
@@ -59,7 +59,7 @@
           style="background: linear-gradient(135deg, #6366f1, #8b5cf6);"><CheckCircleIcon class="w-5 h-5 text-white" /></div>
         <span class="text-white font-bold text-sm">Admin · PaseLista</span>
       </div>
-      <button @click="handleLogout" class="text-rose-400 text-sm font-medium">Salir</button>
+      <button @click="showLogoutModal = true" class="text-rose-400 text-sm font-medium">Salir</button>
     </header>
 
     <!-- Main content -->
@@ -562,6 +562,24 @@
         </div>
       </Transition>
 
+      <!-- Logout confirmation modal -->
+      <Transition name="modal">
+        <div v-if="showLogoutModal" class="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style="background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
+          <div class="w-full max-w-sm glass-card p-6 animate-in text-center" style="background: var(--modal-bg);">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-rose-500/10 text-rose-500">
+              <ArrowRightOnRectangleIcon class="w-8 h-8" />
+            </div>
+            <h3 class="font-bold text-lg mb-2" style="color: var(--text);">¿Cerrar sesión?</h3>
+            <p class="text-sm mb-6" style="color: var(--text-muted);">Tendrás que volver a iniciar sesión para acceder al panel administrativo.</p>
+            <div class="flex gap-3">
+              <button @click="showLogoutModal = false" class="btn-secondary flex-1">Cancelar</button>
+              <button @click="handleLogout" class="btn-danger flex-1">Salir</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+
     </Teleport>
   </div>
 </template>
@@ -849,8 +867,11 @@ function formatTimeOnly(iso) {
   return new Date(iso).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
 }
 
-function handleLogout() {
-  auth.logout()
+const showLogoutModal = ref(false)
+
+async function handleLogout() {
+  showLogoutModal.value = false
+  await auth.logout()
   router.push('/login')
 }
 

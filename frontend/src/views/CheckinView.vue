@@ -17,7 +17,7 @@
         <router-link to="/qr" class="btn-ghost text-xs px-3 py-2">QR</router-link>
         <router-link to="/history" class="btn-ghost text-xs px-3 py-2">Historial</router-link>
         <ThemeToggle />
-        <button @click="auth.logout(); $router.push('/login')" class="btn-ghost text-xs px-3 py-2 text-rose-400">Salir</button>
+        <button @click="showLogoutModal = true" class="btn-ghost text-xs px-3 py-2 text-rose-400">Salir</button>
       </div>
     </header>
 
@@ -388,6 +388,24 @@
         </div>
       </div>
 
+      <!-- Logout confirmation modal -->
+      <Transition name="modal">
+        <div v-if="showLogoutModal" class="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style="background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
+          <div class="w-full max-w-sm glass-card p-6 animate-in text-center" style="background: var(--modal-bg);">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-rose-500/10 text-rose-500">
+              <ArrowRightOnRectangleIcon class="w-8 h-8" />
+            </div>
+            <h3 class="font-bold text-lg mb-2" style="color: var(--text);">¿Cerrar sesión?</h3>
+            <p class="text-sm mb-6" style="color: var(--text-muted);">Tendrás que volver a ingresar tus credenciales para registrar asistencia.</p>
+            <div class="flex gap-3">
+              <button @click="showLogoutModal = false" class="btn-secondary flex-1">Cancelar</button>
+              <button @click="confirmLogout" class="btn-danger flex-1">Salir</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+
     </Teleport>
   </div>
 </template>
@@ -405,6 +423,15 @@ import {
 import ThemeToggle from '@/components/ThemeToggle.vue'
 
 const auth = useAuthStore()
+const router = useRouter()
+
+const showLogoutModal = ref(false)
+
+async function confirmLogout() {
+  showLogoutModal.value = false
+  await auth.logout()
+  router.push('/login')
+}
 
 // Clock
 const currentTime = ref('')
