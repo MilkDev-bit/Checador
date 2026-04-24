@@ -225,8 +225,30 @@
 
             <!-- Permission denied -->
             <template v-else>
+              <!-- If on iOS, show "open in Safari" first since most users arrive from WhatsApp -->
+              <div v-if="isIOS()" class="rounded-xl p-4 mb-3"
+                style="background: rgba(99,102,241,0.12); border: 2px solid rgba(99,102,241,0.4);">
+                <p class="text-xs font-bold mb-2 text-brand-300">¿Abriste este enlace desde WhatsApp u otra app?</p>
+                <ol class="space-y-1.5">
+                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                    <span class="font-bold text-brand-400 flex-shrink-0">1.</span>
+                    Toca los <strong style="color: var(--text);">tres puntos (···)</strong> o el ícono de <strong style="color: var(--text);">compartir</strong> en la barra inferior.
+                  </li>
+                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                    <span class="font-bold text-brand-400 flex-shrink-0">2.</span>
+                    Selecciona <strong style="color: var(--text);">"Abrir en Safari"</strong>.
+                  </li>
+                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                    <span class="font-bold text-brand-400 flex-shrink-0">3.</span>
+                    En Safari, el GPS funcionará correctamente.
+                  </li>
+                </ol>
+              </div>
+
+              <p v-if="isIOS()" class="text-xs text-center mb-2" style="color: var(--text-muted);">— o si ya estás en Safari —</p>
+
               <div class="rounded-xl p-4 mb-3" style="background: rgba(99,102,241,0.07); border: 1px solid rgba(99,102,241,0.2);">
-                <p class="text-xs font-semibold mb-2 text-brand-400">En iPhone</p>
+                <p class="text-xs font-semibold mb-2 text-brand-400">Activar en Configuración (iPhone)</p>
                 <ol class="space-y-1.5">
                   <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
                     <span class="font-bold text-brand-400 flex-shrink-0">1.</span>
@@ -234,7 +256,7 @@
                   </li>
                   <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
                     <span class="font-bold text-brand-400 flex-shrink-0">2.</span>
-                    Entra a <strong style="color: var(--text);">Privacidad y Seguridad → Localización → Safari</strong>.
+                    Ve a <strong style="color: var(--text);">Privacidad y Seguridad → Localización → Safari</strong>.
                   </li>
                   <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
                     <span class="font-bold text-brand-400 flex-shrink-0">3.</span>
@@ -428,12 +450,20 @@ const registeredAt = ref('')
 let locationWatchId = null
 const locationPoints = []
 
+function isIOS() {
+  return /iPhone|iPad|iPod/.test(navigator.userAgent)
+}
+
 function isIOSInAppBrowser() {
   const ua = navigator.userAgent
-  // iOS devices have iPhone/iPad in UA
-  if (!/iPhone|iPad|iPod/.test(ua)) return false
-  // Real Safari always has "Version/X.X" — WKWebView (WhatsApp, Instagram, etc.) does not
-  return !/Version\//.test(ua)
+  if (!isIOS()) return false
+  // Pure WKWebView (older WhatsApp, Telegram, etc.) — no Version/ token
+  if (!/Version\//.test(ua)) return true
+  // SFSafariViewController shares the Safari UA but lacks the actual Safari window object.
+  // Detect by checking standalone is unavailable AND no window.safari (removed iOS 16 but still works on 15-)
+  // Best heuristic: check known in-app UA tokens
+  if (/FBAN|FBAV|Instagram|Twitter|LinkedInApp|Snapchat/.test(ua)) return true
+  return false
 }
 
 function startCheckProcess(type) {
@@ -455,6 +485,20 @@ function cancelProcess() {
 async function requestLocation() {
   showLocationModal.value = false
   processing.value = true
+
+  // Check permission state first if available (iOS 16+, modern Android)
+  if (navigator.permissions) {
+    try {
+      const perm = await navigator.permissions.query({ name: 'geolocation' })
+      if (perm.state === 'denied') {
+        processing.value = false
+        locationErrorType.value = 'denied'
+        showLocationErrorModal.value = true
+        return
+      }
+    } catch { /* Permissions API not supported */ }
+  }
+
   try {
     await new Promise((resolve, reject) =>
       navigator.geolocation.getCurrentPosition(resolve, reject, {
