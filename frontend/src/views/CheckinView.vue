@@ -192,34 +192,21 @@
 
             <!-- Permission denied -->
             <template v-else>
-              <!-- Debug info -->
-              <p class="text-xs font-mono mb-3 px-2 py-1 rounded" style="background: rgba(255,255,255,0.05); color: var(--text-muted);">
-                Error código: {{ locationErrorCode }}
-              </p>
-
-              <!-- If user came from WhatsApp/app, suggest opening in Safari -->
-              <div v-if="isIOSInAppBrowser()" class="rounded-xl p-4 mb-3"
-                style="background: rgba(99,102,241,0.12); border: 2px solid rgba(99,102,241,0.4);">
-                <p class="text-xs font-bold mb-2 text-brand-300">¿Abriste este enlace desde WhatsApp u otra app?</p>
-                <ol class="space-y-1.5">
-                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                    <span class="font-bold text-brand-400 flex-shrink-0">1.</span>
-                    Toca los <strong style="color: var(--text);">tres puntos (···)</strong> en la barra inferior.
-                  </li>
-                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                    <span class="font-bold text-brand-400 flex-shrink-0">2.</span>
-                    Selecciona <strong style="color: var(--text);">"Abrir en Safari"</strong>.
-                  </li>
-                </ol>
+              <div class="rounded-xl p-3 mb-4 flex items-start gap-2"
+                style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25);">
+                <ExclamationTriangleIcon class="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
+                <p class="text-xs leading-relaxed" style="color: var(--text-muted);">
+                  Safari ya tiene <strong style="color: var(--text);">bloqueada</strong> la ubicación para este sitio. El diálogo de permiso no volverá a aparecer hasta que lo reactives.
+                </p>
               </div>
 
-              <!-- iOS: fastest fix is directly in Safari's address bar -->
+              <!-- Option 1: directly from Safari address bar (fastest) -->
               <div class="rounded-xl p-4 mb-3" style="background: rgba(99,102,241,0.10); border: 2px solid rgba(99,102,241,0.35);">
-                <p class="text-xs font-bold mb-2" style="color: var(--text);">Activar desde Safari (más rápido)</p>
+                <p class="text-xs font-bold mb-2" style="color: var(--text);">Opción 1 — Desde Safari (más rápido)</p>
                 <ol class="space-y-1.5">
                   <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
                     <span class="font-bold text-brand-400 flex-shrink-0">1.</span>
-                    Toca las letras <strong style="color: var(--text);">"AA"</strong> a la izquierda de la barra de dirección en Safari.
+                    Toca las letras <strong style="color: var(--text);">"AA"</strong> a la izquierda de la barra de dirección.
                   </li>
                   <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
                     <span class="font-bold text-brand-400 flex-shrink-0">2.</span>
@@ -227,7 +214,7 @@
                   </li>
                   <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
                     <span class="font-bold text-brand-400 flex-shrink-0">3.</span>
-                    En <strong style="color: var(--text);">Ubicación</strong>, cambia de <strong style="color: var(--text);">"Denegar"</strong> a <strong style="color: var(--text);">"Permitir"</strong>.
+                    En <strong style="color: var(--text);">Ubicación</strong> cambia a <strong style="color: var(--text);">"Permitir"</strong>.
                   </li>
                   <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
                     <span class="font-bold text-brand-400 flex-shrink-0">4.</span>
@@ -236,20 +223,22 @@
                 </ol>
               </div>
 
+              <!-- Option 2: from iOS Settings -->
               <div class="rounded-xl p-4 mb-3" style="background: rgba(99,102,241,0.05); border: 1px solid rgba(99,102,241,0.15);">
-                <p class="text-xs font-semibold mb-2 text-brand-400">Alternativa: desde Configuración del iPhone</p>
+                <p class="text-xs font-semibold mb-2 text-brand-400">Opción 2 — Desde Configuración del iPhone</p>
                 <ol class="space-y-1.5">
                   <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
                     <span class="font-bold text-brand-400 flex-shrink-0">1.</span>
-                    <strong style="color: var(--text);">Configuración → Privacidad y Seguridad → Localización → Sitios web de Safari</strong>
+                    Abre <strong style="color: var(--text);">Configuración → Privacidad y Seguridad → Localización → Safari</strong>.
                   </li>
                   <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
                     <span class="font-bold text-brand-400 flex-shrink-0">2.</span>
-                    Cambia a <strong style="color: var(--text);">"Preguntar"</strong> o <strong style="color: var(--text);">"Al usar"</strong>.
+                    Cambia a <strong style="color: var(--text);">"Al usar la app"</strong> y regresa aquí.
                   </li>
                 </ol>
               </div>
 
+              <!-- Android -->
               <div class="rounded-xl p-4 mb-5" style="background: rgba(16,185,129,0.07); border: 1px solid rgba(16,185,129,0.2);">
                 <p class="text-xs font-semibold mb-2 text-emerald-400">En Android (Chrome)</p>
                 <ol class="space-y-1.5">
@@ -270,7 +259,10 @@
             </template>
 
             <div class="space-y-2">
-              <button v-if="locationErrorType !== 'inapp'" @click="showLocationErrorModal = false; startCheckProcess(checkType.value)" class="btn-primary btn-lg w-full">
+              <button v-if="locationErrorType === 'denied'" @click="reloadPage()" class="btn-primary btn-lg w-full">
+                <ArrowPathRoundedSquareIcon class="w-5 h-5" /> Recargar página
+              </button>
+              <button v-else-if="locationErrorType !== 'inapp'" @click="retryLocation()" class="btn-primary btn-lg w-full">
                 <ArrowPathRoundedSquareIcon class="w-5 h-5" /> Reintentar
               </button>
               <button @click="cancelProcess" class="btn-secondary btn-md w-full">Cerrar</button>
@@ -436,6 +428,47 @@ const registeredAt = ref('')
 let locationWatchId = null
 const locationPoints = []
 
+// UI extras
+const recoveredPoints = ref(0)
+const showHiddenWarning = ref(false)
+const isTracking = ref(false)
+
+// Wake lock
+let wakeLock = null
+const wakeLockActive = ref(false)
+async function requestWakeLock() {
+  if ('wakeLock' in navigator) {
+    try {
+      wakeLock = await navigator.wakeLock.request('screen')
+      wakeLockActive.value = true
+      wakeLock.addEventListener('release', () => { wakeLockActive.value = false })
+    } catch { /* not supported */ }
+  }
+}
+function releaseWakeLock() {
+  if (wakeLock) { wakeLock.release(); wakeLock = null; wakeLockActive.value = false }
+}
+
+// Location buffer — persists points when app goes to background
+function saveLocationBuffer(points) {
+  try { localStorage.setItem('locationBuffer', JSON.stringify(points)) } catch {}
+}
+function loadLocationBuffer() {
+  try { return JSON.parse(localStorage.getItem('locationBuffer') || '[]') } catch { return [] }
+}
+function clearLocationBuffer() {
+  try { localStorage.removeItem('locationBuffer') } catch {}
+}
+function handleVisibilityChange() {
+  if (document.visibilityState === 'hidden') {
+    saveLocationBuffer(locationPoints)
+  } else if (document.visibilityState === 'visible' && isTracking.value) {
+    showHiddenWarning.value = true
+  }
+}
+
+function reloadPage() { window.location.reload() }
+
 function isIOS() {
   return /iPhone|iPad|iPod/.test(navigator.userAgent)
 }
@@ -495,6 +528,8 @@ function requestLocation() {
         null,
         { enableHighAccuracy: true, maximumAge: 5000 }
       )
+      isTracking.value = true
+      requestWakeLock()
       cameraStep.value = 'site'
       startCamera('environment').then(() => {
         showCameraModal.value = true
@@ -520,6 +555,13 @@ function stopLocationTracking() {
     navigator.geolocation.clearWatch(locationWatchId)
     locationWatchId = null
   }
+  isTracking.value = false
+  releaseWakeLock()
+}
+
+function retryLocation() {
+  showLocationErrorModal.value = false
+  requestLocation()
 }
 
 // Camera
@@ -614,12 +656,12 @@ async function submitCheck() {
     const { data } = await api.post('/checks', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
     const recordId = data.record.id
 
-    for (const point of locationPoints.value) {
+    for (const point of locationPoints) {
       try {
         await api.post('/location-points', { ...point, check_record_id: recordId })
       } catch { /* Skip individual failed points */ }
     }
-    locationPoints.value = []
+    locationPoints.length = 0
     clearLocationBuffer()
     stopLocationTracking()
     recoveredPoints.value = 0
@@ -658,7 +700,7 @@ onMounted(() => {
   const buffered = loadLocationBuffer()
   if (buffered.length > 0 && activeRecordId.value) {
     recoveredPoints.value = buffered.length
-    locationPoints.value = buffered
+    locationPoints.push(...buffered)
   }
 })
 
