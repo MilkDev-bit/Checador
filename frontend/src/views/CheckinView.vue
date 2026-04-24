@@ -482,42 +482,50 @@ function cancelProcess() {
   processing.value = false
 }
 
-async function requestLocation() {
+// requestLocation MUST be a plain synchronous function so that
+// navigator.geolocation.getCurrentPosition() is called directly within
+// the iOS Safari user-gesture call stack. Wrapping in async / await or
+// a Promise constructor before the call breaks the gesture chain on iOS
+// and the permission dialog is silently suppressed.
+function requestLocation() {
   showLocationModal.value = false
   processing.value = true
 
-  // IMPORTANT: On iOS Safari, getCurrentPosition MUST be called synchronously
-  // within the user gesture call stack. Any await before it (e.g. permissions.query)
-  // breaks the gesture chain and iOS auto-denies the request.
-  try {
-    await new Promise((resolve, reject) =>
-      navigator.geolocation.getCurrentPosition(resolve, reject, {
-        enableHighAccuracy: true,
-        timeout: 15000,
-        maximumAge: 0
-      })
-    )
-    locationWatchId = navigator.geolocation.watchPosition(
-      pos => locationPoints.push({
-        latitude: pos.coords.latitude,
-        longitude: pos.coords.longitude,
-        accuracy: pos.coords.accuracy,
+  navigator.geolocation.getCurrentPosition(
+    (position) => {
+      // Success — start watch then open camera
+      locationPoints.push({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy,
         recorded_at: new Date().toISOString()
-      }),
-      null, { enableHighAccuracy: true, maximumAge: 5000 }
-    )
-    cameraStep.value = 'site'
-    await startCamera('environment')
-    showCameraModal.value = true
-    processing.value = false
-  } catch (err) {
-    processing.value = false
-    const code = err?.code
-    if (code === 1) locationErrorType.value = 'denied'         // PERMISSION_DENIED
-    else if (code === 2) locationErrorType.value = 'unavailable' // POSITION_UNAVAILABLE
-    else locationErrorType.value = 'timeout'                     // TIMEOUT or unknown
-    showLocationErrorModal.value = true
-  }
+      })
+      locationWatchId = navigator.geolocation.watchPosition(
+        pos => locationPoints.push({
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          accuracy: pos.coords.accuracy,
+          recorded_at: new Date().toISOString()
+        }),
+        null,
+        { enableHighAccuracy: true, maximumAge: 5000 }
+      )
+      cameraStep.value = 'site'
+      startCamera('environment').then(() => {
+        showCameraModal.value = true
+        processing.value = false
+      })
+    },
+    (err) => {
+      processing.value = false
+      const code = err?.code
+      if (code === 1) locationErrorType.value = 'denied'          // PERMISSION_DENIED
+      else if (code === 2) locationErrorType.value = 'unavailable' // POSITION_UNAVAILABLE
+      else locationErrorType.value = 'timeout'                     // TIMEOUT or unknown
+      showLocationErrorModal.value = true
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  )
 }
 
 function stopLocationTracking() {
