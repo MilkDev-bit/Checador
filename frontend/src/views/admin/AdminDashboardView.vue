@@ -249,7 +249,7 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="r in records" :key="r.record_id"
+                  <tr v-for="r in paginatedRecords" :key="r.record_id"
                     :style="r.is_suspicious ? 'background: rgba(245,158,11,0.06);' : ''">
                     <td>
                       <div class="flex items-center gap-1.5">
@@ -297,6 +297,15 @@
                 </tbody>
               </table>
             </div>
+            
+            <!-- Records Pagination -->
+            <div v-if="totalRecordsPages > 1" class="px-5 py-3 flex items-center justify-between" style="border-top: 1px solid var(--border-subtle); background: var(--surface);">
+              <p class="text-xs text-slate-500">Página {{ recordsPage }} de {{ totalRecordsPages }}</p>
+              <div class="flex items-center gap-2">
+                <button class="btn-secondary text-xs px-3 py-1.5" :disabled="recordsPage === 1" @click="recordsPage--">Anterior</button>
+                <button class="btn-secondary text-xs px-3 py-1.5" :disabled="recordsPage === totalRecordsPages" @click="recordsPage++">Siguiente</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -322,7 +331,7 @@
             <p style="color: var(--text-muted);">Sin usuarios registrados</p>
           </div>
           <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-            <div v-for="(user, i) in users" :key="user.id"
+            <div v-for="(user, i) in paginatedUsers" :key="user.id"
               class="glass-card p-5 animate-in"
               :style="`animation-delay: ${i * 0.03}s`">
               <div class="flex items-start gap-3 mb-4">
@@ -349,6 +358,15 @@
                   <span class="text-xs" style="color: var(--text-muted);">{{ formatDateShort(user.created_at) }}</span>
                 </div>
               </div>
+            </div>
+          </div>
+          
+          <!-- Users Pagination -->
+          <div v-if="totalUsersPages > 1" class="flex items-center justify-between mt-4">
+            <p class="text-xs text-slate-500">Página {{ usersPage }} de {{ totalUsersPages }}</p>
+            <div class="flex items-center gap-2">
+              <button class="btn-secondary text-xs px-3 py-1.5" :disabled="usersPage === 1" @click="usersPage--">Anterior</button>
+              <button class="btn-secondary text-xs px-3 py-1.5" :disabled="usersPage === totalUsersPages" @click="usersPage++">Siguiente</button>
             </div>
           </div>
         </div>
@@ -593,13 +611,14 @@ function clearDate() { filters.value.date = ''; loadAll() }
 
 function clearFilters() {
   filters.value = { date: todayISO(), project: '', type: '', search: '' }
+  recordsPage.value = 1
   loadAll()
 }
 
 let searchTimer = null
 function debouncedLoad() {
   clearTimeout(searchTimer)
-  searchTimer = setTimeout(loadRecords, 400)
+  searchTimer = setTimeout(() => { recordsPage.value = 1; loadRecords() }, 400)
 }
 
 async function loadAll() {
@@ -624,6 +643,7 @@ async function loadRecords() {
     if (filters.value.search) params.search = filters.value.search
     const { data } = await api.get('/admin/records', { params })
     records.value = data
+    recordsPage.value = 1
   } catch {} finally {
     loadingRecords.value = false
   }
@@ -634,6 +654,7 @@ async function loadUsers() {
     const params = filters.value.project ? { project: filters.value.project } : {}
     const { data } = await api.get('/admin/users', { params })
     users.value = data
+    usersPage.value = 1
   } catch {}
 }
 
@@ -643,6 +664,23 @@ async function loadProjects() {
     projects.value = data
   } catch {}
 }
+
+// Pagination logic
+const recordsPage = ref(1)
+const recordsPerPage = 15
+const paginatedRecords = computed(() => {
+  const start = (recordsPage.value - 1) * recordsPerPage
+  return records.value.slice(start, start + recordsPerPage)
+})
+const totalRecordsPages = computed(() => Math.ceil(records.value.length / recordsPerPage) || 1)
+
+const usersPage = ref(1)
+const usersPerPage = 12
+const paginatedUsers = computed(() => {
+  const start = (usersPage.value - 1) * usersPerPage
+  return users.value.slice(start, start + usersPerPage)
+})
+const totalUsersPages = computed(() => Math.ceil(users.value.length / usersPerPage) || 1)
 
 // Route modal + Leaflet map
 const mapContainer = ref(null)
