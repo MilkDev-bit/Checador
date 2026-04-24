@@ -2,7 +2,9 @@ package handlers
 
 import (
 	"database/sql"
+	"encoding/json"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -16,22 +18,29 @@ import (
 )
 
 type RegisterRequest struct {
-	FirstName   string `json:"first_name" binding:"required"`
-	LastName    string `json:"last_name" binding:"required"`
-	ProjectName string `json:"project_name" binding:"required"`
-	Email       string `json:"email" binding:"required,email"`
-	Password    string `json:"password" binding:"required,min=8"`
+	FirstName      string `json:"first_name" binding:"required"`
+	LastName       string `json:"last_name" binding:"required"`
+	ProjectName    string `json:"project_name" binding:"required"`
+	Email          string `json:"email" binding:"required,email"`
+	Password       string `json:"password" binding:"required,min=8"`
+	RecaptchaToken string `json:"recaptcha_token" binding:"required"`
 }
 
 type LoginRequest struct {
-	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required"`
+	Email          string `json:"email" binding:"required,email"`
+	Password       string `json:"password" binding:"required"`
+	RecaptchaToken string `json:"recaptcha_token" binding:"required"`
 }
 
 func Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Todos los campos son requeridos, incluyendo el reCAPTCHA."})
+		return
+	}
+
+	if !verifyRecaptcha(req.RecaptchaToken) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Verificación reCAPTCHA fallida. Por favor, inténtalo de nuevo."})
 		return
 	}
 
@@ -66,7 +75,12 @@ func Register(c *gin.Context) {
 func Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Correo, contraseña y reCAPTCHA son requeridos."})
+		return
+	}
+
+	if !verifyRecaptcha(req.RecaptchaToken) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Verificación reCAPTCHA fallida. Por favor, inténtalo de nuevo."})
 		return
 	}
 
@@ -145,4 +159,31 @@ func generateToken(userID, email, role string) (string, error) {
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(secret))
+}
+
+type RecaptchaResponse struct {
+	Success bool     `json:"success"`
+	Errors  []string `json:"error-codes"`
+}
+
+func verifyRecaptcha(token string) bool {
+	secret := os.Getenv("RECAPTCHA_SECRET_KEY")
+	if secret == "" {
+		// Google's official testing secret key (always returns success)
+		secret = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+	}
+
+	resp, err := http.PostForm("https://www.google.com/recaptcha/api/siteverify",
+		url.Values{"secret": {secret}, "response": {token}})
+	if err != nil {
+		return false
+	}
+	defer resp.Body.Close()
+
+	var result RecaptchaResponse
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return false
+	}
+
+	return result.Success
 }

@@ -64,6 +64,11 @@
               </div>
             </div>
 
+            <!-- reCAPTCHA v2 Container -->
+            <div class="flex justify-center mt-2 overflow-hidden rounded-xl">
+              <div id="recaptcha-container"></div>
+            </div>
+
             <Transition name="fade">
               <div v-if="error" class="flex items-start gap-3 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-2xl px-5 py-4 text-sm animate-shake">
                 <ExclamationTriangleIcon class="w-5 h-5 flex-shrink-0" />
@@ -94,7 +99,7 @@
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { EyeIcon, EyeSlashIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
@@ -105,12 +110,40 @@ const loading = ref(false)
 const error = ref('')
 const showPwd = ref(false)
 const form = ref({ email: '', password: '' })
+const recaptchaWidgetId = ref(null)
+
+onMounted(() => {
+  const checkRecaptcha = setInterval(() => {
+    if (window.grecaptcha && window.grecaptcha.render) {
+      clearInterval(checkRecaptcha)
+      try {
+        recaptchaWidgetId.value = window.grecaptcha.render('recaptcha-container', {
+          sitekey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI', // Google Test Site Key
+          theme: 'dark'
+        })
+      } catch (e) {
+        // Handle double render gracefully
+      }
+    }
+  }, 100)
+})
 
 async function handleLogin() {
   error.value = ''
+  
+  let recaptchaToken = ''
+  if (recaptchaWidgetId.value !== null) {
+    recaptchaToken = window.grecaptcha.getResponse(recaptchaWidgetId.value)
+  }
+
+  if (!recaptchaToken) {
+    error.value = 'Por favor, completa la verificación de seguridad reCAPTCHA.'
+    return
+  }
+
   loading.value = true
   try {
-    const data = await auth.login(form.value.email, form.value.password)
+    const data = await auth.login(form.value.email, form.value.password, recaptchaToken)
     if (data.user?.role === 'admin') {
       router.push('/admin')
     } else {
@@ -118,6 +151,9 @@ async function handleLogin() {
     }
   } catch (e) {
     error.value = e.response?.data?.error || 'Error al iniciar sesión'
+    if (recaptchaWidgetId.value !== null) {
+      window.grecaptcha.reset(recaptchaWidgetId.value)
+    }
   } finally {
     loading.value = false
   }

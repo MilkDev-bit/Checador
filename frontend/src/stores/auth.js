@@ -8,8 +8,8 @@ export const useAuthStore = defineStore('auth', () => {
   const isLoggedIn = computed(() => !!user.value)
   const isAdmin = computed(() => user.value?.role === 'admin')
 
-  async function login(email, password) {
-    const { data } = await api.post('/auth/login', { email, password })
+  async function login(email, password, recaptcha_token) {
+    const { data } = await api.post('/auth/login', { email, password, recaptcha_token })
     user.value = data.user
     localStorage.setItem('user', JSON.stringify(data.user))
     return data

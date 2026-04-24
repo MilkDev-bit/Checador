@@ -109,26 +109,9 @@
               </p>
             </Transition>
 
-            <!-- Interactive CAPTCHA -->
-            <div class="rounded-2xl p-4 mt-2 bg-gradient-to-r from-cyan-500/5 to-blue-500/5 border border-cyan-500/20 shadow-inner group transition-all hover:border-cyan-500/40">
-              <p class="text-xs font-semibold text-cyan-400/80 uppercase tracking-wider mb-3 text-center">Verificación Humana</p>
-              <div class="flex items-center justify-center gap-3">
-                <div class="px-4 py-2 rounded-xl font-mono text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-300 bg-slate-900/80 shadow-inner select-none min-w-[80px] text-center">
-                  {{ captcha.a }} + {{ captcha.b }}
-                </div>
-                <span class="text-slate-400 font-bold">=</span>
-                <input v-model="captchaAnswer" type="number" 
-                  class="w-20 px-3 py-2 rounded-xl text-white font-mono text-xl text-center bg-slate-900/50 border border-slate-700/50 focus:border-cyan-400 focus:bg-slate-900/80 focus:ring-4 focus:ring-cyan-500/10 transition-all duration-300 outline-none placeholder-slate-600"
-                  placeholder="?" required />
-                <button type="button" @click="refreshCaptcha" class="text-slate-500 hover:text-cyan-400 transition-colors p-2 rounded-lg hover:bg-cyan-500/10 active:scale-90" title="Nuevo captcha">
-                  <ArrowPathIcon class="w-5 h-5" />
-                </button>
-              </div>
-              <Transition name="fade">
-                <p v-if="captchaError" class="text-rose-400 text-xs mt-3 flex items-center justify-center gap-1.5 animate-shake">
-                  <ExclamationTriangleIcon class="w-3.5 h-3.5" /> Respuesta incorrecta, reintenta
-                </p>
-              </Transition>
+            <!-- reCAPTCHA v2 Container -->
+            <div class="flex justify-center mt-4 overflow-hidden rounded-xl">
+              <div id="recaptcha-container"></div>
             </div>
 
             <Transition name="fade">
@@ -170,28 +153,31 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { EyeIcon, EyeSlashIcon, ExclamationTriangleIcon, ArrowPathIcon, CheckCircleIcon } from '@heroicons/vue/24/outline'
+import { EyeIcon, EyeSlashIcon, ExclamationTriangleIcon, CheckCircleIcon } from '@heroicons/vue/24/outline'
 
 const auth = useAuthStore()
 const router = useRouter()
 const loading = ref(false)
 const error = ref('')
 const success = ref(false)
-const captchaAnswer = ref('')
-const captchaError = ref(false)
 const showPwd = ref(false)
-const captcha = ref({ a: 0, b: 0 })
+const recaptchaWidgetId = ref(null)
 
-function refreshCaptcha() {
-  captcha.value = {
-    a: Math.floor(Math.random() * 10) + 1,
-    b: Math.floor(Math.random() * 10) + 1
-  }
-  captchaAnswer.value = ''
-  captchaError.value = false
-}
-
-onMounted(refreshCaptcha)
+onMounted(() => {
+  const checkRecaptcha = setInterval(() => {
+    if (window.grecaptcha && window.grecaptcha.render) {
+      clearInterval(checkRecaptcha)
+      try {
+        recaptchaWidgetId.value = window.grecaptcha.render('recaptcha-container', {
+          sitekey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI', // Google Test Site Key
+          theme: 'dark'
+        })
+      } catch (e) {
+        // Ignore double render issues
+      }
+    }
+  }, 100)
+})
 
 const form = ref({
   first_name: '', last_name: '', project_name: '',
@@ -203,13 +189,20 @@ const passwordMismatch = computed(
 )
 
 async function handleRegister() {
-  captchaError.value = false
   error.value = ''
-  if (parseInt(captchaAnswer.value) !== captcha.value.a + captcha.value.b) {
-    captchaError.value = true
+  
+  let recaptchaToken = ''
+  if (recaptchaWidgetId.value !== null) {
+    recaptchaToken = window.grecaptcha.getResponse(recaptchaWidgetId.value)
+  }
+
+  if (!recaptchaToken) {
+    error.value = 'Por favor, completa la verificación de seguridad reCAPTCHA.'
     return
   }
+
   if (form.value.password !== form.value.confirm_password) return
+  
   loading.value = true
   try {
     await auth.register({
@@ -217,13 +210,16 @@ async function handleRegister() {
       last_name: form.value.last_name,
       project_name: form.value.project_name,
       email: form.value.email,
-      password: form.value.password
+      password: form.value.password,
+      recaptcha_token: recaptchaToken
     })
     success.value = true
     setTimeout(() => router.push('/login'), 1500)
   } catch (e) {
     error.value = e.response?.data?.error || 'Error al crear el perfil'
-    refreshCaptcha()
+    if (recaptchaWidgetId.value !== null) {
+      window.grecaptcha.reset(recaptchaWidgetId.value)
+    }
   } finally {
     loading.value = false
   }
