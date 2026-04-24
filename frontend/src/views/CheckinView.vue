@@ -665,13 +665,16 @@ async function submitCheck() {
     if (photoSite) formData.append('photo_site', dataURLtoBlob(photoSite), 'site.jpg')
     if (photoSelfie) formData.append('photo_selfie', dataURLtoBlob(photoSelfie), 'selfie.jpg')
 
-    const { data } = await api.post('/checks', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
+    const { data } = await api.post('/checks', formData)
     const recordId = data.record.id
 
-    for (const point of locationPoints) {
+    if (locationPoints.length > 0) {
       try {
-        await api.post('/location-points', { ...point, check_record_id: recordId })
-      } catch { /* Skip individual failed points */ }
+        await api.post('/location-points/batch', {
+          check_record_id: recordId,
+          points: locationPoints
+        })
+      } catch { /* Points failed — non-critical */ }
     }
     locationPoints.length = 0
     clearLocationBuffer()

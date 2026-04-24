@@ -130,6 +130,75 @@ func AddLocationPoint(c *gin.Context) {
 	c.JSON(http.StatusCreated, point)
 }
 
+type BatchLocationPointRequest struct {
+	CheckRecordID string `json:"check_record_id" binding:"required"`
+	Points        []struct {
+		Latitude   float64 `json:"latitude" binding:"required"`
+		Longitude  float64 `json:"longitude" binding:"required"`
+		Accuracy   float64 `json:"accuracy"`
+		RecordedAt string  `json:"recorded_at" binding:"required"`
+	} `json:"points" binding:"required"`
+}
+
+func AddLocationPointsBatch(c *gin.Context) {
+	userID := c.GetString("user_id")
+
+	var req BatchLocationPointRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Verify ownership
+	var ownerID string
+	err := database.DB.QueryRow(
+		`SELECT user_id FROM check_records WHERE id = $1`, req.CheckRecordID,
+	).Scan(&ownerID)
+	if err != nil || ownerID != userID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Record not found or unauthorized"})
+		return
+	}
+
+	if len(req.Points) == 0 {
+		c.JSON(http.StatusCreated, gin.H{"inserted": 0})
+		return
+	}
+
+	tx, err := database.DB.Begin()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Transaction error"})
+		return
+	}
+	defer tx.Rollback()
+
+	stmt, err := tx.Prepare(
+		`INSERT INTO location_points (check_record_id, latitude, longitude, accuracy, recorded_at)
+		 VALUES ($1, $2, $3, $4, $5)`)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Prepare error"})
+		return
+	}
+	defer stmt.Close()
+
+	inserted := 0
+	for _, p := range req.Points {
+		ts, err := time.Parse(time.RFC3339, p.RecordedAt)
+		if err != nil {
+			continue // skip malformed timestamps
+		}
+		if _, err = stmt.Exec(req.CheckRecordID, p.Latitude, p.Longitude, p.Accuracy, ts); err == nil {
+			inserted++
+		}
+	}
+
+	if err := tx.Commit(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Commit error"})
+		return
+	}
+
+	c.JSON(http.StatusCreated, gin.H{"inserted": inserted})
+}
+
 func GetMyRecords(c *gin.Context) {
 	userID := c.GetString("user_id")
 

@@ -30,6 +30,7 @@ func Register(r *gin.Engine) {
 		auth.GET("/checks", handlers.GetMyRecords)
 		auth.GET("/checks/:id/route", handlers.GetRecordRoute)
 		auth.POST("/location-points", handlers.AddLocationPoint)
+		auth.POST("/location-points/batch", handlers.AddLocationPointsBatch)
 	}
 
 	// Admin protected routes
