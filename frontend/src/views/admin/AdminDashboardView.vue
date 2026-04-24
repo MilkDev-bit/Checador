@@ -560,9 +560,11 @@ import {
   ClipboardDocumentListIcon, UsersIcon, ChartBarIcon, UserCircleIcon,
   BuildingOffice2Icon, CalendarIcon, MagnifyingGlassIcon, XMarkIcon, ExclamationTriangleIcon
 } from '@heroicons/vue/24/outline'
+import { useThemeStore } from '@/stores/theme'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 
 const auth = useAuthStore()
+const theme = useThemeStore()
 const router = useRouter()
 
 const activeTab = ref('overview')
@@ -672,9 +674,14 @@ watch(() => routeModal.value.show, async (show) => {
   const points = routeModal.value.points
   const coords = points.map(p => [p.latitude, p.longitude])
 
-  // Dark-friendly tile layer
+  // Dynamic tile layer based on theme
   leafletMap = L.map(mapContainer.value, { zoomControl: true }).setView(coords[0], 17)
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+  
+  const tileUrl = theme.isDark 
+    ? 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png'
+    : 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png'
+
+  L.tileLayer(tileUrl, {
     attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
     subdomains: 'abcd',
     maxZoom: 20
@@ -786,11 +793,6 @@ function formatDate(iso) {
 
 function formatDateShort(iso) {
   return new Date(iso).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })
-}
-
-function formatTimeOnly(iso) {
-  if (!iso) return '--:--'
-  return new Date(iso).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
 }
 
 function handleLogout() {
