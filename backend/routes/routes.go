@@ -18,6 +18,7 @@ func Register(r *gin.Engine) {
 	// Public routes
 	api.POST("/auth/register", handlers.Register)
 	api.POST("/auth/login", handlers.Login)
+	api.POST("/auth/logout", handlers.Logout)
 	api.GET("/qr", handlers.GenerateQR)
 	api.GET("/checkin-url", handlers.GetCheckinURL)
 

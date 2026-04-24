@@ -98,10 +98,18 @@ func Login(c *gin.Context) {
 		return
 	}
 
+	// Set HttpOnly, Secure, SameSite=Strict cookie
+	c.SetCookie("jwt_token", token, int(24*time.Hour/time.Second), "/", "", true, true)
+
 	c.JSON(http.StatusOK, gin.H{
-		"token": token,
-		"user":  user,
+		"user": user,
 	})
+}
+
+func Logout(c *gin.Context) {
+	// Clear the cookie by setting MaxAge to -1
+	c.SetCookie("jwt_token", "", -1, "/", "", true, true)
+	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }
 
 func Me(c *gin.Context) {
