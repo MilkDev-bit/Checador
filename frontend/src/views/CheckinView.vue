@@ -167,58 +167,105 @@
                 <MapPinIcon class="w-5 h-5 text-rose-400" />
               </div>
               <div>
-                <h3 class="font-bold text-base" style="color: var(--text);">Ubicación bloqueada</h3>
-                <p class="text-xs" style="color: var(--text-muted);">Sigue estos pasos para activarla</p>
+                <h3 class="font-bold text-base" style="color: var(--text);">
+                  {{ locationErrorType === 'inapp' ? 'Abre la página en Safari' :
+                     locationErrorType === 'unavailable' ? 'GPS no disponible' :
+                     locationErrorType === 'timeout' ? 'Tiempo de espera agotado' :
+                     'Ubicación bloqueada' }}
+                </h3>
+                <p class="text-xs" style="color: var(--text-muted);">
+                  {{ locationErrorType === 'inapp' ? 'El browser de WhatsApp no tiene acceso al GPS' :
+                     locationErrorType === 'unavailable' ? 'No se detectó señal GPS' :
+                     locationErrorType === 'timeout' ? 'El GPS tardó demasiado en responder' :
+                     'Sigue estos pasos para activarla' }}
+                </p>
               </div>
             </div>
 
-            <!-- iOS instructions -->
-            <div class="rounded-xl p-4 mb-3" style="background: rgba(99,102,241,0.07); border: 1px solid rgba(99,102,241,0.2);">
-              <p class="text-xs font-semibold mb-2 text-brand-400">En iPhone (Safari / Chrome)</p>
-              <ol class="space-y-1.5">
-                <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                  <span class="font-bold text-brand-400 flex-shrink-0">1.</span>
-                  Abre <strong style="color: var(--text);">Configuración</strong> del iPhone.
-                </li>
-                <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                  <span class="font-bold text-brand-400 flex-shrink-0">2.</span>
-                  Busca y entra a <strong style="color: var(--text);">Safari</strong> (o Chrome).
-                </li>
-                <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                  <span class="font-bold text-brand-400 flex-shrink-0">3.</span>
-                  Toca <strong style="color: var(--text);">Ubicación</strong> → selecciona <strong style="color: var(--text);">"Al usar la app"</strong>.
-                </li>
-                <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                  <span class="font-bold text-brand-400 flex-shrink-0">4.</span>
-                  Regresa aquí y vuelve a intentarlo.
-                </li>
-              </ol>
-            </div>
+            <!-- In-app browser (WKWebView) -->
+            <template v-if="locationErrorType === 'inapp'">
+              <div class="rounded-xl p-4 mb-5" style="background: rgba(99,102,241,0.07); border: 1px solid rgba(99,102,241,0.2);">
+                <p class="text-xs font-semibold mb-3 text-brand-400">Cómo abrir en Safari</p>
+                <ol class="space-y-2">
+                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                    <span class="font-bold text-brand-400 flex-shrink-0">1.</span>
+                    Toca el ícono de <strong style="color: var(--text);">tres puntos (···)</strong> o el ícono de <strong style="color: var(--text);">compartir</strong> en la barra inferior de WhatsApp.
+                  </li>
+                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                    <span class="font-bold text-brand-400 flex-shrink-0">2.</span>
+                    Selecciona <strong style="color: var(--text);">"Abrir en Safari"</strong> o <strong style="color: var(--text);">"Abrir en navegador"</strong>.
+                  </li>
+                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                    <span class="font-bold text-brand-400 flex-shrink-0">3.</span>
+                    Inicia sesión nuevamente y el GPS funcionará correctamente.
+                  </li>
+                </ol>
+              </div>
+            </template>
 
-            <!-- Android instructions -->
-            <div class="rounded-xl p-4 mb-5" style="background: rgba(16,185,129,0.07); border: 1px solid rgba(16,185,129,0.2);">
-              <p class="text-xs font-semibold mb-2 text-emerald-400">En Android (Chrome)</p>
-              <ol class="space-y-1.5">
-                <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                  <span class="font-bold text-emerald-400 flex-shrink-0">1.</span>
-                  Toca el ícono de <strong style="color: var(--text);">candado</strong> o <strong style="color: var(--text);">info</strong> junto a la URL.
-                </li>
-                <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                  <span class="font-bold text-emerald-400 flex-shrink-0">2.</span>
-                  Toca <strong style="color: var(--text);">Permisos</strong> → <strong style="color: var(--text);">Ubicación</strong> → <strong style="color: var(--text);">"Permitir"</strong>.
-                </li>
-                <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                  <span class="font-bold text-emerald-400 flex-shrink-0">3.</span>
-                  Recarga la página y vuelve a intentarlo.
-                </li>
-              </ol>
-            </div>
+            <!-- GPS unavailable or timeout -->
+            <template v-else-if="locationErrorType === 'unavailable' || locationErrorType === 'timeout'">
+              <div class="rounded-xl p-4 mb-5" style="background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.2);">
+                <ol class="space-y-2">
+                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                    <span class="font-bold text-amber-400 flex-shrink-0">1.</span>
+                    Ve a un lugar con buena señal o al aire libre.
+                  </li>
+                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                    <span class="font-bold text-amber-400 flex-shrink-0">2.</span>
+                    Asegúrate de que el <strong style="color: var(--text);">GPS del teléfono</strong> esté activado.
+                  </li>
+                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                    <span class="font-bold text-amber-400 flex-shrink-0">3.</span>
+                    Vuelve a intentarlo.
+                  </li>
+                </ol>
+              </div>
+            </template>
+
+            <!-- Permission denied -->
+            <template v-else>
+              <div class="rounded-xl p-4 mb-3" style="background: rgba(99,102,241,0.07); border: 1px solid rgba(99,102,241,0.2);">
+                <p class="text-xs font-semibold mb-2 text-brand-400">En iPhone</p>
+                <ol class="space-y-1.5">
+                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                    <span class="font-bold text-brand-400 flex-shrink-0">1.</span>
+                    Abre <strong style="color: var(--text);">Configuración</strong> del iPhone.
+                  </li>
+                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                    <span class="font-bold text-brand-400 flex-shrink-0">2.</span>
+                    Entra a <strong style="color: var(--text);">Privacidad y Seguridad → Localización → Safari</strong>.
+                  </li>
+                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                    <span class="font-bold text-brand-400 flex-shrink-0">3.</span>
+                    Selecciona <strong style="color: var(--text);">"Al usar la app"</strong> y regresa aquí.
+                  </li>
+                </ol>
+              </div>
+              <div class="rounded-xl p-4 mb-5" style="background: rgba(16,185,129,0.07); border: 1px solid rgba(16,185,129,0.2);">
+                <p class="text-xs font-semibold mb-2 text-emerald-400">En Android</p>
+                <ol class="space-y-1.5">
+                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                    <span class="font-bold text-emerald-400 flex-shrink-0">1.</span>
+                    Toca el ícono de <strong style="color: var(--text);">candado</strong> junto a la URL.
+                  </li>
+                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                    <span class="font-bold text-emerald-400 flex-shrink-0">2.</span>
+                    Toca <strong style="color: var(--text);">Permisos → Ubicación → Permitir</strong>.
+                  </li>
+                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                    <span class="font-bold text-emerald-400 flex-shrink-0">3.</span>
+                    Recarga la página y vuelve a intentarlo.
+                  </li>
+                </ol>
+              </div>
+            </template>
 
             <div class="space-y-2">
-              <button @click="showLocationErrorModal = false; startCheckProcess(checkType)" class="btn-primary btn-lg w-full">
+              <button v-if="locationErrorType !== 'inapp'" @click="showLocationErrorModal = false; startCheckProcess(checkType)" class="btn-primary btn-lg w-full">
                 <ArrowPathRoundedSquareIcon class="w-5 h-5" /> Reintentar
               </button>
-              <button @click="cancelProcess" class="btn-secondary btn-md w-full">Cancelar</button>
+              <button @click="cancelProcess" class="btn-secondary btn-md w-full">Cerrar</button>
             </div>
           </div>
         </div>
@@ -372,6 +419,7 @@ const processing = ref(false)
 const checkType = ref('entry')
 const showLocationModal = ref(false)
 const showLocationErrorModal = ref(false)
+const locationErrorType = ref('denied') // 'inapp' | 'denied' | 'unavailable' | 'timeout'
 const showCameraModal = ref(false)
 const showSuccessModal = ref(false)
 const registeredAt = ref('')
@@ -380,8 +428,21 @@ const registeredAt = ref('')
 let locationWatchId = null
 const locationPoints = []
 
+function isIOSInAppBrowser() {
+  const ua = navigator.userAgent
+  // iOS devices have iPhone/iPad in UA
+  if (!/iPhone|iPad|iPod/.test(ua)) return false
+  // Real Safari always has "Version/X.X" — WKWebView (WhatsApp, Instagram, etc.) does not
+  return !/Version\//.test(ua)
+}
+
 function startCheckProcess(type) {
   checkType.value = type
+  if (isIOSInAppBrowser()) {
+    locationErrorType.value = 'inapp'
+    showLocationErrorModal.value = true
+    return
+  }
   showLocationModal.value = true
 }
 
@@ -396,7 +457,11 @@ async function requestLocation() {
   processing.value = true
   try {
     await new Promise((resolve, reject) =>
-      navigator.geolocation.getCurrentPosition(resolve, reject, { enableHighAccuracy: true })
+      navigator.geolocation.getCurrentPosition(resolve, reject, {
+        enableHighAccuracy: true,
+        timeout: 15000,
+        maximumAge: 0
+      })
     )
     locationWatchId = navigator.geolocation.watchPosition(
       pos => locationPoints.push({
@@ -411,8 +476,12 @@ async function requestLocation() {
     await startCamera('environment')
     showCameraModal.value = true
     processing.value = false
-  } catch {
+  } catch (err) {
     processing.value = false
+    const code = err?.code
+    if (code === 1) locationErrorType.value = 'denied'         // PERMISSION_DENIED
+    else if (code === 2) locationErrorType.value = 'unavailable' // POSITION_UNAVAILABLE
+    else locationErrorType.value = 'timeout'                     // TIMEOUT or unknown
     showLocationErrorModal.value = true
   }
 }
