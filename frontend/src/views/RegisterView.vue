@@ -169,7 +169,7 @@ onMounted(() => {
       clearInterval(checkRecaptcha)
       try {
         recaptchaWidgetId.value = window.grecaptcha.render('recaptcha-container', {
-          sitekey: '6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI', // Google Test Site Key
+          sitekey: '6LcliMgsAAAAAFzIQe4DODsVW5nIR-QKsKzqZ63C', // Clave pública de producción
           theme: 'dark'
         })
       } catch (e) {
