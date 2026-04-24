@@ -120,7 +120,51 @@
               </button>
             </div>
             <div class="overflow-x-auto custom-scroll">
-              <RecordsTable :records="records.slice(0, 8)" @view-route="openRouteModal" @view-photos="openPhotosModal" />
+              <table class="data-table w-full">
+                <thead>
+                  <tr>
+                    <th>Usuario</th>
+                    <th class="hidden sm:table-cell">Proyecto</th>
+                    <th>Tipo</th>
+                    <th>Fecha / Hora</th>
+                    <th class="hidden md:table-cell">GPS</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-if="records.slice(0,8).length === 0">
+                    <td colspan="6" class="text-center py-8" style="color: var(--text-muted);">Sin registros</td>
+                  </tr>
+                  <tr v-for="r in records.slice(0, 8)" :key="r.record_id">
+                    <td>
+                      <p class="font-medium text-sm" style="color: var(--text);">{{ r.first_name }} {{ r.last_name }}</p>
+                      <p class="text-xs" style="color: var(--text-muted);">{{ r.email }}</p>
+                    </td>
+                    <td class="hidden sm:table-cell">
+                      <span class="text-xs line-clamp-1 max-w-[140px] block" style="color: var(--text-muted);">{{ r.project_name }}</span>
+                    </td>
+                    <td>
+                      <span :class="r.type === 'entry' ? 'badge-green' : 'badge-red'" class="badge whitespace-nowrap">
+                        {{ r.type === 'entry' ? 'Entrada' : 'Salida' }}
+                      </span>
+                    </td>
+                    <td>
+                      <p class="text-xs whitespace-nowrap" style="color: var(--text-muted);">{{ formatDate(r.timestamp) }}</p>
+                    </td>
+                    <td class="hidden md:table-cell">
+                      <span :class="r.location_count > 0 ? 'badge-blue' : 'badge-gray'" class="badge">
+                        {{ r.location_count }} pts
+                      </span>
+                    </td>
+                    <td>
+                      <div class="flex items-center gap-1">
+                        <button @click="openPhotosModal(r)" class="text-xs px-2 py-1 rounded-lg transition-all" style="color: var(--text-muted);">Fotos</button>
+                        <button @click="openRouteModal(r)" class="text-xs px-2 py-1 rounded-lg transition-all" style="color: var(--text-muted);">Ruta</button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -179,7 +223,48 @@
               <p class="text-sm mt-1" style="color: var(--text-dim);">Intenta cambiar los filtros</p>
             </div>
             <div v-else class="overflow-x-auto custom-scroll">
-              <RecordsTable :records="records" @view-route="openRouteModal" @view-photos="openPhotosModal" />
+              <table class="data-table w-full">
+                <thead>
+                  <tr>
+                    <th>Usuario</th>
+                    <th class="hidden sm:table-cell">Proyecto</th>
+                    <th>Tipo</th>
+                    <th>Fecha / Hora</th>
+                    <th class="hidden md:table-cell">GPS</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="r in records" :key="r.record_id">
+                    <td>
+                      <p class="font-medium text-sm" style="color: var(--text);">{{ r.first_name }} {{ r.last_name }}</p>
+                      <p class="text-xs" style="color: var(--text-muted);">{{ r.email }}</p>
+                    </td>
+                    <td class="hidden sm:table-cell">
+                      <span class="text-xs line-clamp-1 max-w-[140px] block" style="color: var(--text-muted);">{{ r.project_name }}</span>
+                    </td>
+                    <td>
+                      <span :class="r.type === 'entry' ? 'badge-green' : 'badge-red'" class="badge whitespace-nowrap">
+                        {{ r.type === 'entry' ? 'Entrada' : 'Salida' }}
+                      </span>
+                    </td>
+                    <td>
+                      <p class="text-xs whitespace-nowrap" style="color: var(--text-muted);">{{ formatDate(r.timestamp) }}</p>
+                    </td>
+                    <td class="hidden md:table-cell">
+                      <span :class="r.location_count > 0 ? 'badge-blue' : 'badge-gray'" class="badge">
+                        {{ r.location_count }} pts
+                      </span>
+                    </td>
+                    <td>
+                      <div class="flex items-center gap-1">
+                        <button @click="openPhotosModal(r)" class="text-xs px-2 py-1 rounded-lg transition-all" style="color: var(--text-muted);">Fotos</button>
+                        <button @click="openRouteModal(r)" class="text-xs px-2 py-1 rounded-lg transition-all" style="color: var(--text-muted);">Ruta</button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
@@ -352,73 +437,11 @@ import {
 } from '@heroicons/vue/24/outline'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 
-// Inline records table component
-const RecordsTable = {
-  props: ['records'],
-  emits: ['view-route', 'view-photos'],
-  template: `
-    <table class="data-table w-full">
-      <thead>
-        <tr>
-          <th>Usuario</th>
-          <th class="hidden sm:table-cell">Proyecto</th>
-          <th>Tipo</th>
-          <th>Fecha / Hora</th>
-          <th class="hidden md:table-cell">GPS</th>
-          <th>Acciones</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr v-if="records.length === 0">
-          <td colspan="6" class="text-center py-8 text-slate-500">Sin registros</td>
-        </tr>
-        <tr v-for="r in records" :key="r.record_id">
-          <td>
-            <div>
-              <p class="text-white font-medium text-sm">{{ r.first_name }} {{ r.last_name }}</p>
-              <p class="text-slate-500 text-xs">{{ r.email }}</p>
-            </div>
-          </td>
-          <td class="hidden sm:table-cell">
-            <span class="text-slate-300 text-xs line-clamp-1 max-w-[140px] block">{{ r.project_name }}</span>
-          </td>
-          <td>
-            <span :class="r.type === 'entry' ? 'badge-green' : 'badge-red'" class="badge whitespace-nowrap">
-              {{ r.type === 'entry' ? 'Entrada' : 'Salida' }}
-            </span>
-          </td>
-          <td>
-            <p class="text-slate-300 text-xs whitespace-nowrap">{{ formatDate(r.timestamp) }}</p>
-          </td>
-          <td class="hidden md:table-cell">
-            <span :class="r.location_count > 0 ? 'badge-blue' : 'badge-gray'" class="badge">
-              {{ r.location_count }} pts
-            </span>
-          </td>
-          <td>
-            <div class="flex items-center gap-1">
-              <button @click="$emit('view-photos', r)"
-                class="text-xs px-2 py-1 rounded-lg transition-all" style="color: var(--text-muted);">
-                Fotos
-              </button>
-              <button @click="$emit('view-route', r)"
-                class="text-xs px-2 py-1 rounded-lg transition-all" style="color: var(--text-muted);">
-                Ruta
-              </button>
-            </div>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  `,
-  methods: {
-    formatDate(iso) {
-      return new Date(iso).toLocaleString('es-MX', {
-        month: 'short', day: 'numeric',
-        hour: '2-digit', minute: '2-digit'
-      })
-    }
-  }
+function formatDate(iso) {
+  return new Date(iso).toLocaleString('es-MX', {
+    month: 'short', day: 'numeric',
+    hour: '2-digit', minute: '2-digit'
+  })
 }
 
 const auth = useAuthStore()
