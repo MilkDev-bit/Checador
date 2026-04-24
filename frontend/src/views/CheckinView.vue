@@ -123,39 +123,6 @@
     <!-- ===== Modals ===== -->
     <Teleport to="body">
 
-      <!-- Location pre-permission modal -->
-      <Transition name="modal">
-        <div v-if="showLocationModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0"
-          style="background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);">
-          <div class="w-full max-w-sm glass-card p-7 text-center animate-in">
-            <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
-              style="background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(6,182,212,0.3)); border: 1px solid rgba(99,102,241,0.3);">
-              <MapPinIcon class="w-8 h-8 text-brand-400" />
-            </div>
-            <h3 class="text-xl font-bold mb-2" style="color: var(--text);">Permitir Ubicación</h3>
-            <p class="text-sm mb-4 leading-relaxed" style="color: var(--text-muted);">
-              Para registrar tu {{ checkType === 'entry' ? 'entrada' : 'salida' }} necesitamos acceder a tu ubicación GPS y registrar el recorrido completo.
-            </p>
-            <div class="text-left space-y-2 mb-5 px-1">
-              <p class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                <span class="w-5 h-5 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center flex-shrink-0 font-bold text-xs mt-0.5">1</span>
-                Aparecerá una ventana preguntando si permites la ubicación.
-              </p>
-              <p class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                <span class="w-5 h-5 rounded-full bg-brand-500/20 text-brand-400 flex items-center justify-center flex-shrink-0 font-bold text-xs mt-0.5">2</span>
-                Selecciona <strong style="color: var(--text);">"Permitir"</strong> o <strong style="color: var(--text);">"Allow"</strong> para continuar.
-              </p>
-            </div>
-            <div class="space-y-3">
-              <button @click="requestLocation" class="btn-primary btn-lg w-full">
-                <MapPinIcon class="w-5 h-5" /> Continuar
-              </button>
-              <button @click="cancelProcess" class="btn-secondary btn-md w-full">Cancelar</button>
-            </div>
-          </div>
-        </div>
-      </Transition>
-
       <!-- Location error / guide modal -->
       <Transition name="modal">
         <div v-if="showLocationErrorModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0"
@@ -394,7 +361,7 @@
       </Transition>
 
       <!-- Processing spinner -->
-      <div v-if="processing && !showLocationModal && !showLocationErrorModal && !showCameraModal && !showSuccessModal"
+      <div v-if="processing && !showLocationErrorModal && !showCameraModal && !showSuccessModal"
         class="fixed inset-0 z-50 flex items-center justify-center"
         style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
         <div class="glass-card p-6 text-center">
@@ -439,9 +406,8 @@ const activeRecordId = ref(localStorage.getItem('activeRecordId') || null)
 const entryTime = ref(localStorage.getItem('entryTime') || null)
 const processing = ref(false)
 const checkType = ref('entry')
-const showLocationModal = ref(false)
 const showLocationErrorModal = ref(false)
-const locationErrorType = ref('denied') // 'inapp' | 'denied' | 'unavailable' | 'timeout'
+const locationErrorType = ref('denied')
 const showCameraModal = ref(false)
 const showSuccessModal = ref(false)
 const registeredAt = ref('')
@@ -473,27 +439,26 @@ function startCheckProcess(type) {
     showLocationErrorModal.value = true
     return
   }
-  showLocationModal.value = true
+  // Call requestLocation directly — iOS Safari requires getCurrentPosition
+  // to be called in the same synchronous call stack as the user tap.
+  requestLocation()
 }
 
 function cancelProcess() {
-  showLocationModal.value = false
   showLocationErrorModal.value = false
   processing.value = false
 }
 
 // requestLocation MUST be a plain synchronous function so that
-// navigator.geolocation.getCurrentPosition() is called directly within
-// the iOS Safari user-gesture call stack. Wrapping in async / await or
-// a Promise constructor before the call breaks the gesture chain on iOS
-// and the permission dialog is silently suppressed.
+// navigator.geolocation.getCurrentPosition() is called as the VERY FIRST
+// instruction — before any Vue reactive state changes — to stay within the
+// iOS Safari user-gesture call stack. Even a single ref assignment before
+// the call can cause WebKit to break the gesture chain.
 function requestLocation() {
-  showLocationModal.value = false
-  processing.value = true
-
+  // ← getCurrentPosition is the absolute first call. No state changes before this.
   navigator.geolocation.getCurrentPosition(
     (position) => {
-      // Success — start watch then open camera
+      processing.value = false
       locationPoints.push({
         latitude: position.coords.latitude,
         longitude: position.coords.longitude,
@@ -513,19 +478,20 @@ function requestLocation() {
       cameraStep.value = 'site'
       startCamera('environment').then(() => {
         showCameraModal.value = true
-        processing.value = false
       })
     },
     (err) => {
       processing.value = false
       const code = err?.code
-      if (code === 1) locationErrorType.value = 'denied'          // PERMISSION_DENIED
-      else if (code === 2) locationErrorType.value = 'unavailable' // POSITION_UNAVAILABLE
-      else locationErrorType.value = 'timeout'                     // TIMEOUT or unknown
+      if (code === 1) locationErrorType.value = 'denied'           // PERMISSION_DENIED
+      else if (code === 2) locationErrorType.value = 'unavailable'  // POSITION_UNAVAILABLE
+      else locationErrorType.value = 'timeout'                      // TIMEOUT or unknown
       showLocationErrorModal.value = true
     },
-    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+    { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
   )
+  // Show processing spinner after registering the geolocation listener
+  processing.value = true
 }
 
 function stopLocationTracking() {
