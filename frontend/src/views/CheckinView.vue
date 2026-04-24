@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="min-h-screen min-h-dvh bg-mesh" style="background-color: var(--bg);">
     <!-- Top nav -->
     <header class="sticky top-0 z-20 px-4 py-3 flex items-center justify-between"
@@ -621,12 +621,17 @@ function capturePhoto() {
   const video = videoRef.value
   const canvas = canvasRef.value
   if (!video || !canvas) return
-  canvas.width = video.videoWidth
-  canvas.height = video.videoHeight
+
+  // Limit resolution to max 800px to keep payload under 1 MB
+  const MAX_DIM = 800
+  const scale = Math.min(1, MAX_DIM / Math.max(video.videoWidth, video.videoHeight))
+  canvas.width = Math.round(video.videoWidth * scale)
+  canvas.height = Math.round(video.videoHeight * scale)
+
   const ctx = canvas.getContext('2d')
   if (cameraStep.value === 'selfie') { ctx.translate(canvas.width, 0); ctx.scale(-1, 1) }
-  ctx.drawImage(video, 0, 0)
-  capturedPhoto.value = canvas.toDataURL('image/jpeg', 0.85)
+  ctx.drawImage(video, 0, 0, canvas.width, canvas.height)
+  capturedPhoto.value = canvas.toDataURL('image/jpeg', 0.72)
 }
 
 function retakePhoto() { capturedPhoto.value = null }
@@ -695,8 +700,10 @@ async function submitCheck() {
 
     registeredAt.value = new Date(now).toLocaleString('es-MX')
     showSuccessModal.value = true
-  } catch {
-    alert('Error al registrar. Intenta de nuevo.')
+  } catch (err) {
+    const status = err?.response?.status
+    const msg = err?.response?.data?.error || ''
+    alert(`Error al registrar. Intenta de nuevo.${status ? ` (${status}${msg ? ': ' + msg : ''})` : ''}`)
   } finally {
     processing.value = false
     photoSite = null
