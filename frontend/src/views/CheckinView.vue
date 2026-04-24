@@ -214,7 +214,6 @@
               <HandRaisedIcon v-else class="w-10 h-10 text-rose-400" />
             </div>
             <h3 class="text-2xl font-bold mb-1" style="color: var(--text);">
-            <h3 class="text-2xl font-bold mb-1" style="color: var(--text);">
               {{ checkType === 'entry' ? '¡Entrada Registrada!' : '¡Salida Registrada!' }}
             </h3>
             <p style="color: var(--text-muted);" class="text-sm mb-1">{{ registeredAt }}</p>
