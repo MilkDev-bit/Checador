@@ -157,9 +157,20 @@
                       </span>
                     </td>
                     <td>
-                      <div class="flex items-center gap-1">
-                        <button @click="openPhotosModal(r)" class="text-xs px-2 py-1 rounded-lg transition-all" style="color: var(--text-muted);">Fotos</button>
-                        <button @click="openRouteModal(r)" class="text-xs px-2 py-1 rounded-lg transition-all" style="color: var(--text-muted);">Ruta</button>
+                      <div class="flex items-center gap-2">
+                        <!-- Photo thumbnails -->
+                        <button v-if="r.photo_site_path || r.photo_selfie_path"
+                          @click="openPhotosModal(r)"
+                          class="flex items-center gap-1 flex-shrink-0">
+                          <img v-if="r.photo_site_path" :src="r.photo_site_path"
+                            class="w-8 h-8 rounded-md object-cover ring-1 ring-white/10 hover:ring-brand-400 transition-all" />
+                          <img v-if="r.photo_selfie_path" :src="r.photo_selfie_path"
+                            class="w-8 h-8 rounded-md object-cover ring-1 ring-white/10 hover:ring-brand-400 transition-all" />
+                        </button>
+                        <span v-else class="text-xs" style="color: var(--text-dim);">Sin fotos</span>
+                        <button @click="openRouteModal(r)" :disabled="r.location_count === 0"
+                          class="text-xs px-2 py-1 rounded-lg transition-all flex-shrink-0"
+                          :style="r.location_count > 0 ? 'color: #818cf8;' : 'color: var(--text-dim); opacity: 0.4;'">Mapa</button>
                       </div>
                     </td>
                   </tr>
@@ -257,9 +268,20 @@
                       </span>
                     </td>
                     <td>
-                      <div class="flex items-center gap-1">
-                        <button @click="openPhotosModal(r)" class="text-xs px-2 py-1 rounded-lg transition-all" style="color: var(--text-muted);">Fotos</button>
-                        <button @click="openRouteModal(r)" class="text-xs px-2 py-1 rounded-lg transition-all" style="color: var(--text-muted);">Ruta</button>
+                      <div class="flex items-center gap-2">
+                        <!-- Photo thumbnails -->
+                        <button v-if="r.photo_site_path || r.photo_selfie_path"
+                          @click="openPhotosModal(r)"
+                          class="flex items-center gap-1 flex-shrink-0">
+                          <img v-if="r.photo_site_path" :src="r.photo_site_path"
+                            class="w-8 h-8 rounded-md object-cover ring-1 ring-white/10 hover:ring-brand-400 transition-all" />
+                          <img v-if="r.photo_selfie_path" :src="r.photo_selfie_path"
+                            class="w-8 h-8 rounded-md object-cover ring-1 ring-white/10 hover:ring-brand-400 transition-all" />
+                        </button>
+                        <span v-else class="text-xs" style="color: var(--text-dim);">Sin fotos</span>
+                        <button @click="openRouteModal(r)" :disabled="r.location_count === 0"
+                          class="text-xs px-2 py-1 rounded-lg transition-all flex-shrink-0"
+                          :style="r.location_count > 0 ? 'color: #818cf8;' : 'color: var(--text-dim); opacity: 0.4;'">Mapa</button>
                       </div>
                     </td>
                   </tr>
@@ -342,10 +364,10 @@
 
       <!-- Route modal -->
       <Transition name="modal">
-        <div v-if="routeModal.show" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0"
-          style="background: rgba(0,0,0,0.8); backdrop-filter: blur(8px);">
-          <div class="w-full max-w-md glass-card max-h-[80vh] flex flex-col animate-in"
-            style="background: var(--modal-bg);">
+        <div v-if="routeModal.show" class="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style="background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
+          <div class="w-full max-w-2xl glass-card flex flex-col animate-in" style="background: var(--modal-bg); max-height: 90vh;">
+            <!-- Header -->
             <div class="flex items-center justify-between px-5 py-4 flex-shrink-0" style="border-bottom: 1px solid var(--border-subtle);">
               <div>
                 <h3 class="font-bold" style="color: var(--text);">Recorrido GPS</h3>
@@ -353,29 +375,25 @@
                   {{ routeModal.user }} · {{ routeModal.points.length }} puntos
                 </p>
               </div>
-              <button @click="routeModal.show = false"
-                class="w-8 h-8 rounded-lg flex items-center justify-center transition-all" style="color: var(--text-muted);">
-                <XMarkIcon class="w-5 h-5" />
-              </button>
-            </div>
-            <div class="overflow-y-auto flex-1 custom-scroll">
-              <div v-if="routeModal.points.length === 0" class="text-center py-8 text-sm" style="color: var(--text-muted);">
-                Sin puntos GPS registrados
-              </div>
-              <div v-for="(point, i) in routeModal.points" :key="point.id"
-                class="flex items-start gap-3 px-5 py-3 last:border-0" style="border-bottom: 1px solid var(--border-subtle);">
-                <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5"
-                  :style="i === 0 ? 'background: linear-gradient(135deg, #059669, #10b981);' : i === routeModal.points.length - 1 ? 'background: linear-gradient(135deg, #dc2626, #f43f5e);' : 'background: linear-gradient(135deg, #6366f1, #8b5cf6);'">
-                  {{ i + 1 }}
-                </div>
-                <div>
-                  <p class="text-sm font-mono" style="color: var(--text);">{{ point.latitude.toFixed(6) }}, {{ point.longitude.toFixed(6) }}</p>
-                  <p class="text-xs mt-0.5" style="color: var(--text-muted);">
-                    {{ formatDate(point.recorded_at) }} · ±{{ Math.round(point.accuracy) }}m
-                  </p>
-                </div>
+              <div class="flex items-center gap-2">
+                <a v-if="routeModal.points.length > 0"
+                  :href="googleMapsUrl(routeModal.points)"
+                  target="_blank" rel="noopener"
+                  class="btn-secondary btn-sm flex items-center gap-1 text-xs">
+                  <MapPinIcon class="w-3.5 h-3.5" /> Google Maps
+                </a>
+                <button @click="routeModal.show = false; destroyMap()"
+                  class="w-8 h-8 rounded-lg flex items-center justify-center transition-all" style="color: var(--text-muted);">
+                  <XMarkIcon class="w-5 h-5" />
+                </button>
               </div>
             </div>
+
+            <!-- Map or empty -->
+            <div v-if="routeModal.points.length === 0" class="text-center py-16 text-sm" style="color: var(--text-muted);">
+              Sin puntos GPS registrados
+            </div>
+            <div v-else ref="mapContainer" style="height: 460px; width: 100%; border-radius: 0 0 1rem 1rem; overflow: hidden;"></div>
           </div>
         </div>
       </Transition>
@@ -426,10 +444,12 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api'
+import L from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 import {
   CheckCircleIcon, MapPinIcon, ArrowRightOnRectangleIcon, SignalIcon,
   ClipboardDocumentListIcon, UsersIcon, ChartBarIcon, UserCircleIcon,
@@ -517,8 +537,53 @@ async function loadProjects() {
   } catch {}
 }
 
-// Route modal
+// Route modal + Leaflet map
+const mapContainer = ref(null)
+let leafletMap = null
 const routeModal = ref({ show: false, user: '', points: [] })
+
+function googleMapsUrl(points) {
+  if (!points.length) return '#'
+  if (points.length === 1) {
+    return `https://www.google.com/maps?q=${points[0].latitude},${points[0].longitude}`
+  }
+  const origin = `${points[0].latitude},${points[0].longitude}`
+  const dest = `${points[points.length - 1].latitude},${points[points.length - 1].longitude}`
+  const waypoints = points.slice(1, -1).map(p => `${p.latitude},${p.longitude}`).join('|')
+  const base = `https://www.google.com/maps/dir/?api=1&origin=${origin}&destination=${dest}&travelmode=walking`
+  return waypoints ? `${base}&waypoints=${encodeURIComponent(waypoints)}` : base
+}
+
+function destroyMap() {
+  if (leafletMap) { leafletMap.remove(); leafletMap = null }
+}
+
+watch(() => routeModal.value.show, async (show) => {
+  if (!show) { destroyMap(); return }
+  if (!routeModal.value.points.length) return
+  await nextTick()
+  if (!mapContainer.value) return
+  destroyMap()
+  const points = routeModal.value.points
+  const coords = points.map(p => [p.latitude, p.longitude])
+  leafletMap = L.map(mapContainer.value).setView(coords[0], 16)
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap',
+    maxZoom: 19
+  }).addTo(leafletMap)
+  // Draw route line
+  L.polyline(coords, { color: '#6366f1', weight: 4, opacity: 0.85 }).addTo(leafletMap)
+  // Start marker (green)
+  L.circleMarker(coords[0], { radius: 9, color: '#059669', fillColor: '#10b981', fillOpacity: 1, weight: 2 })
+    .bindPopup(`<b>Inicio</b><br>${formatDate(points[0].recorded_at)}`).addTo(leafletMap)
+  // End marker (red)
+  if (coords.length > 1) {
+    L.circleMarker(coords[coords.length - 1], { radius: 9, color: '#dc2626', fillColor: '#f43f5e', fillOpacity: 1, weight: 2 })
+      .bindPopup(`<b>Fin</b><br>${formatDate(points[points.length - 1].recorded_at)}`).addTo(leafletMap)
+  }
+  leafletMap.fitBounds(L.polyline(coords).getBounds(), { padding: [24, 24] })
+})
+
 async function openRouteModal(record) {
   try {
     const { data } = await api.get(`/admin/records/${record.record_id}/route`)
