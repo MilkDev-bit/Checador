@@ -437,13 +437,6 @@ import {
 } from '@heroicons/vue/24/outline'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 
-function formatDate(iso) {
-  return new Date(iso).toLocaleString('es-MX', {
-    month: 'short', day: 'numeric',
-    hour: '2-digit', minute: '2-digit'
-  })
-}
-
 const auth = useAuthStore()
 const router = useRouter()
 
