@@ -373,36 +373,93 @@
 
       <!-- Route modal -->
       <Transition name="modal">
-        <div v-if="routeModal.show" class="fixed inset-0 z-50 flex items-center justify-center px-4"
-          style="background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
-          <div class="w-full max-w-2xl glass-card flex flex-col animate-in" style="background: var(--modal-bg); max-height: 90vh;">
-            <!-- Header -->
-            <div class="flex items-center justify-between px-5 py-4 flex-shrink-0" style="border-bottom: 1px solid var(--border-subtle);">
-              <div>
-                <h3 class="font-bold" style="color: var(--text);">Recorrido GPS</h3>
-                <p class="text-xs mt-0.5" style="color: var(--text-muted);">
-                  {{ routeModal.user }} · {{ routeModal.points.length }} puntos
-                </p>
+        <div v-if="routeModal.show" class="fixed inset-0 z-50 flex items-center justify-center px-3 py-4"
+          style="background: rgba(0,0,0,0.88); backdrop-filter: blur(10px);">
+          <div class="w-full max-w-3xl glass-card flex flex-col animate-in overflow-hidden"
+            style="background: var(--modal-bg); max-height: 94vh; border: 1px solid rgba(99,102,241,0.2);">
+
+            <!-- Header premium -->
+            <div class="flex items-center justify-between px-5 py-4 flex-shrink-0"
+              style="background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.1)); border-bottom: 1px solid var(--border-subtle);">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                  <MapPinIcon class="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <h3 class="font-bold text-base" style="color: var(--text);">Recorrido GPS</h3>
+                  <p class="text-xs mt-0.5" style="color: var(--text-muted);">{{ routeModal.user }}</p>
+                </div>
               </div>
               <div class="flex items-center gap-2">
                 <a v-if="routeModal.points.length > 0"
                   :href="googleMapsUrl(routeModal.points)"
                   target="_blank" rel="noopener"
-                  class="btn-secondary btn-sm flex items-center gap-1 text-xs">
-                  <MapPinIcon class="w-3.5 h-3.5" /> Google Maps
+                  class="btn-secondary btn-sm flex items-center gap-1.5 text-xs">
+                  <MapPinIcon class="w-3.5 h-3.5" /> Ver en Google Maps
                 </a>
                 <button @click="routeModal.show = false; destroyMap()"
-                  class="w-8 h-8 rounded-lg flex items-center justify-center transition-all" style="color: var(--text-muted);">
+                  class="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:bg-white/10" style="color: var(--text-muted);">
                   <XMarkIcon class="w-5 h-5" />
                 </button>
               </div>
             </div>
 
+            <!-- Stats bar -->
+            <div v-if="routeModal.points.length > 0"
+              class="flex items-center gap-4 px-5 py-2.5 flex-shrink-0 flex-wrap"
+              style="background: rgba(99,102,241,0.05); border-bottom: 1px solid var(--border-subtle);">
+              <div class="flex items-center gap-1.5">
+                <div class="w-3 h-3 rounded-full bg-emerald-400 flex-shrink-0"></div>
+                <span class="text-xs" style="color: var(--text-muted);">Inicio:</span>
+                <span class="text-xs font-semibold" style="color: var(--text);">{{ formatTimeOnly(routeModal.points[0]?.recorded_at) }}</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <div class="w-3 h-3 rounded-full bg-rose-400 flex-shrink-0"></div>
+                <span class="text-xs" style="color: var(--text-muted);">Fin:</span>
+                <span class="text-xs font-semibold" style="color: var(--text);">{{ formatTimeOnly(routeModal.points[routeModal.points.length-1]?.recorded_at) }}</span>
+              </div>
+              <div class="flex items-center gap-1.5">
+                <SignalIcon class="w-3.5 h-3.5 text-brand-400" />
+                <span class="text-xs font-semibold" style="color: var(--text);">{{ routeModal.points.length }} puntos GPS</span>
+              </div>
+              <div v-if="routeModal.duration" class="flex items-center gap-1.5">
+                <span class="text-xs" style="color: var(--text-muted);">Duración:</span>
+                <span class="text-xs font-semibold" style="color: var(--text);">{{ routeModal.duration }}</span>
+              </div>
+            </div>
+
             <!-- Map or empty -->
-            <div v-if="routeModal.points.length === 0" class="text-center py-16 text-sm" style="color: var(--text-muted);">
+            <div v-if="routeModal.points.length === 0" class="text-center py-20 text-sm" style="color: var(--text-muted);">
+              <MapPinIcon class="w-10 h-10 mx-auto mb-3 opacity-30" />
               Sin puntos GPS registrados
             </div>
-            <div v-else ref="mapContainer" style="height: 460px; width: 100%; border-radius: 0 0 1rem 1rem; overflow: hidden;"></div>
+            <div v-else class="flex-1 overflow-auto">
+              <div ref="mapContainer" style="height: 420px; width: 100%;"></div>
+
+              <!-- Address section -->
+              <div class="px-5 py-4" style="border-top: 1px solid var(--border-subtle);">
+                <div class="flex items-start gap-3">
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                    style="background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.25);">
+                    <MapPinIcon class="w-4 h-4 text-brand-400" />
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-xs font-semibold mb-1" style="color: var(--text-muted);">📍 Dirección detectada (punto de inicio)</p>
+                    <div v-if="routeModal.loadingAddress" class="flex items-center gap-2">
+                      <div class="w-3 h-3 border border-brand-500/40 border-t-brand-500 rounded-full animate-spin"></div>
+                      <span class="text-xs" style="color: var(--text-muted);">Obteniendo dirección...</span>
+                    </div>
+                    <p v-else-if="routeModal.address" class="text-sm font-medium" style="color: var(--text);">{{ routeModal.address }}</p>
+                    <p v-else class="text-xs" style="color: var(--text-dim);">Dirección no disponible</p>
+                    <p v-if="routeModal.points.length > 0" class="text-xs mt-1" style="color: var(--text-dim);">
+                      Coordenadas: {{ routeModal.points[0].latitude.toFixed(6) }}, {{ routeModal.points[0].longitude.toFixed(6) }}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </Transition>
@@ -588,7 +645,7 @@ async function loadProjects() {
 // Route modal + Leaflet map
 const mapContainer = ref(null)
 let leafletMap = null
-const routeModal = ref({ show: false, user: '', points: [] })
+const routeModal = ref({ show: false, user: '', points: [], duration: '', address: '', loadingAddress: false })
 
 function googleMapsUrl(points) {
   if (!points.length) return '#'
@@ -614,31 +671,78 @@ watch(() => routeModal.value.show, async (show) => {
   destroyMap()
   const points = routeModal.value.points
   const coords = points.map(p => [p.latitude, p.longitude])
-  leafletMap = L.map(mapContainer.value).setView(coords[0], 16)
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap',
-    maxZoom: 19
+
+  // Dark-friendly tile layer
+  leafletMap = L.map(mapContainer.value, { zoomControl: true }).setView(coords[0], 17)
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>',
+    subdomains: 'abcd',
+    maxZoom: 20
   }).addTo(leafletMap)
-  // Draw route line
-  L.polyline(coords, { color: '#6366f1', weight: 4, opacity: 0.85 }).addTo(leafletMap)
+
+  // Route line — glowing effect
+  L.polyline(coords, { color: '#6366f1', weight: 5, opacity: 0.9 }).addTo(leafletMap)
+  L.polyline(coords, { color: '#a78bfa', weight: 2, opacity: 0.4 }).addTo(leafletMap)
+
   // Start marker (green)
-  L.circleMarker(coords[0], { radius: 9, color: '#059669', fillColor: '#10b981', fillOpacity: 1, weight: 2 })
-    .bindPopup(`<b>Inicio</b><br>${formatDate(points[0].recorded_at)}`).addTo(leafletMap)
+  const startIcon = L.divIcon({
+    html: `<div style="width:18px;height:18px;background:#10b981;border:3px solid white;border-radius:50%;box-shadow:0 0 8px rgba(16,185,129,0.8);"></div>`,
+    className: '', iconAnchor: [9, 9]
+  })
+  L.marker(coords[0], { icon: startIcon })
+    .bindPopup(`<b style="color:#10b981">🟢 Inicio</b><br><span style="font-size:11px">${formatDate(points[0].recorded_at)}</span>`)
+    .addTo(leafletMap)
+
   // End marker (red)
   if (coords.length > 1) {
-    L.circleMarker(coords[coords.length - 1], { radius: 9, color: '#dc2626', fillColor: '#f43f5e', fillOpacity: 1, weight: 2 })
-      .bindPopup(`<b>Fin</b><br>${formatDate(points[points.length - 1].recorded_at)}`).addTo(leafletMap)
+    const endIcon = L.divIcon({
+      html: `<div style="width:18px;height:18px;background:#f43f5e;border:3px solid white;border-radius:50%;box-shadow:0 0 8px rgba(244,63,94,0.8);"></div>`,
+      className: '', iconAnchor: [9, 9]
+    })
+    L.marker(coords[coords.length - 1], { icon: endIcon })
+      .bindPopup(`<b style="color:#f43f5e">🔴 Fin</b><br><span style="font-size:11px">${formatDate(points[points.length - 1].recorded_at)}</span>`)
+      .addTo(leafletMap)
   }
-  leafletMap.fitBounds(L.polyline(coords).getBounds(), { padding: [24, 24] })
+
+  leafletMap.fitBounds(L.polyline(coords).getBounds(), { padding: [32, 32] })
+
+  // Reverse geocoding with Nominatim
+  routeModal.value.loadingAddress = true
+  routeModal.value.address = ''
+  try {
+    const { latitude: lat, longitude: lon } = points[0]
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lon}&format=json&addressdetails=1`,
+      { headers: { 'Accept-Language': 'es' } }
+    )
+    const geo = await res.json()
+    routeModal.value.address = geo.display_name || ''
+  } catch {
+    routeModal.value.address = ''
+  } finally {
+    routeModal.value.loadingAddress = false
+  }
 })
 
 async function openRouteModal(record) {
   try {
     const { data } = await api.get(`/admin/records/${record.record_id}/route`)
+    // Calculate duration
+    let duration = ''
+    if (data.length >= 2) {
+      const ms = new Date(data[data.length - 1].recorded_at) - new Date(data[0].recorded_at)
+      const totalMin = Math.round(ms / 60000)
+      duration = totalMin >= 60
+        ? `${Math.floor(totalMin / 60)}h ${totalMin % 60}min`
+        : `${totalMin} min`
+    }
     routeModal.value = {
       show: true,
       user: `${record.first_name} ${record.last_name}`,
-      points: data
+      points: data,
+      duration,
+      address: '',
+      loadingAddress: false
     }
   } catch {}
 }
@@ -682,6 +786,11 @@ function formatDate(iso) {
 
 function formatDateShort(iso) {
   return new Date(iso).toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })
+}
+
+function formatTimeOnly(iso) {
+  if (!iso) return '--:--'
+  return new Date(iso).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
 }
 
 function handleLogout() {
