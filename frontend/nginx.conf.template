@@ -30,7 +30,6 @@ server {
     # Security headers
     add_header X-Frame-Options "SAMEORIGIN";
     add_header X-Content-Type-Options "nosniff";
-    add_header Permissions-Policy "geolocation=*, camera=*";
 
     gzip on;
     gzip_types text/plain text/css application/json application/javascript text/xml application/xml image/svg+xml;

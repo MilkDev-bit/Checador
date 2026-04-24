@@ -144,7 +144,8 @@
                   {{ locationErrorType === 'inapp' ? 'El browser de WhatsApp no tiene acceso al GPS' :
                      locationErrorType === 'unavailable' ? 'No se detectó señal GPS' :
                      locationErrorType === 'timeout' ? 'El GPS tardó demasiado en responder' :
-                     'Sigue estos pasos para activarla' }}
+                     'Sigue los pasos de abajo para activarla' }}
+                  <span v-if="locationErrorCode" class="ml-1 opacity-50">(código {{ locationErrorCode }})</span>
                 </p>
               </div>
             </div>
@@ -192,21 +193,45 @@
 
             <!-- Permission denied -->
             <template v-else>
-              <div class="rounded-xl p-3 mb-4 flex items-start gap-2"
+              <!-- Paso 0: Verificar Servicios de Localización globales -->
+              <div class="rounded-xl p-3 mb-3 flex items-start gap-2"
                 style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25);">
                 <ExclamationTriangleIcon class="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
                 <p class="text-xs leading-relaxed" style="color: var(--text-muted);">
-                  Safari ya tiene <strong style="color: var(--text);">bloqueada</strong> la ubicación para este sitio. El diálogo de permiso no volverá a aparecer hasta que lo reactives.
+                  iOS bloqueó la ubicación. Hay <strong style="color: var(--text);">dos lugares</strong> donde revisar:
                 </p>
               </div>
 
-              <!-- Option 1: directly from Safari address bar (fastest) -->
+              <!-- Paso 1: Configuración iOS global (causa más común) -->
               <div class="rounded-xl p-4 mb-3" style="background: rgba(99,102,241,0.10); border: 2px solid rgba(99,102,241,0.35);">
-                <p class="text-xs font-bold mb-2" style="color: var(--text);">Opción 1 — Desde Safari (más rápido)</p>
+                <p class="text-xs font-bold mb-2" style="color: var(--text);">① Configuración del iPhone (revisa primero)</p>
                 <ol class="space-y-1.5">
                   <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
                     <span class="font-bold text-brand-400 flex-shrink-0">1.</span>
-                    Toca las letras <strong style="color: var(--text);">"AA"</strong> a la izquierda de la barra de dirección.
+                    Abre <strong style="color: var(--text);">Configuración → Privacidad y Seguridad → Servicios de Localización</strong>.
+                  </li>
+                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                    <span class="font-bold text-brand-400 flex-shrink-0">2.</span>
+                    Asegúrate de que los Servicios de Localización estén <strong style="color: var(--text);">activados</strong> (toggle verde).
+                  </li>
+                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                    <span class="font-bold text-brand-400 flex-shrink-0">3.</span>
+                    En la lista busca <strong style="color: var(--text);">Safari</strong> → ponlo en <strong style="color: var(--text);">"Al usar la app"</strong>.
+                  </li>
+                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                    <span class="font-bold text-brand-400 flex-shrink-0">4.</span>
+                    Regresa aquí y toca <strong style="color: var(--text);">"Recargar página"</strong>.
+                  </li>
+                </ol>
+              </div>
+
+              <!-- Paso 2: AA del sitio en Safari -->
+              <div class="rounded-xl p-4 mb-3" style="background: rgba(99,102,241,0.05); border: 1px solid rgba(99,102,241,0.2);">
+                <p class="text-xs font-bold mb-2" style="color: var(--text);">② Permiso del sitio en Safari</p>
+                <ol class="space-y-1.5">
+                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                    <span class="font-bold text-brand-400 flex-shrink-0">1.</span>
+                    Toca las letras <strong style="color: var(--text);">"AA"</strong> a la izquierda de la barra de dirección de Safari.
                   </li>
                   <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
                     <span class="font-bold text-brand-400 flex-shrink-0">2.</span>
@@ -214,26 +239,11 @@
                   </li>
                   <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
                     <span class="font-bold text-brand-400 flex-shrink-0">3.</span>
-                    En <strong style="color: var(--text);">Ubicación</strong> cambia a <strong style="color: var(--text);">"Permitir"</strong>.
+                    En <strong style="color: var(--text);">Ubicación</strong> selecciona <strong style="color: var(--text);">"Permitir"</strong>.
                   </li>
                   <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
                     <span class="font-bold text-brand-400 flex-shrink-0">4.</span>
-                    Regresa aquí y pulsa <strong style="color: var(--text);">Reintentar</strong>.
-                  </li>
-                </ol>
-              </div>
-
-              <!-- Option 2: from iOS Settings -->
-              <div class="rounded-xl p-4 mb-3" style="background: rgba(99,102,241,0.05); border: 1px solid rgba(99,102,241,0.15);">
-                <p class="text-xs font-semibold mb-2 text-brand-400">Opción 2 — Desde Configuración del iPhone</p>
-                <ol class="space-y-1.5">
-                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                    <span class="font-bold text-brand-400 flex-shrink-0">1.</span>
-                    Abre <strong style="color: var(--text);">Configuración → Privacidad y Seguridad → Localización → Safari</strong>.
-                  </li>
-                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                    <span class="font-bold text-brand-400 flex-shrink-0">2.</span>
-                    Cambia a <strong style="color: var(--text);">"Al usar la app"</strong> y regresa aquí.
+                    Regresa aquí y toca <strong style="color: var(--text);">"Recargar página"</strong>.
                   </li>
                 </ol>
               </div>
@@ -244,14 +254,10 @@
                 <ol class="space-y-1.5">
                   <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
                     <span class="font-bold text-emerald-400 flex-shrink-0">1.</span>
-                    Toca el ícono de <strong style="color: var(--text);">candado</strong> junto a la URL.
+                    Toca el ícono de <strong style="color: var(--text);">candado</strong> junto a la URL → <strong style="color: var(--text);">Permisos → Ubicación → Permitir</strong>.
                   </li>
                   <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
                     <span class="font-bold text-emerald-400 flex-shrink-0">2.</span>
-                    Toca <strong style="color: var(--text);">Permisos → Ubicación → Permitir</strong>.
-                  </li>
-                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                    <span class="font-bold text-emerald-400 flex-shrink-0">3.</span>
                     Recarga la página y vuelve a intentarlo.
                   </li>
                 </ol>
@@ -508,6 +514,12 @@ function cancelProcess() {
 // iOS Safari user-gesture call stack. Even a single ref assignment before
 // the call can cause WebKit to break the gesture chain.
 function requestLocation() {
+  if (!navigator.geolocation) {
+    locationErrorCode.value = 0
+    locationErrorType.value = 'unavailable'
+    showLocationErrorModal.value = true
+    return
+  }
   // ← getCurrentPosition is the absolute first call. No state changes before this.
   navigator.geolocation.getCurrentPosition(
     (position) => {
