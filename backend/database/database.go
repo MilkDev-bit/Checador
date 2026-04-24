@@ -57,10 +57,13 @@ func Migrate() {
 			user_id UUID NOT NULL REFERENCES users(id),
 			type VARCHAR(10) NOT NULL CHECK (type IN ('entry','exit')),
 			timestamp TIMESTAMP NOT NULL,
-			photo_site_path VARCHAR(500),
-			photo_selfie_path VARCHAR(500),
+			photo_site_path TEXT,
+			photo_selfie_path TEXT,
 			created_at TIMESTAMP DEFAULT NOW()
 		)`,
+		// Widen existing columns from VARCHAR(500) to TEXT in case the table already exists
+		`ALTER TABLE check_records ALTER COLUMN photo_site_path TYPE TEXT`,
+		`ALTER TABLE check_records ALTER COLUMN photo_selfie_path TYPE TEXT`,
 		`CREATE TABLE IF NOT EXISTS location_points (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			check_record_id UUID NOT NULL REFERENCES check_records(id),
@@ -72,11 +75,25 @@ func Migrate() {
 		)`,
 	}
 
-	for _, q := range queries {
+	// Fatal migrations — table creation must succeed
+	createQueries := queries[:len(queries)-2]
+	for _, q := range createQueries {
 		if _, err := DB.Exec(q); err != nil {
 			log.Fatalf("Migration error: %v", err)
 		}
 	}
+
+	// Non-fatal migrations — ALTER TABLE to fix existing deployed columns
+	alterQueries := []string{
+		`ALTER TABLE check_records ALTER COLUMN photo_site_path TYPE TEXT`,
+		`ALTER TABLE check_records ALTER COLUMN photo_selfie_path TYPE TEXT`,
+	}
+	for _, q := range alterQueries {
+		if _, err := DB.Exec(q); err != nil {
+			log.Printf("Migration warning (non-fatal): %v", err)
+		}
+	}
+
 	log.Println("Database migrated")
 }
 
