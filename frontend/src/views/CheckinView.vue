@@ -192,6 +192,11 @@
 
             <!-- Permission denied -->
             <template v-else>
+              <!-- Debug info -->
+              <p class="text-xs font-mono mb-3 px-2 py-1 rounded" style="background: rgba(255,255,255,0.05); color: var(--text-muted);">
+                Error código: {{ locationErrorCode }}
+              </p>
+
               <!-- If user came from WhatsApp/app, suggest opening in Safari -->
               <div v-if="isIOSInAppBrowser()" class="rounded-xl p-4 mb-3"
                 style="background: rgba(99,102,241,0.12); border: 2px solid rgba(99,102,241,0.4);">
@@ -199,40 +204,54 @@
                 <ol class="space-y-1.5">
                   <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
                     <span class="font-bold text-brand-400 flex-shrink-0">1.</span>
-                    Toca los <strong style="color: var(--text);">tres puntos (···)</strong> o el ícono de <strong style="color: var(--text);">compartir</strong> en la barra inferior.
+                    Toca los <strong style="color: var(--text);">tres puntos (···)</strong> en la barra inferior.
                   </li>
                   <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
                     <span class="font-bold text-brand-400 flex-shrink-0">2.</span>
                     Selecciona <strong style="color: var(--text);">"Abrir en Safari"</strong>.
                   </li>
-                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                    <span class="font-bold text-brand-400 flex-shrink-0">3.</span>
-                    En Safari, el GPS funcionará correctamente.
-                  </li>
                 </ol>
               </div>
 
-              <p v-if="isIOSInAppBrowser()" class="text-xs text-center mb-2" style="color: var(--text-muted);">— o si ya estás en Safari —</p>
-
-              <div class="rounded-xl p-4 mb-3" style="background: rgba(99,102,241,0.07); border: 1px solid rgba(99,102,241,0.2);">
-                <p class="text-xs font-semibold mb-2 text-brand-400">Activar en Configuración (iPhone)</p>
+              <!-- iOS: fastest fix is directly in Safari's address bar -->
+              <div class="rounded-xl p-4 mb-3" style="background: rgba(99,102,241,0.10); border: 2px solid rgba(99,102,241,0.35);">
+                <p class="text-xs font-bold mb-2" style="color: var(--text);">Activar desde Safari (más rápido)</p>
                 <ol class="space-y-1.5">
                   <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
                     <span class="font-bold text-brand-400 flex-shrink-0">1.</span>
-                    Abre <strong style="color: var(--text);">Configuración</strong> del iPhone.
+                    Toca las letras <strong style="color: var(--text);">"AA"</strong> a la izquierda de la barra de dirección en Safari.
                   </li>
                   <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
                     <span class="font-bold text-brand-400 flex-shrink-0">2.</span>
-                    Ve a <strong style="color: var(--text);">Privacidad y Seguridad → Localización → Safari</strong>.
+                    Toca <strong style="color: var(--text);">"Ajustes del sitio web"</strong>.
                   </li>
                   <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
                     <span class="font-bold text-brand-400 flex-shrink-0">3.</span>
-                    Selecciona <strong style="color: var(--text);">"Al usar la app"</strong> y regresa aquí.
+                    En <strong style="color: var(--text);">Ubicación</strong>, cambia de <strong style="color: var(--text);">"Denegar"</strong> a <strong style="color: var(--text);">"Permitir"</strong>.
+                  </li>
+                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                    <span class="font-bold text-brand-400 flex-shrink-0">4.</span>
+                    Regresa aquí y pulsa <strong style="color: var(--text);">Reintentar</strong>.
                   </li>
                 </ol>
               </div>
+
+              <div class="rounded-xl p-4 mb-3" style="background: rgba(99,102,241,0.05); border: 1px solid rgba(99,102,241,0.15);">
+                <p class="text-xs font-semibold mb-2 text-brand-400">Alternativa: desde Configuración del iPhone</p>
+                <ol class="space-y-1.5">
+                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                    <span class="font-bold text-brand-400 flex-shrink-0">1.</span>
+                    <strong style="color: var(--text);">Configuración → Privacidad y Seguridad → Localización → Sitios web de Safari</strong>
+                  </li>
+                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
+                    <span class="font-bold text-brand-400 flex-shrink-0">2.</span>
+                    Cambia a <strong style="color: var(--text);">"Preguntar"</strong> o <strong style="color: var(--text);">"Al usar"</strong>.
+                  </li>
+                </ol>
+              </div>
+
               <div class="rounded-xl p-4 mb-5" style="background: rgba(16,185,129,0.07); border: 1px solid rgba(16,185,129,0.2);">
-                <p class="text-xs font-semibold mb-2 text-emerald-400">En Android</p>
+                <p class="text-xs font-semibold mb-2 text-emerald-400">En Android (Chrome)</p>
                 <ol class="space-y-1.5">
                   <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
                     <span class="font-bold text-emerald-400 flex-shrink-0">1.</span>
@@ -251,7 +270,7 @@
             </template>
 
             <div class="space-y-2">
-              <button v-if="locationErrorType !== 'inapp'" @click="showLocationErrorModal = false; startCheckProcess(checkType)" class="btn-primary btn-lg w-full">
+              <button v-if="locationErrorType !== 'inapp'" @click="showLocationErrorModal = false; startCheckProcess(checkType.value)" class="btn-primary btn-lg w-full">
                 <ArrowPathRoundedSquareIcon class="w-5 h-5" /> Reintentar
               </button>
               <button @click="cancelProcess" class="btn-secondary btn-md w-full">Cerrar</button>
@@ -408,6 +427,7 @@ const processing = ref(false)
 const checkType = ref('entry')
 const showLocationErrorModal = ref(false)
 const locationErrorType = ref('denied')
+const locationErrorCode = ref(0)
 const showCameraModal = ref(false)
 const showSuccessModal = ref(false)
 const registeredAt = ref('')
@@ -482,7 +502,8 @@ function requestLocation() {
     },
     (err) => {
       processing.value = false
-      const code = err?.code
+      const code = err?.code ?? -1
+      locationErrorCode.value = code
       if (code === 1) locationErrorType.value = 'denied'           // PERMISSION_DENIED
       else if (code === 2) locationErrorType.value = 'unavailable'  // POSITION_UNAVAILABLE
       else locationErrorType.value = 'timeout'                      // TIMEOUT or unknown
