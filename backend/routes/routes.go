@@ -39,6 +39,7 @@ func Register(r *gin.Engine) {
 		admin.GET("/stats", handlers.AdminGetStats)
 		admin.GET("/records", handlers.AdminGetRecords)
 		admin.GET("/records/:id/route", handlers.AdminGetRecordRoute)
+		admin.GET("/records/:id/photos", handlers.AdminGetRecordPhotos)
 		admin.GET("/users", handlers.AdminGetUsers)
 		admin.GET("/projects", handlers.AdminGetProjects)
 	}

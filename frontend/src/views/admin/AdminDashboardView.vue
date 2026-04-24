@@ -158,15 +158,10 @@
                     </td>
                     <td>
                       <div class="flex items-center gap-2">
-                        <!-- Photo thumbnails -->
-                        <button v-if="r.photo_site_path || r.photo_selfie_path"
+                        <button v-if="r.has_site_photo || r.has_selfie_photo"
                           @click="openPhotosModal(r)"
-                          class="flex items-center gap-1 flex-shrink-0">
-                          <img v-if="r.photo_site_path" :src="r.photo_site_path"
-                            class="w-8 h-8 rounded-md object-cover ring-1 ring-white/10 hover:ring-brand-400 transition-all" />
-                          <img v-if="r.photo_selfie_path" :src="r.photo_selfie_path"
-                            class="w-8 h-8 rounded-md object-cover ring-1 ring-white/10 hover:ring-brand-400 transition-all" />
-                        </button>
+                          class="text-xs px-2 py-1 rounded-lg transition-all flex-shrink-0"
+                          style="color: #a78bfa;">Fotos</button>
                         <span v-else class="text-xs" style="color: var(--text-dim);">Sin fotos</span>
                         <button @click="openRouteModal(r)" :disabled="r.location_count === 0"
                           class="text-xs px-2 py-1 rounded-lg transition-all flex-shrink-0"
@@ -269,15 +264,10 @@
                     </td>
                     <td>
                       <div class="flex items-center gap-2">
-                        <!-- Photo thumbnails -->
-                        <button v-if="r.photo_site_path || r.photo_selfie_path"
+                        <button v-if="r.has_site_photo || r.has_selfie_photo"
                           @click="openPhotosModal(r)"
-                          class="flex items-center gap-1 flex-shrink-0">
-                          <img v-if="r.photo_site_path" :src="r.photo_site_path"
-                            class="w-8 h-8 rounded-md object-cover ring-1 ring-white/10 hover:ring-brand-400 transition-all" />
-                          <img v-if="r.photo_selfie_path" :src="r.photo_selfie_path"
-                            class="w-8 h-8 rounded-md object-cover ring-1 ring-white/10 hover:ring-brand-400 transition-all" />
-                        </button>
+                          class="text-xs px-2 py-1 rounded-lg transition-all flex-shrink-0"
+                          style="color: #a78bfa;">Fotos</button>
                         <span v-else class="text-xs" style="color: var(--text-dim);">Sin fotos</span>
                         <button @click="openRouteModal(r)" :disabled="r.location_count === 0"
                           class="text-xs px-2 py-1 rounded-lg transition-all flex-shrink-0"
@@ -597,14 +587,19 @@ async function openRouteModal(record) {
 
 // Photos modal
 const photosModal = ref({ show: false, user: '', date: '', site: '', selfie: '' })
-function openPhotosModal(record) {
+async function openPhotosModal(record) {
   photosModal.value = {
     show: true,
     user: `${record.first_name} ${record.last_name}`,
     date: formatDate(record.timestamp),
-    site: record.photo_site_path || '',
-    selfie: record.photo_selfie_path || ''
+    site: '',
+    selfie: ''
   }
+  try {
+    const { data } = await api.get(`/admin/records/${record.record_id}/photos`)
+    photosModal.value.site = data.photo_site_path || ''
+    photosModal.value.selfie = data.photo_selfie_path || ''
+  } catch {}
 }
 
 function formatDate(iso) {

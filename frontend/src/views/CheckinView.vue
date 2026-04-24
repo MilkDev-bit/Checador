@@ -393,7 +393,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, nextTick, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api'
 import {
@@ -522,7 +522,7 @@ function requestLocation() {
   }
   // ← getCurrentPosition is the absolute first call. No state changes before this.
   navigator.geolocation.getCurrentPosition(
-    (position) => {
+    async (position) => {
       processing.value = false
       locationPoints.push({
         latitude: position.coords.latitude,
@@ -543,9 +543,9 @@ function requestLocation() {
       isTracking.value = true
       requestWakeLock()
       cameraStep.value = 'site'
-      startCamera('environment').then(() => {
-        showCameraModal.value = true
-      })
+      showCameraModal.value = true
+      await nextTick()
+      await startCamera('environment')
     },
     (err) => {
       processing.value = false
