@@ -12,17 +12,21 @@ import (
 )
 
 type AdminRecordRow struct {
-	RecordID       string    `json:"record_id"`
-	UserID         string    `json:"user_id"`
-	FirstName      string    `json:"first_name"`
-	LastName       string    `json:"last_name"`
-	ProjectName    string    `json:"project_name"`
-	Email          string    `json:"email"`
-	Type           string    `json:"type"`
-	Timestamp      time.Time `json:"timestamp"`
-	HasSitePhoto   bool      `json:"has_site_photo"`
-	HasSelfiePhoto bool      `json:"has_selfie_photo"`
-	LocationCount  int       `json:"location_count"`
+	RecordID         string    `json:"record_id"`
+	UserID           string    `json:"user_id"`
+	FirstName        string    `json:"first_name"`
+	LastName         string    `json:"last_name"`
+	ProjectName      string    `json:"project_name"`
+	Email            string    `json:"email"`
+	Type             string    `json:"type"`
+	Timestamp        time.Time `json:"timestamp"`
+	HasSitePhoto     bool      `json:"has_site_photo"`
+	HasSelfiePhoto   bool      `json:"has_selfie_photo"`
+	LocationCount    int       `json:"location_count"`
+	IsSuspicious     bool      `json:"is_suspicious"`
+	SuspiciousReason string    `json:"suspicious_reason,omitempty"`
+	IPCountry        string    `json:"ip_country,omitempty"`
+	IPCity           string    `json:"ip_city,omitempty"`
 }
 
 type AdminStats struct {
@@ -123,7 +127,8 @@ func AdminGetRecords(c *gin.Context) {
 	           cr.type, cr.timestamp,
 	           (cr.photo_site_path IS NOT NULL AND cr.photo_site_path != '') AS has_site_photo,
 	           (cr.photo_selfie_path IS NOT NULL AND cr.photo_selfie_path != '') AS has_selfie_photo,
-	           (SELECT COUNT(*) FROM location_points lp WHERE lp.check_record_id = cr.id)
+	           (SELECT COUNT(*) FROM location_points lp WHERE lp.check_record_id = cr.id),
+	           cr.is_suspicious, COALESCE(cr.suspicious_reason,''), COALESCE(cr.ip_country,''), COALESCE(cr.ip_city,'')
 	           FROM check_records cr JOIN users u ON cr.user_id = u.id`
 	if len(where) > 0 {
 		query += " WHERE " + strings.Join(where, " AND ")
@@ -141,7 +146,8 @@ func AdminGetRecords(c *gin.Context) {
 	for rows.Next() {
 		var r AdminRecordRow
 		rows.Scan(&r.RecordID, &r.UserID, &r.FirstName, &r.LastName, &r.ProjectName, &r.Email,
-			&r.Type, &r.Timestamp, &r.HasSitePhoto, &r.HasSelfiePhoto, &r.LocationCount)
+			&r.Type, &r.Timestamp, &r.HasSitePhoto, &r.HasSelfiePhoto, &r.LocationCount,
+			&r.IsSuspicious, &r.SuspiciousReason, &r.IPCountry, &r.IPCity)
 		records = append(records, r)
 	}
 

@@ -667,6 +667,11 @@ async function submitCheck() {
     const formData = new FormData()
     formData.append('type', checkType.value)
     formData.append('timestamp', now)
+    // Send GPS coords so backend can cross-check against IP geolocation
+    if (locationPoints.length > 0) {
+      formData.append('latitude', String(locationPoints[0].latitude))
+      formData.append('longitude', String(locationPoints[0].longitude))
+    }
     if (photoSite) formData.append('photo_site', dataURLtoBlob(photoSite), 'site.jpg')
     if (photoSelfie) formData.append('photo_selfie', dataURLtoBlob(photoSelfie), 'selfie.jpg')
 

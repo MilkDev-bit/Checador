@@ -20,6 +20,10 @@ type CheckRecord struct {
 	Timestamp       time.Time       `json:"timestamp"`
 	PhotoSitePath   string          `json:"photo_site_path,omitempty"`
 	PhotoSelfiePath string          `json:"photo_selfie_path,omitempty"`
+	IsSuspicious    bool            `json:"is_suspicious"`
+	SuspiciousReason string         `json:"suspicious_reason,omitempty"`
+	IPCountry       string          `json:"ip_country,omitempty"`
+	IPCity          string          `json:"ip_city,omitempty"`
 	LocationPoints  []LocationPoint `json:"location_points,omitempty"`
 	CreatedAt       time.Time       `json:"created_at"`
 }

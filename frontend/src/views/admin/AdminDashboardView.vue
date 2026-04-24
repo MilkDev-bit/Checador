@@ -135,10 +135,18 @@
                   <tr v-if="records.slice(0,8).length === 0">
                     <td colspan="6" class="text-center py-8" style="color: var(--text-muted);">Sin registros</td>
                   </tr>
-                  <tr v-for="r in records.slice(0, 8)" :key="r.record_id">
+                  <tr v-for="r in records.slice(0, 8)" :key="r.record_id"
+                    :style="r.is_suspicious ? 'background: rgba(245,158,11,0.06);' : ''">
                     <td>
-                      <p class="font-medium text-sm" style="color: var(--text);">{{ r.first_name }} {{ r.last_name }}</p>
-                      <p class="text-xs" style="color: var(--text-muted);">{{ r.email }}</p>
+                      <div class="flex items-center gap-1.5">
+                        <div>
+                          <p class="font-medium text-sm" style="color: var(--text);">{{ r.first_name }} {{ r.last_name }}</p>
+                          <p class="text-xs" style="color: var(--text-muted);">{{ r.email }}</p>
+                        </div>
+                        <ExclamationTriangleIcon v-if="r.is_suspicious"
+                          class="w-4 h-4 text-amber-400 flex-shrink-0"
+                          :title="r.suspicious_reason || 'Registro sospechoso'" />
+                      </div>
                     </td>
                     <td class="hidden sm:table-cell">
                       <span class="text-xs line-clamp-1 max-w-[140px] block" style="color: var(--text-muted);">{{ r.project_name }}</span>
@@ -241,10 +249,21 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr v-for="r in records" :key="r.record_id">
+                  <tr v-for="r in records" :key="r.record_id"
+                    :style="r.is_suspicious ? 'background: rgba(245,158,11,0.06);' : ''">
                     <td>
-                      <p class="font-medium text-sm" style="color: var(--text);">{{ r.first_name }} {{ r.last_name }}</p>
-                      <p class="text-xs" style="color: var(--text-muted);">{{ r.email }}</p>
+                      <div class="flex items-center gap-1.5">
+                        <div>
+                          <p class="font-medium text-sm" style="color: var(--text);">{{ r.first_name }} {{ r.last_name }}</p>
+                          <p class="text-xs" style="color: var(--text-muted);">{{ r.email }}</p>
+                        </div>
+                        <!-- Suspicious flag -->
+                        <button v-if="r.is_suspicious" @click="openSuspiciousModal(r)"
+                          class="flex-shrink-0 p-0.5 rounded"
+                          title="Ver detalle de alerta">
+                          <ExclamationTriangleIcon class="w-4 h-4 text-amber-400" />
+                        </button>
+                      </div>
                     </td>
                     <td class="hidden sm:table-cell">
                       <span class="text-xs line-clamp-1 max-w-[140px] block" style="color: var(--text-muted);">{{ r.project_name }}</span>
@@ -388,6 +407,45 @@
         </div>
       </Transition>
 
+      <!-- Suspicious alert modal -->
+      <Transition name="modal">
+        <div v-if="suspiciousModal.show" class="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style="background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
+          <div class="w-full max-w-md glass-card animate-in" style="background: var(--modal-bg);">
+            <div class="flex items-center justify-between px-5 py-4" style="border-bottom: 1px solid rgba(245,158,11,0.3);">
+              <div class="flex items-center gap-2">
+                <ExclamationTriangleIcon class="w-5 h-5 text-amber-400" />
+                <h3 class="font-bold text-amber-400">Alerta de fraude detectado</h3>
+              </div>
+              <button @click="suspiciousModal.show = false"
+                class="w-8 h-8 rounded-lg flex items-center justify-center" style="color: var(--text-muted);">
+                <XMarkIcon class="w-5 h-5" />
+              </button>
+            </div>
+            <div class="p-5 space-y-4">
+              <div class="rounded-xl p-4" style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.25);">
+                <p class="text-sm font-semibold mb-1" style="color: var(--text);">{{ suspiciousModal.user }}</p>
+                <p class="text-xs" style="color: var(--text-muted);">{{ suspiciousModal.date }}</p>
+              </div>
+              <div>
+                <p class="text-xs font-semibold mb-2 text-amber-400">Razón de la alerta:</p>
+                <p class="text-sm" style="color: var(--text);">{{ suspiciousModal.reason }}</p>
+              </div>
+              <div v-if="suspiciousModal.ipCountry" class="flex items-center gap-2">
+                <span class="text-xs" style="color: var(--text-dim);">IP detectada en:</span>
+                <span class="text-xs font-medium" style="color: var(--text);">{{ suspiciousModal.ipCity ? suspiciousModal.ipCity + ', ' : '' }}{{ suspiciousModal.ipCountry }}</span>
+              </div>
+              <div class="rounded-xl p-3" style="background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.2);">
+                <p class="text-xs" style="color: var(--text-muted);">
+                  El registro fue guardado normalmente. Esta alerta es solo informativa para que el administrador investigue.
+                </p>
+              </div>
+              <button @click="suspiciousModal.show = false" class="btn-secondary btn-md w-full">Cerrar</button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+
       <!-- Photos modal -->
       <Transition name="modal">
         <div v-if="photosModal.show" class="fixed inset-0 z-50 flex items-center justify-center px-4"
@@ -443,7 +501,7 @@ import 'leaflet/dist/leaflet.css'
 import {
   CheckCircleIcon, MapPinIcon, ArrowRightOnRectangleIcon, SignalIcon,
   ClipboardDocumentListIcon, UsersIcon, ChartBarIcon, UserCircleIcon,
-  BuildingOffice2Icon, CalendarIcon, MagnifyingGlassIcon, XMarkIcon
+  BuildingOffice2Icon, CalendarIcon, MagnifyingGlassIcon, XMarkIcon, ExclamationTriangleIcon
 } from '@heroicons/vue/24/outline'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 
@@ -583,6 +641,19 @@ async function openRouteModal(record) {
       points: data
     }
   } catch {}
+}
+
+// Suspicious modal
+const suspiciousModal = ref({ show: false, user: '', date: '', reason: '', ipCountry: '', ipCity: '' })
+function openSuspiciousModal(record) {
+  suspiciousModal.value = {
+    show: true,
+    user: `${record.first_name} ${record.last_name}`,
+    date: formatDate(record.timestamp),
+    reason: record.suspicious_reason || 'Sin detalle disponible',
+    ipCountry: record.ip_country || '',
+    ipCity: record.ip_city || ''
+  }
 }
 
 // Photos modal

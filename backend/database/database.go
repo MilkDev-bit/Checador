@@ -59,6 +59,10 @@ func Migrate() {
 			timestamp TIMESTAMP NOT NULL,
 			photo_site_path TEXT,
 			photo_selfie_path TEXT,
+			is_suspicious BOOLEAN NOT NULL DEFAULT FALSE,
+			suspicious_reason TEXT,
+			ip_country VARCHAR(100),
+			ip_city VARCHAR(100),
 			created_at TIMESTAMP DEFAULT NOW()
 		)`,
 		// Widen existing columns from VARCHAR(500) to TEXT in case the table already exists
@@ -87,6 +91,10 @@ func Migrate() {
 	alterQueries := []string{
 		`ALTER TABLE check_records ALTER COLUMN photo_site_path TYPE TEXT`,
 		`ALTER TABLE check_records ALTER COLUMN photo_selfie_path TYPE TEXT`,
+		`ALTER TABLE check_records ADD COLUMN IF NOT EXISTS is_suspicious BOOLEAN NOT NULL DEFAULT FALSE`,
+		`ALTER TABLE check_records ADD COLUMN IF NOT EXISTS suspicious_reason TEXT`,
+		`ALTER TABLE check_records ADD COLUMN IF NOT EXISTS ip_country VARCHAR(100)`,
+		`ALTER TABLE check_records ADD COLUMN IF NOT EXISTS ip_city VARCHAR(100)`,
 	}
 	for _, q := range alterQueries {
 		if _, err := DB.Exec(q); err != nil {

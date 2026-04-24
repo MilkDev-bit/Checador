@@ -1,9 +1,11 @@
-﻿package handlers
+package handlers
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"fmt"
 	"io"
+	"math"
 	"mime/multipart"
 	"net/http"
 	"path/filepath"
@@ -17,16 +19,104 @@ import (
 )
 
 type CheckInRequest struct {
-	Type      string `form:"type" binding:"required"`
-	Timestamp string `form:"timestamp" binding:"required"`
+	Type      string  `form:"type"      binding:"required"`
+	Timestamp string  `form:"timestamp" binding:"required"`
+	Latitude  float64 `form:"latitude"`
+	Longitude float64 `form:"longitude"`
 }
 
 type LocationPointRequest struct {
 	CheckRecordID string  `json:"check_record_id" binding:"required"`
-	Latitude      float64 `json:"latitude" binding:"required"`
-	Longitude     float64 `json:"longitude" binding:"required"`
+	Latitude      float64 `json:"latitude"        binding:"required"`
+	Longitude     float64 `json:"longitude"       binding:"required"`
 	Accuracy      float64 `json:"accuracy"`
-	RecordedAt    string  `json:"recorded_at" binding:"required"`
+	RecordedAt    string  `json:"recorded_at"     binding:"required"`
+}
+
+// ipAPIResponse maps the fields we use from ip-api.com (free, no key needed).
+type ipAPIResponse struct {
+	Status      string  `json:"status"`
+	Country     string  `json:"country"`
+	City        string  `json:"city"`
+	Lat         float64 `json:"lat"`
+	Lon         float64 `json:"lon"`
+	Proxy       bool    `json:"proxy"`
+	Hosting     bool    `json:"hosting"`
+	Mobile      bool    `json:"mobile"`
+}
+
+// getClientIP extracts the real client IP honoring X-Forwarded-For (set by nginx).
+func getClientIP(c *gin.Context) string {
+	if xff := c.GetHeader("X-Forwarded-For"); xff != "" {
+		// XFF can be "clientIP, proxy1, proxy2" — take the leftmost
+		parts := strings.Split(xff, ",")
+		return strings.TrimSpace(parts[0])
+	}
+	return c.ClientIP()
+}
+
+// haversineKm returns the distance in km between two lat/lon points.
+func haversineKm(lat1, lon1, lat2, lon2 float64) float64 {
+	const R = 6371.0
+	dLat := (lat2 - lat1) * math.Pi / 180
+	dLon := (lon2 - lon1) * math.Pi / 180
+	a := math.Sin(dLat/2)*math.Sin(dLat/2) +
+		math.Cos(lat1*math.Pi/180)*math.Cos(lat2*math.Pi/180)*
+			math.Sin(dLon/2)*math.Sin(dLon/2)
+	return R * 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
+}
+
+// runFraudCheck queries ip-api.com and updates the DB record if suspicious.
+// Runs in a goroutine — does NOT block the HTTP response.
+func runFraudCheck(recordID string, clientIP string, gpsLat, gpsLon float64) {
+	// ip-api.com free endpoint (45 req/min, no key required)
+	url := fmt.Sprintf(
+		"http://ip-api.com/json/%s?fields=status,country,city,lat,lon,proxy,hosting,mobile",
+		clientIP,
+	)
+
+	client := &http.Client{Timeout: 8 * time.Second}
+	resp, err := client.Get(url)
+	if err != nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	var ipData ipAPIResponse
+	if err := json.NewDecoder(resp.Body).Decode(&ipData); err != nil || ipData.Status != "success" {
+		return
+	}
+
+	var reasons []string
+
+	// 1. VPN / Proxy / Datacenter IP
+	if ipData.Proxy {
+		reasons = append(reasons, "IP detectada como proxy/VPN")
+	}
+	if ipData.Hosting {
+		reasons = append(reasons, "IP de datacenter/hosting (posible VPN)")
+	}
+
+	// 2. GPS vs IP geolocation mismatch (only if GPS coords were submitted)
+	if gpsLat != 0 || gpsLon != 0 {
+		dist := haversineKm(gpsLat, gpsLon, ipData.Lat, ipData.Lon)
+		if dist > 500 {
+			reasons = append(reasons, fmt.Sprintf(
+				"Ubicación GPS y IP separadas %.0f km (IP: %s, %s)",
+				dist, ipData.City, ipData.Country,
+			))
+		}
+	}
+
+	isSuspicious := len(reasons) > 0
+	reasonText := strings.Join(reasons, " | ")
+
+	database.DB.Exec(
+		`UPDATE check_records
+		 SET is_suspicious = $1, suspicious_reason = $2, ip_country = $3, ip_city = $4
+		 WHERE id = $5`,
+		isSuspicious, reasonText, ipData.Country, ipData.City, recordID,
+	)
 }
 
 func RegisterCheck(c *gin.Context) {
@@ -74,15 +164,21 @@ func RegisterCheck(c *gin.Context) {
 	err = database.DB.QueryRow(
 		`INSERT INTO check_records (user_id, type, timestamp, photo_site_path, photo_selfie_path)
  VALUES ($1, $2, $3, $4, $5)
- RETURNING id, user_id, type, timestamp, photo_site_path, photo_selfie_path, created_at`,
+ RETURNING id, user_id, type, timestamp, photo_site_path, photo_selfie_path, is_suspicious, suspicious_reason, ip_country, ip_city, created_at`,
 		userID, req.Type, ts, photoSiteData, photoSelfieData,
 	).Scan(&record.ID, &record.UserID, &record.Type, &record.Timestamp,
-		&record.PhotoSitePath, &record.PhotoSelfiePath, &record.CreatedAt)
+		&record.PhotoSitePath, &record.PhotoSelfiePath,
+		&record.IsSuspicious, &record.SuspiciousReason, &record.IPCountry, &record.IPCity,
+		&record.CreatedAt)
 
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error saving check record"})
 		return
 	}
+
+	// Launch fraud check asynchronously — doesn't delay the user response
+	clientIP := getClientIP(c)
+	go runFraudCheck(record.ID, clientIP, req.Latitude, req.Longitude)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": fmt.Sprintf("Check %s registered successfully", req.Type),
@@ -133,8 +229,8 @@ func AddLocationPoint(c *gin.Context) {
 type BatchLocationPointRequest struct {
 	CheckRecordID string `json:"check_record_id" binding:"required"`
 	Points        []struct {
-		Latitude   float64 `json:"latitude" binding:"required"`
-		Longitude  float64 `json:"longitude" binding:"required"`
+		Latitude   float64 `json:"latitude"   binding:"required"`
+		Longitude  float64 `json:"longitude"  binding:"required"`
 		Accuracy   float64 `json:"accuracy"`
 		RecordedAt string  `json:"recorded_at" binding:"required"`
 	} `json:"points" binding:"required"`
