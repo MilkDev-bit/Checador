@@ -723,7 +723,18 @@ watch(() => routeModal.value.show, async (show) => {
       { headers: { 'Accept-Language': 'es' } }
     )
     const geo = await res.json()
-    routeModal.value.address = geo.display_name || ''
+    if (geo.address) {
+      const a = geo.address
+      const parts = [
+        a.road, a.neighbourhood, a.suburb, 
+        a.city || a.town || a.village, 
+        a.state, a.postcode, a.country
+      ].filter(Boolean)
+      // Only use unique parts to avoid duplicates like "León, León"
+      routeModal.value.address = [...new Set(parts)].join(', ') || geo.display_name || ''
+    } else {
+      routeModal.value.address = geo.display_name || ''
+    }
   } catch {
     routeModal.value.address = ''
   } finally {
