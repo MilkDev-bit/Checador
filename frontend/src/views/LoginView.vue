@@ -1,5 +1,6 @@
 <template>
-  <div class="min-h-screen min-h-dvh bg-mesh flex items-center justify-center px-4 py-8" style="background-color: #0f1629;">
+  <div class="min-h-screen min-h-dvh bg-mesh flex items-center justify-center px-4 py-8"
+    style="background-color: var(--bg);">
     <!-- Background blobs -->
     <div class="fixed inset-0 overflow-hidden pointer-events-none">
       <div class="absolute -top-40 -right-40 w-80 h-80 rounded-full opacity-20 animate-pulse-slow"
@@ -11,8 +12,11 @@
     <div class="relative w-full max-w-md animate-in">
 
       <!-- Card -->
-      <div class="glass-card p-8" style="background: rgba(20,29,53,0.9);">
-        <h2 class="text-xl font-semibold text-white mb-6">Iniciar Sesión</h2>
+      <div class="glass-card p-8">
+        <div class="flex items-center justify-between mb-6">
+          <h2 class="text-xl font-semibold" style="color: var(--text);">Iniciar Sesión</h2>
+          <ThemeToggle />
+        </div>
 
         <form @submit.prevent="handleLogin" class="space-y-4">
           <div>
@@ -23,14 +27,18 @@
             <label class="input-label">Contraseña</label>
             <div class="relative">
               <input v-model="form.password" :type="showPwd ? 'text' : 'password'" class="input pr-12" placeholder="••••••••" required autocomplete="current-password" />
-              <button type="button" @click="showPwd = !showPwd" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 text-lg">
-                {{ showPwd ? '🙈' : '👁️' }}
+              <button type="button" @click="showPwd = !showPwd"
+                class="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+                style="color: var(--text-muted);">
+                <EyeSlashIcon v-if="showPwd" class="w-5 h-5" />
+                <EyeIcon v-else class="w-5 h-5" />
               </button>
             </div>
           </div>
 
           <div v-if="error" class="flex items-start gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl px-4 py-3 text-sm">
-            <span>⚠️</span><span>{{ error }}</span>
+            <ExclamationTriangleIcon class="w-4 h-4 flex-shrink-0 mt-0.5" />
+            <span>{{ error }}</span>
           </div>
 
           <button type="submit" class="btn-primary btn-lg w-full mt-2" :disabled="loading">
@@ -39,7 +47,7 @@
           </button>
         </form>
 
-        <div class="mt-6 pt-6 border-t border-white/8 text-center text-sm text-slate-400">
+        <div class="mt-6 pt-6 text-center text-sm" style="border-top: 1px solid var(--border-subtle); color: var(--text-muted);">
           ¿No tienes cuenta?
           <router-link to="/register" class="text-brand-400 font-semibold hover:text-brand-300 ml-1 transition-colors">
             Crear perfil →
@@ -54,6 +62,8 @@
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { EyeIcon, EyeSlashIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
+import ThemeToggle from '@/components/ThemeToggle.vue'
 
 const auth = useAuthStore()
 const router = useRouter()

@@ -1,19 +1,22 @@
 ﻿<template>
-  <div class="min-h-screen min-h-dvh bg-mesh" style="background-color: #0f1629;">
+  <div class="min-h-screen min-h-dvh bg-mesh" style="background-color: var(--bg);">
     <!-- Top nav -->
     <header class="sticky top-0 z-20 px-4 py-3 flex items-center justify-between"
-      style="background: rgba(15,22,41,0.85); backdrop-filter: blur(12px); border-bottom: 1px solid rgba(255,255,255,0.06);">
+      style="background: var(--nav-bg); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-subtle);">
       <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg flex items-center justify-center text-sm"
-          style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">âœ…</div>
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center"
+          style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+          <CheckCircleIcon class="w-4 h-4 text-white" />
+        </div>
         <div>
-          <p class="text-white font-semibold text-sm leading-none">PaseLista</p>
-          <p class="text-slate-500 text-xs mt-0.5 truncate max-w-[160px]">{{ auth.user?.project_name }}</p>
+          <p class="font-semibold text-sm leading-none" style="color: var(--text);">PaseLista</p>
+          <p class="text-xs mt-0.5 truncate max-w-[160px]" style="color: var(--text-muted);">{{ auth.user?.project_name }}</p>
         </div>
       </div>
       <div class="flex items-center gap-1">
         <router-link to="/qr" class="btn-ghost text-xs px-3 py-2">QR</router-link>
         <router-link to="/history" class="btn-ghost text-xs px-3 py-2">Historial</router-link>
+        <ThemeToggle />
         <button @click="auth.logout(); $router.push('/login')" class="btn-ghost text-xs px-3 py-2 text-rose-400">Salir</button>
       </div>
     </header>
@@ -23,12 +26,14 @@
       <div v-if="showHiddenWarning"
         class="px-4 py-3 flex items-center gap-3 text-sm"
         style="background: rgba(245,158,11,0.15); border-bottom: 1px solid rgba(245,158,11,0.3);">
-        <span class="text-xl flex-shrink-0">⚠️</span>
+        <ExclamationTriangleIcon class="w-5 h-5 text-amber-400 flex-shrink-0" />
         <div class="flex-1">
           <p class="text-amber-400 font-semibold text-xs">GPS posiblemente pausado</p>
           <p class="text-amber-300/70 text-xs">La app estuvo en segundo plano. Algunos puntos de recorrido podrían no haberse registrado.</p>
         </div>
-        <button @click="showHiddenWarning = false" class="text-amber-400/60 hover:text-amber-300 flex-shrink-0 text-lg leading-none">✕</button>
+        <button @click="showHiddenWarning = false" class="text-amber-400/60 hover:text-amber-300 flex-shrink-0">
+          <XMarkIcon class="w-5 h-5" />
+        </button>
       </div>
     </Transition>
 
@@ -36,22 +41,23 @@
     <div v-if="isTracking" class="px-4 py-2 flex items-center gap-2 text-xs"
       style="background: rgba(16,185,129,0.08); border-bottom: 1px solid rgba(16,185,129,0.15);">
       <div class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-      <span class="text-emerald-400/80">Rastreo GPS activo · {{ locationPoints.length }} puntos
-        <span v-if="wakeLockActive"> · 🔒 Pantalla activa</span>
+      <span class="text-emerald-400/80">Rastreo GPS activo · {{ locationPoints.length }} puntos</span>
+      <span v-if="wakeLockActive" class="flex items-center gap-1 text-emerald-400/80">
+        · <LockClosedIcon class="w-3 h-3" /> Pantalla activa
       </span>
     </div>
 
     <div class="max-w-lg mx-auto px-4 pt-6 pb-10 space-y-5">
       <!-- Greeting card -->
-      <div class="glass-card p-5 animate-in" style="background: rgba(20,29,53,0.8);">
+      <div class="glass-card p-5 animate-in">
         <div class="flex items-center gap-4">
-          <div class="w-14 h-14 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
             style="background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.3)); border: 1px solid rgba(99,102,241,0.3);">
-            ðŸ‘‹
+            <HandRaisedIcon class="w-7 h-7 text-brand-400" />
           </div>
           <div class="min-w-0">
-            <h2 class="text-lg font-bold text-white truncate">Hola, {{ auth.user?.first_name }}</h2>
-            <p class="text-slate-400 text-sm">{{ todayStr }}</p>
+            <h2 class="text-lg font-bold truncate" style="color: var(--text);">Hola, {{ auth.user?.first_name }}</h2>
+            <p class="text-sm" style="color: var(--text-muted);">{{ todayStr }}</p>
             <p class="text-brand-400 font-mono font-semibold text-base mt-0.5">{{ currentTime }}</p>
           </div>
         </div>
@@ -61,26 +67,29 @@
       <div v-if="recoveredPoints > 0" class="glass-card p-4 animate-in"
         style="background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.25);">
         <div class="flex items-start gap-3">
-          <span class="text-xl">💾</span>
+          <CloudArrowUpIcon class="w-5 h-5 text-brand-400 flex-shrink-0 mt-0.5" />
           <div>
             <p class="text-brand-300 font-semibold text-sm">Puntos GPS recuperados</p>
-            <p class="text-slate-400 text-xs mt-0.5">Se recuperaron {{ recoveredPoints }} puntos de una sesión anterior.</p>
+            <p class="text-sm mt-0.5" style="color: var(--text-muted);">Se recuperaron {{ recoveredPoints }} puntos de una sesión anterior.</p>
           </div>
         </div>
       </div>
 
       <!-- Status card -->
-      <div class="glass-card p-4 animate-in" style="animation-delay: 0.05s; background: rgba(20,29,53,0.8);">
+      <div class="glass-card p-4 animate-in" style="animation-delay: 0.05s;">
         <div class="flex items-center gap-3">
-          <div :class="activeRecordId ? 'bg-emerald-500/20' : 'bg-slate-700/50'"
-            class="w-10 h-10 rounded-xl flex items-center justify-center text-xl flex-shrink-0">
-            {{ activeRecordId ? 'ðŸŸ¢' : 'âšª' }}
+          <div :class="activeRecordId ? 'bg-emerald-500/20' : ''"
+            class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+            :style="!activeRecordId ? 'background: var(--input-bg)' : ''">
+            <SignalIcon v-if="activeRecordId" class="w-5 h-5 text-emerald-400" />
+            <MinusCircleIcon v-else class="w-5 h-5" style="color: var(--text-muted);" />
           </div>
           <div>
-            <p :class="activeRecordId ? 'text-emerald-400' : 'text-slate-400'" class="font-semibold text-sm">
+            <p :class="activeRecordId ? 'text-emerald-400' : ''" class="font-semibold text-sm"
+              :style="!activeRecordId ? 'color: var(--text-muted)' : ''">
               {{ activeRecordId ? 'Entrada registrada actualmente' : 'Sin entrada activa' }}
             </p>
-            <p v-if="entryTime" class="text-slate-500 text-xs">Desde las {{ entryTime }}</p>
+            <p v-if="entryTime" class="text-xs" style="color: var(--text-muted);">Desde las {{ entryTime }}</p>
           </div>
         </div>
       </div>
@@ -94,7 +103,7 @@
           class="btn-success btn-xl w-full"
           style="background: linear-gradient(135deg, #059669, #10b981); box-shadow: 0 4px 20px rgba(16,185,129,0.3);"
         >
-          <span class="text-2xl">ðŸ“</span>
+          <MapPinIcon class="w-6 h-6" />
           <span>Registrar Entrada</span>
         </button>
 
@@ -105,7 +114,7 @@
           class="btn-danger btn-xl w-full"
           style="background: linear-gradient(135deg, #dc2626, #f43f5e); box-shadow: 0 4px 20px rgba(244,63,94,0.3);"
         >
-          <span class="text-2xl">ðŸšª</span>
+          <ArrowRightOnRectangleIcon class="w-6 h-6" />
           <span>Registrar Salida</span>
         </button>
       </div>
@@ -119,22 +128,21 @@
         <div v-if="showLocationModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0"
           style="background: rgba(0,0,0,0.7); backdrop-filter: blur(6px);">
           <div class="w-full max-w-sm glass-card p-7 text-center animate-in"
-            style="background: rgba(20,29,53,0.97);">
-            <div class="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4"
+            <div class="w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4"
               style="background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(6,182,212,0.3)); border: 1px solid rgba(99,102,241,0.3);">
-              ðŸ“
+              <MapPinIcon class="w-8 h-8 text-brand-400" />
             </div>
-            <h3 class="text-xl font-bold text-white mb-2">Compartir UbicaciÃ³n</h3>
-            <p class="text-slate-400 text-sm mb-3 leading-relaxed">
+            <h3 class="text-xl font-bold mb-2" style="color: var(--text);">Compartir Ubicación</h3>
+            <p class="text-sm mb-3 leading-relaxed" style="color: var(--text-muted);">
               Para registrar tu {{ checkType === 'entry' ? 'entrada' : 'salida' }}, necesitamos tu ubicación en tiempo real para registrar el recorrido completo.
             </p>
             <p class="text-amber-400/80 text-xs mb-5 px-3 py-2.5 leading-relaxed rounded-xl"
               style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);">
-              💡 Mantén la app en primer plano para un GPS preciso. Se activará el bloqueo de pantalla automáticamente.
+              <InformationCircleIcon class="w-4 h-4 inline-block mr-1 text-amber-400" /> Mantén la app en primer plano para un GPS preciso. Se activará el bloqueo de pantalla automáticamente.
             </p>
             <div class="space-y-3">
               <button @click="requestLocation" class="btn-primary btn-lg w-full">
-                <span>ðŸ“</span> Permitir UbicaciÃ³n
+                <MapPinIcon class="w-5 h-5" /> Permitir Ubicación
               </button>
               <button @click="cancelProcess" class="btn-secondary btn-md w-full">Cancelar</button>
             </div>
@@ -149,11 +157,12 @@
           style="background: linear-gradient(to bottom, rgba(0,0,0,0.85), transparent);">
           <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full text-white text-sm font-semibold"
             style="background: rgba(99,102,241,0.5); border: 1px solid rgba(99,102,241,0.5);">
-            <span>{{ cameraStep === 'site' ? 'ðŸ“¸' : 'ðŸ¤³' }}</span>
-            <span>{{ cameraStep === 'site' ? 'Toma fotografÃ­a del sitio' : 'TÃ³mate una selfie en el sitio' }}</span>
+            <CameraIcon v-if="cameraStep === 'site'" class="w-4 h-4" />
+            <UserCircleIcon v-else class="w-4 h-4" />
+            <span>{{ cameraStep === 'site' ? 'Toma fotografía del sitio' : 'Tómate una selfie en el sitio' }}</span>
           </div>
           <p class="text-white/60 text-xs mt-2">
-            {{ cameraStep === 'site' ? 'FotografÃ­a el lugar donde te encuentras' : 'Incluye claramente tu rostro' }}
+            {{ cameraStep === 'site' ? 'Fotografía el lugar donde te encuentras' : 'Incluye claramente tu rostro' }}
           </p>
         </div>
 
@@ -191,7 +200,7 @@
             <button @click="toggleFlash"
               class="w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-all"
               :style="flashOn ? 'background: rgba(251,191,36,0.3); border: 2px solid rgba(251,191,36,0.7);' : 'background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2);'">
-              {{ flashOn ? 'âš¡' : 'ðŸ”¦' }}
+              <BoltIcon class="w-6 h-6" :class="flashOn ? 'text-amber-300' : 'text-white'" />
             </button>
 
             <button @click="capturePhoto"
@@ -203,14 +212,18 @@
             <button @click="switchCamera"
               class="w-12 h-12 rounded-full flex items-center justify-center text-2xl transition-all"
               style="background: rgba(255,255,255,0.1); border: 2px solid rgba(255,255,255,0.2);">
-              ðŸ”„
+              <ArrowPathIcon class="w-6 h-6 text-white" />
             </button>
           </div>
 
           <!-- After capture -->
           <div v-if="capturedPhoto" class="flex gap-3 max-w-xs mx-auto">
-            <button @click="retakePhoto" class="btn-secondary btn-lg flex-1">ðŸ”„ Retomar</button>
-            <button @click="confirmPhoto" class="btn-primary btn-lg flex-1">âœ… Usar foto</button>
+            <button @click="retakePhoto" class="btn-secondary btn-lg flex-1">
+              <ArrowPathIcon class="w-4 h-4" /> Retomar
+            </button>
+            <button @click="confirmPhoto" class="btn-primary btn-lg flex-1">
+              <CheckCircleIcon class="w-4 h-4" /> Usar foto
+            </button>
           </div>
         </div>
       </div>
@@ -219,19 +232,20 @@
       <Transition name="modal">
         <div v-if="showSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center px-4"
           style="background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);">
-          <div class="w-full max-w-sm glass-card p-8 text-center animate-in"
-            style="background: rgba(20,29,53,0.97);">
-            <div class="w-20 h-20 rounded-3xl flex items-center justify-center text-4xl mx-auto mb-4"
+          <div class="w-full max-w-sm glass-card p-8 text-center animate-in">
+            <div class="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4"
               :style="checkType === 'entry'
                 ? 'background: linear-gradient(135deg, rgba(5,150,105,0.3), rgba(16,185,129,0.3)); border: 1px solid rgba(16,185,129,0.4);'
                 : 'background: linear-gradient(135deg, rgba(220,38,38,0.3), rgba(244,63,94,0.3)); border: 1px solid rgba(244,63,94,0.4);'">
-              {{ checkType === 'entry' ? 'âœ…' : 'ðŸ‘‹' }}
+              <CheckCircleIcon v-if="checkType === 'entry'" class="w-10 h-10 text-emerald-400" />
+              <HandRaisedIcon v-else class="w-10 h-10 text-rose-400" />
             </div>
-            <h3 class="text-2xl font-bold text-white mb-1">
-              {{ checkType === 'entry' ? 'Â¡Entrada Registrada!' : 'Â¡Salida Registrada!' }}
+            <h3 class="text-2xl font-bold mb-1" style="color: var(--text);">
+            <h3 class="text-2xl font-bold mb-1" style="color: var(--text);">
+              {{ checkType === 'entry' ? '¡Entrada Registrada!' : '¡Salida Registrada!' }}
             </h3>
-            <p class="text-slate-400 text-sm mb-1">{{ registeredAt }}</p>
-            <p class="text-slate-500 text-xs mb-6">UbicaciÃ³n y fotografÃ­as guardadas exitosamente</p>
+            <p style="color: var(--text-muted);" class="text-sm mb-1">{{ registeredAt }}</p>
+            <p class="text-xs mb-6" style="color: var(--text-muted);">Ubicación y fotografías guardadas exitosamente</p>
             <button @click="closeSuccess" class="btn-primary btn-lg w-full">Aceptar</button>
           </div>
         </div>
@@ -241,10 +255,10 @@
       <div v-if="processing && !showLocationModal && !showCameraModal && !showSuccessModal"
         class="fixed inset-0 z-50 flex items-center justify-center"
         style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
-        <div class="glass-card p-6 text-center" style="background: rgba(20,29,53,0.95);">
+        <div class="glass-card p-6 text-center">
           <div class="w-10 h-10 border-2 border-brand-500/30 border-t-brand-500 rounded-full animate-spin mx-auto mb-3"></div>
-          <p class="text-white font-semibold">Procesando...</p>
-          <p class="text-slate-400 text-xs mt-1">Por favor espera</p>
+          <p class="font-semibold" style="color: var(--text);">Procesando...</p>
+          <p class="text-xs mt-1" style="color: var(--text-muted);">Por favor espera</p>
         </div>
       </div>
 
@@ -256,6 +270,13 @@
 import { ref, onMounted, onUnmounted } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api'
+import {
+  CheckCircleIcon, HandRaisedIcon, MapPinIcon, ArrowRightOnRectangleIcon,
+  ExclamationTriangleIcon, XMarkIcon, LockClosedIcon, CloudArrowUpIcon,
+  SignalIcon, MinusCircleIcon, CameraIcon, UserCircleIcon, BoltIcon, ArrowPathIcon,
+  InformationCircleIcon
+} from '@heroicons/vue/24/outline'
+import ThemeToggle from '@/components/ThemeToggle.vue'
 
 const auth = useAuthStore()
 
@@ -316,7 +337,7 @@ async function requestLocation() {
     showCameraModal.value = true
     processing.value = false
   } catch {
-    alert('No se pudo obtener la ubicaciÃ³n. Por favor permite el acceso en tu navegador.')
+    alert('No se pudo obtener la ubicación. Por favor permite el acceso en tu navegador.')
     processing.value = false
   }
 }
