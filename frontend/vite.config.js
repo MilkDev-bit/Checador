@@ -21,12 +21,12 @@ export default defineConfig({
         display: 'standalone',
         icons: [
           {
-            src: 'https://cdn-icons-png.flaticon.com/512/560/560216.png', // Temporary generic icon until you provide local assets
+            src: '/checador-logo.png',
             sizes: '512x512',
             type: 'image/png'
           },
           {
-            src: 'https://cdn-icons-png.flaticon.com/512/560/560216.png',
+            src: '/checador-logo.png',
             sizes: '192x192',
             type: 'image/png'
           }

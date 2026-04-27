@@ -7,8 +7,9 @@
       <!-- Logo -->
       <div class="px-6 py-6" style="border-bottom: 1px solid var(--border-subtle);">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
-            style="background: linear-gradient(135deg, #6366f1, #8b5cf6);"><CheckCircleIcon class="w-5 h-5 text-white" /></div>
+          <div class="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center text-xl">
+            <img src="/checador-logo.png" alt="PaseLista Logo" class="w-full h-full object-cover" />
+          </div>
           <div>
           </div>
         </div>
@@ -51,8 +52,9 @@
     <header class="lg:hidden sticky top-0 z-20 px-4 py-3 safe-top flex items-center justify-between"
       style="background: var(--nav-bg); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-subtle);">
       <div class="flex items-center gap-2">
-        <div class="w-8 h-8 rounded-lg flex items-center justify-center"
-          style="background: linear-gradient(135deg, #6366f1, #8b5cf6);"><CheckCircleIcon class="w-5 h-5 text-white" /></div>
+        <div class="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center">
+          <img src="/checador-logo.png" alt="Logo" class="w-full h-full object-cover" />
+        </div>
         <span class="text-white font-bold text-sm">Admin · PaseLista</span>
       </div>
       <button @click="showLogoutModal = true" class="text-rose-400 text-sm font-medium">Salir</button>

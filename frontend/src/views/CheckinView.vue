@@ -7,8 +7,8 @@
       <!-- Brand & Header -->
       <div class="px-4 md:px-6 py-3 min-h-[4rem] safe-top flex items-center justify-between border-b border-slate-200 dark:border-white/5">
         <div class="flex items-center gap-3">
-          <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-brand-500 to-violet-600 shadow-glow-brand ring-2 ring-white/20 dark:ring-white/5">
-            <CheckCircleIcon class="w-5 h-5 text-white" />
+          <div class="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-brand-500 to-violet-600 shadow-glow-brand ring-2 ring-white/20 dark:ring-white/5">
+            <img src="/checador-logo.png" alt="Logo" class="w-full h-full object-cover" />
           </div>
           <div class="flex flex-col justify-center">
             <h1 class="font-bold text-base leading-tight tracking-tight text-slate-900 dark:text-white">PaseLista</h1>

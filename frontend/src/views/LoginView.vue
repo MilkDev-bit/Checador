@@ -12,10 +12,8 @@
     <div class="relative z-10 w-full max-w-[420px] glass-panel border border-white/20 dark:border-white/5 p-8 sm:p-10 animate-slide-up">
       
       <div class="text-center mb-8">
-        <div class="inline-flex p-3 rounded-2xl bg-brand-50 text-brand-600 dark:bg-brand-900/40 dark:text-brand-400 mb-6 shadow-inner-light ring-1 ring-brand-500/10 animate-bounce-subtle">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-7 h-7">
-            <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
-          </svg>
+        <div class="inline-flex w-16 h-16 rounded-2xl overflow-hidden bg-brand-50 text-brand-600 dark:bg-brand-900/40 dark:text-brand-400 mb-6 shadow-inner-light ring-1 ring-brand-500/10 animate-bounce-subtle">
+          <img src="/checador-logo.png" alt="PaseLista Logo" class="w-full h-full object-cover" />
         </div>
         <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">Bienvenido de nuevo</h2>
         <p class="text-slate-500 dark:text-slate-400 font-medium text-sm">Ingresa a tu cuenta para continuar</p>

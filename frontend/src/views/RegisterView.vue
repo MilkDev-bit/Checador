@@ -11,6 +11,9 @@
     <div class="relative z-10 w-full max-w-[600px] bg-white shadow-[0_30px_60px_rgba(0,0,0,0.05)] rounded-[3rem] border border-white p-8 lg:p-12 animate-in-up">
       
       <div class="text-center mb-10">
+        <div class="inline-flex w-16 h-16 rounded-2xl overflow-hidden mb-4 shadow-sm ring-1 ring-slate-900/5 animate-in-up">
+          <img src="/checador-logo.png" alt="PaseLista Logo" class="w-full h-full object-cover" />
+        </div>
         <h2 class="text-3xl font-black text-slate-800 tracking-tight mb-2">Crear Cuenta</h2>
         <p class="text-slate-500 font-medium">Únete a nosotros completando tus datos</p>
       </div>
