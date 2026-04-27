@@ -87,10 +87,18 @@ func Login(c *gin.Context) {
 	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
 
 	var user models.User
+	var avatarURL, coverURL sql.NullString
 	err := database.DB.QueryRow(
-		`SELECT id, first_name, last_name, project_name, email, role, password_hash FROM users WHERE email = $1`,
+		`SELECT id, first_name, last_name, project_name, email, role, password_hash, avatar_url, cover_url FROM users WHERE email = $1`,
 		req.Email,
-	).Scan(&user.ID, &user.FirstName, &user.LastName, &user.ProjectName, &user.Email, &user.Role, &user.PasswordHash)
+	).Scan(&user.ID, &user.FirstName, &user.LastName, &user.ProjectName, &user.Email, &user.Role, &user.PasswordHash, &avatarURL, &coverURL)
+
+	if avatarURL.Valid {
+		user.AvatarURL = avatarURL.String
+	}
+	if coverURL.Valid {
+		user.CoverURL = coverURL.String
+	}
 
 	if err == sql.ErrNoRows {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
