@@ -25,6 +25,9 @@
               {{ auth.user?.first_name?.[0] ?? '' }}{{ auth.user?.last_name?.[0] ?? '' }}
             </div>
           </router-link>
+          <button v-if="!isPWA" @click="showMobileMenu = true" class="w-8 h-8 ml-2 flex items-center justify-center text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-surface-800 rounded-lg transition-colors">
+            <Bars3BottomRightIcon class="w-6 h-6" />
+          </button>
         </div>
       </div>
 
@@ -205,8 +208,8 @@
 
       </div>
 
-      <!-- Mobile Bottom Navigation Bar (Hidden on md up) -->
-      <nav class="md:hidden glass-panel fixed bottom-4 left-4 right-4 z-20 flex justify-between items-center px-6 py-3 border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
+      <!-- Mobile Bottom Navigation Bar (Hidden on md up, Only shown on PWA standalone) -->
+      <nav v-if="isPWA" class="md:hidden glass-panel fixed bottom-4 left-4 right-4 z-20 flex justify-between items-center px-6 py-3 border border-white/20 shadow-glass">
         <router-link to="/checkin" class="flex flex-col items-center gap-1 text-brand-600 dark:text-brand-400">
           <MapPinIcon class="w-6 h-6" />
           <span class="text-[10px] font-bold">Inicio</span>
@@ -229,16 +232,51 @@
         </router-link>
         
         <button @click="showLogoutModal = true" class="flex flex-col items-center gap-1 text-slate-400 hover:text-rose-500 transition-colors">
-          <ArrowLeftOnRectangleIcon class="w-6 h-6" />
+          <ArrowRightOnRectangleIcon class="w-6 h-6" />
           <span class="text-[10px] font-semibold">Salir</span>
         </button>
       </nav>
       <!-- End mobile nav padding -->
-      <div class="h-24 md:h-0"></div>
+      <div v-if="isPWA" class="h-24 md:h-0"></div>
     </main>
 
     <!-- ===== Modals ===== -->
     <Teleport to="body">
+
+      <!-- Mobile Hamburger Menu Drawer -->
+      <Transition name="slide-banner">
+        <div v-if="showMobileMenu" class="fixed inset-0 z-50 flex justify-end">
+          <div class="absolute inset-0 bg-slate-900/60 backdrop-blur-sm" @click="showMobileMenu = false"></div>
+          <div class="relative w-64 max-w-[80vw] h-full bg-white dark:bg-surface-950 shadow-2xl flex flex-col animate-slide-up sm:animate-in border-l border-slate-200 dark:border-surface-800">
+            <div class="p-4 flex justify-between items-center border-b border-slate-100 dark:border-surface-800">
+              <span class="font-bold text-slate-900 dark:text-white">Menú</span>
+              <button @click="showMobileMenu = false" class="p-2 bg-slate-100 dark:bg-surface-800 rounded-full text-slate-500 dark:text-slate-400">
+                <XMarkIcon class="w-5 h-5"/>
+              </button>
+            </div>
+            <nav class="p-4 space-y-2 flex-1 overflow-y-auto">
+               <router-link to="/checkin" @click="showMobileMenu = false" class="flex items-center gap-3 px-4 py-3 rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400 font-semibold transition-all">
+                  <MapPinIcon class="w-5 h-5" />
+                  Inicio
+                </router-link>
+                <router-link to="/history" @click="showMobileMenu = false" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-50 dark:hover:bg-white/5 transition-all">
+                  <ClockIcon class="w-5 h-5" />
+                  Historial
+                </router-link>
+                <router-link to="/qr" @click="showMobileMenu = false" class="flex items-center gap-3 px-4 py-3 rounded-xl text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-50 dark:hover:bg-white/5 transition-all">
+                  <QrCodeIcon class="w-5 h-5" />
+                  Escanear QR
+                </router-link>
+            </nav>
+            <div class="p-4 border-t border-slate-100 dark:border-surface-800 flex gap-2">
+               <button @click="showLogoutModal = true; showMobileMenu = false" class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-rose-500 dark:text-rose-400 font-semibold hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors">
+                 <ArrowRightOnRectangleIcon class="w-5 h-5"/>
+                 Cerrar Sesión
+               </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
 
       <!-- Location error / guide modal -->
       <Transition name="modal">
@@ -484,7 +522,8 @@ import {
   CheckCircleIcon, HandRaisedIcon, MapPinIcon, ArrowRightOnRectangleIcon,
   ExclamationTriangleIcon, XMarkIcon, LockClosedIcon, CloudArrowUpIcon,
   SignalIcon, MinusCircleIcon, CameraIcon, UserCircleIcon, BoltIcon, ArrowPathIcon,
-  InformationCircleIcon, DevicePhoneMobileIcon, ArrowPathRoundedSquareIcon
+  InformationCircleIcon, DevicePhoneMobileIcon, ArrowPathRoundedSquareIcon,
+  QrCodeIcon, ClockIcon, Bars3BottomRightIcon
 } from '@heroicons/vue/24/outline'
 import ThemeToggle from '@/components/ThemeToggle.vue'
 
@@ -522,6 +561,19 @@ const locationErrorCode = ref(0)
 const showCameraModal = ref(false)
 const showSuccessModal = ref(false)
 const registeredAt = ref('')
+
+const isPWA = ref(false)
+const showMobileMenu = ref(false)
+
+onMounted(() => {
+  // Check if PWA (standalone mode)
+  if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+    isPWA.value = true
+  }
+  window.matchMedia('(display-mode: standalone)').addEventListener('change', (e) => {
+    isPWA.value = e.matches
+  })
+})
 
 // Location
 let locationWatchId = null
