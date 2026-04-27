@@ -64,7 +64,7 @@
 
     <!-- Main content -->
     <main class="lg:pl-64 min-h-screen">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-32 lg:pb-6">
 
         <!-- Page header -->
         <div class="mb-6 animate-in">
