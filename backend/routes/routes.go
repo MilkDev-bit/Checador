@@ -27,6 +27,7 @@ func Register(r *gin.Engine) {
 	auth.Use(middleware.AuthRequired())
 	{
 		auth.GET("/auth/me", handlers.Me)
+		auth.GET("/checks/status", handlers.GetCheckStatus)
 		auth.PUT("/profile/email", handlers.UpdateEmail)
 		auth.PUT("/profile/password", handlers.UpdatePassword)
 		auth.PUT("/profile/avatar", handlers.UpdateAvatar)

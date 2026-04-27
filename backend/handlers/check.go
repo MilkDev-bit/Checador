@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
@@ -385,4 +386,39 @@ func encodeToDataURL(fh *multipart.FileHeader) (string, error) {
 	}
 
 	return "data:" + mime + ";base64," + base64.StdEncoding.EncodeToString(data), nil
+}
+
+// GetCheckStatus returns if the user currently has an active 'entry' without an 'exit'
+func GetCheckStatus(c *gin.Context) {
+	userID := c.GetString("user_id")
+
+	var r models.CheckRecord
+	// Fetch the most recent check record for this user
+	err := database.DB.QueryRow(
+		`SELECT id, type, timestamp FROM check_records 
+		 WHERE user_id = $1 
+		 ORDER BY timestamp DESC LIMIT 1`,
+		userID,
+	).Scan(&r.ID, &r.Type, &r.Timestamp)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			c.JSON(http.StatusOK, gin.H{"active": false})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		return
+	}
+
+	if r.Type == "entry" {
+		// Only consider it "active" if it was done within the same day/session.
+		// (Optional) We are doing simple type tracking, so if it's entry, they are active.
+		c.JSON(http.StatusOK, gin.H{
+			"active":     true,
+			"record_id":  r.ID,
+			"entry_time": r.Timestamp,
+		})
+	} else {
+		c.JSON(http.StatusOK, gin.H{"active": false})
+	}
 }

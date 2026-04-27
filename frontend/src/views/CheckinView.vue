@@ -864,10 +864,29 @@ async function submitCheck() {
 function closeSuccess() { showSuccessModal.value = false }
 
 // ─── Lifecycle ────────────────────────────────────────────────────────────────
-onMounted(() => {
+onMounted(async () => {
   updateTime()
   timeInterval = setInterval(updateTime, 1000)
   document.addEventListener('visibilitychange', handleVisibilityChange)
+
+  // Sync state with backend so it survives cache clearing
+  try {
+    const { data } = await api.get('/checks/status')
+    if (data && data.active) {
+      activeRecordId.value = data.record_id
+      entryTime.value = new Date(data.entry_time).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+      localStorage.setItem('activeRecordId', data.record_id)
+      localStorage.setItem('entryTime', entryTime.value)
+    } else {
+      activeRecordId.value = null
+      entryTime.value = null
+      localStorage.removeItem('activeRecordId')
+      localStorage.removeItem('entryTime')
+    }
+  } catch (error) {
+    console.error('Failed to sync session status', error)
+  }
+
   // Recover buffered points if app was closed during an active session
   const buffered = loadLocationBuffer()
   if (buffered.length > 0 && activeRecordId.value) {
