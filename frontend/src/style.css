@@ -152,11 +152,11 @@
   .card {
     background: var(--surface);
     border: 1px solid var(--border-subtle);
-    @apply rounded-2xl shadow-card;
+    @apply rounded-2xl shadow-lg;
   }
   .card-elevated {
     background: var(--surface);
-    @apply border border-brand-500/20 rounded-2xl shadow-brand;
+    @apply border border-brand-500/20 rounded-2xl shadow-glow-brand;
   }
 
   /* Badges */
