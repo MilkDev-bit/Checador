@@ -33,9 +33,10 @@
       <!-- Admin info + logout -->
       <div class="px-4 py-4" style="border-top: 1px solid var(--border-subtle);">
         <div class="flex items-center gap-3 mb-3">
-          <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold"
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold overflow-hidden"
             style="background: linear-gradient(135deg, rgba(99,102,241,0.4), rgba(139,92,246,0.4)); border: 1px solid rgba(99,102,241,0.3);">
-            {{ auth.user?.first_name?.[0] }}
+            <img v-if="auth.user?.avatar_url" :src="auth.user.avatar_url" class="w-full h-full object-cover" alt="Perfil" />
+            <span v-else>{{ auth.user?.first_name?.[0] }}</span>
           </div>
           <div class="min-w-0">
             <p class="text-sm font-medium truncate" style="color: var(--text);">{{ auth.user?.first_name }} {{ auth.user?.last_name }}</p>

@@ -45,6 +45,7 @@ type AdminUserRow struct {
 	Email       string    `json:"email"`
 	CreatedAt   time.Time `json:"created_at"`
 	TotalChecks int       `json:"total_checks"`
+	AvatarURL   string    `json:"avatar_url"`
 }
 
 func AdminGetStats(c *gin.Context) {
@@ -161,7 +162,7 @@ func AdminGetUsers(c *gin.Context) {
 	projectFilter := strings.TrimSpace(c.Query("project"))
 
 	args := []interface{}{}
-	query := `SELECT u.id, u.first_name, u.last_name, u.project_name, u.email, u.created_at,
+	query := `SELECT u.id, u.first_name, u.last_name, u.project_name, u.email, u.created_at, COALESCE(u.avatar_url, ''),
 	           (SELECT COUNT(*) FROM check_records cr WHERE cr.user_id = u.id) as total_checks
 	           FROM users u WHERE u.role = 'user'`
 	if projectFilter != "" {
@@ -180,7 +181,7 @@ func AdminGetUsers(c *gin.Context) {
 	users := []AdminUserRow{}
 	for rows.Next() {
 		var u AdminUserRow
-		rows.Scan(&u.ID, &u.FirstName, &u.LastName, &u.ProjectName, &u.Email, &u.CreatedAt, &u.TotalChecks)
+		rows.Scan(&u.ID, &u.FirstName, &u.LastName, &u.ProjectName, &u.Email, &u.CreatedAt, &u.AvatarURL, &u.TotalChecks)
 		users = append(users, u)
 	}
 

@@ -22,13 +22,15 @@ export default defineConfig({
         icons: [
           {
             src: '/checador-logo.png',
-            sizes: '512x512',
-            type: 'image/png'
+            sizes: '192x192',
+            type: 'image/png',
+            purpose: 'any maskable'
           },
           {
             src: '/checador-logo.png',
-            sizes: '192x192',
-            type: 'image/png'
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable'
           }
         ]
       }
