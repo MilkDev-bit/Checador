@@ -41,10 +41,6 @@
             <p class="text-xs truncate" style="color: var(--text-muted);">Administrador</p>
           </div>
         </div>
-        <div class="flex items-center justify-between mb-2">
-          <span class="text-xs" style="color: var(--text-muted);">Tema</span>
-          <button @click="theme.toggle()" class="px-2 py-1 rounded bg-surface-200 dark:bg-surface-800 text-xs">Toggle Tema</button>
-        </div>
         <button @click="showLogoutModal = true" class="btn-secondary btn-sm w-full text-rose-400 border-rose-500/20 hover:bg-rose-500/10">
           Cerrar Sesión
         </button>
@@ -331,9 +327,10 @@
               class="glass-card p-5 animate-in"
               :style="`animation-delay: ${i * 0.03}s`">
               <div class="flex items-start gap-3 mb-4">
-                <div class="w-12 h-12 rounded-2xl flex items-center justify-center text-lg font-bold flex-shrink-0"
+                <div class="w-12 h-12 rounded-2xl overflow-hidden flex items-center justify-center text-lg font-bold flex-shrink-0"
                   style="background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.3)); border: 1px solid rgba(99,102,241,0.25);">
-                  {{ user.first_name[0] }}{{ user.last_name[0] }}
+                  <img v-if="user.avatar_url" :src="user.avatar_url" class="w-full h-full object-cover" />
+                  <span v-else>{{ user.first_name[0] }}{{ user.last_name[0] }}</span>
                 </div>
                 <div class="min-w-0">
                   <p class="font-semibold truncate" style="color: var(--text);">{{ user.first_name }} {{ user.last_name }}</p>
@@ -493,6 +490,35 @@
                 <span class="text-sm" style="color: var(--text-muted);">Rol</span>
                 <span class="badge badge-blue">Administrador</span>
               </div>
+            </div>
+          </div>
+
+          <!-- Appearance card -->
+          <div class="glass-card p-6">
+            <div class="flex items-center gap-3 mb-5">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style="background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.2);">
+                <SunIcon class="w-5 h-5 text-amber-400" />
+              </div>
+              <h2 class="font-bold text-base" style="color: var(--text);">Apariencia</h2>
+            </div>
+            <div class="flex items-center justify-between py-3 px-4 rounded-xl" style="background: var(--input-bg);">
+              <div>
+                <p class="text-sm font-semibold" style="color: var(--text);">Modo Oscuro</p>
+                <p class="text-xs mt-0.5" style="color: var(--text-muted);">Cambiar tema visual</p>
+              </div>
+              <button
+                @click="theme.toggle()"
+                class="relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+                :class="theme.isDark ? 'bg-brand-500' : 'bg-slate-300 dark:bg-surface-600'"
+                role="switch"
+                :aria-checked="theme.isDark"
+              >
+                <span
+                  class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+                  :class="theme.isDark ? 'translate-x-5' : 'translate-x-0'"
+                ></span>
+              </button>
             </div>
           </div>
 
@@ -837,10 +863,9 @@ import {
   ClipboardDocumentListIcon, UsersIcon, ChartBarIcon, UserCircleIcon,
   BuildingOffice2Icon, CalendarIcon, MagnifyingGlassIcon, XMarkIcon, ExclamationTriangleIcon,
   CameraIcon, EnvelopeIcon, LockClosedIcon, CheckIcon, PhotoIcon,
-  EyeIcon, EyeSlashIcon, InformationCircleIcon
+  EyeIcon, EyeSlashIcon, InformationCircleIcon, SunIcon
 } from '@heroicons/vue/24/outline'
 import { useThemeStore } from '@/stores/theme'
-import ThemeToggle from '@/components/ThemeToggle.vue'
 
 const auth = useAuthStore()
 const theme = useThemeStore()
