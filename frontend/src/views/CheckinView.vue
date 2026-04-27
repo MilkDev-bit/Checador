@@ -1,184 +1,284 @@
 <template>
-  <div class="min-h-screen min-h-dvh bg-mesh" style="background-color: var(--bg);">
-    <!-- Top nav -->
-    <header class="sticky top-0 z-20 px-4 py-3 flex items-center justify-between"
-      style="background: var(--nav-bg); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-subtle);">
-      <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-          style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
-          <CheckCircleIcon class="w-4 h-4 text-white" />
+  <div class="min-h-screen min-h-dvh bg-mesh flex flex-col md:flex-row">
+    
+    <!-- Sidebar / Top Navigation (Responsive) -->
+    <aside class="md:w-64 glass-panel border-b md:border-b-0 md:border-r border-white/20 dark:border-white/5 flex-shrink-0 flex flex-col z-20 sticky top-0 md:h-screen md:sticky rounded-none">
+      
+      <!-- Brand & Header -->
+      <div class="h-16 px-4 md:px-6 flex items-center justify-between border-b border-slate-200 dark:border-white/5">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-brand-500 to-violet-600 shadow-glow-brand ring-2 ring-white/20 dark:ring-white/5">
+            <CheckCircleIcon class="w-5 h-5 text-white" />
+          </div>
+          <div class="flex flex-col justify-center">
+            <h1 class="font-bold text-base leading-tight tracking-tight text-slate-900 dark:text-white">PaseLista</h1>
+            <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate max-w-[120px]">{{ auth.user?.project_name || 'Mi Proyecto' }}</p>
+          </div>
         </div>
-        <div>
-          <p class="font-semibold text-sm leading-none" style="color: var(--text);">PaseLista</p>
-          <p class="text-xs mt-0.5 truncate max-w-[130px]" style="color: var(--text-muted);">{{ auth.user?.project_name }}</p>
-        </div>
-      </div>
-      <div class="flex items-center gap-1">
-        <router-link to="/qr" class="btn-ghost text-xs px-3 py-2">QR</router-link>
-        <router-link to="/history" class="btn-ghost text-xs px-3 py-2">Historial</router-link>
-        <ThemeToggle />
-        <!-- Avatar / profile button -->
-        <router-link to="/profile"
-          class="w-8 h-8 rounded-xl overflow-hidden flex-shrink-0 transition-all hover:ring-2 ring-brand-400/60"
-          style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
-          <img v-if="auth.user?.avatar_url" :src="auth.user.avatar_url" class="w-full h-full object-cover" alt="Perfil" />
-          <span v-else class="w-full h-full flex items-center justify-center text-white text-xs font-black">
-            {{ auth.user?.first_name?.[0] ?? '' }}{{ auth.user?.last_name?.[0] ?? '' }}
-          </span>
-        </router-link>
-        <button @click="showLogoutModal = true" class="btn-ghost text-xs px-3 py-2 text-rose-400">Salir</button>
-      </div>
-    </header>
-
-    <!-- GPS background warning banner -->
-    <Transition name="slide-banner">
-      <div v-if="showHiddenWarning"
-        class="px-4 py-3 flex items-center gap-3 text-sm"
-        style="background: rgba(245,158,11,0.15); border-bottom: 1px solid rgba(245,158,11,0.3);">
-        <ExclamationTriangleIcon class="w-5 h-5 text-amber-400 flex-shrink-0" />
-        <div class="flex-1">
-          <p class="text-amber-400 font-semibold text-xs">GPS posiblemente pausado</p>
-          <p class="text-amber-300/70 text-xs">La app estuvo en segundo plano. Algunos puntos de recorrido podrían no haberse registrado.</p>
-        </div>
-        <button @click="showHiddenWarning = false" class="text-amber-400/60 hover:text-amber-300 flex-shrink-0">
-          <XMarkIcon class="w-5 h-5" />
-        </button>
-      </div>
-    </Transition>
-
-    <!-- Active tracking indicator -->
-    <div v-if="isTracking" class="px-4 py-2 flex items-center gap-2 text-xs"
-      style="background: rgba(16,185,129,0.08); border-bottom: 1px solid rgba(16,185,129,0.15);">
-      <div class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-      <span class="text-emerald-400/80">Rastreo GPS activo · {{ locationPoints.length }} puntos</span>
-      <span v-if="wakeLockActive" class="flex items-center gap-1 text-emerald-400/80">
-        · <LockClosedIcon class="w-3 h-3" /> Pantalla activa
-      </span>
-    </div>
-
-    <div class="max-w-lg mx-auto px-4 pt-6 pb-10 space-y-5">
-      <!-- Greeting card -->
-      <div class="glass-card p-5 animate-in">
-        <div class="flex items-center gap-4">
-          <router-link to="/profile"
-            class="w-14 h-14 rounded-2xl overflow-hidden flex-shrink-0 transition-transform hover:scale-105"
-            style="background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.3)); border: 1px solid rgba(99,102,241,0.3);">
-            <img v-if="auth.user?.avatar_url" :src="auth.user.avatar_url" class="w-full h-full object-cover" alt="Avatar" />
-            <div v-else class="w-full h-full flex items-center justify-center">
-              <HandRaisedIcon class="w-7 h-7 text-brand-400" />
+        
+        <!-- Mobile Actions -->
+        <div class="flex items-center gap-2 md:hidden">
+          <ThemeToggle />
+          <router-link to="/profile" class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 transition-transform active:scale-95 ring-2 ring-brand-100 dark:ring-brand-900/50">
+            <img v-if="auth.user?.avatar_url" :src="auth.user.avatar_url" class="w-full h-full object-cover" alt="Perfil" />
+            <div v-else class="w-full h-full bg-brand-500 flex items-center justify-center text-white text-xs font-bold">
+              {{ auth.user?.first_name?.[0] ?? '' }}{{ auth.user?.last_name?.[0] ?? '' }}
             </div>
           </router-link>
-          <div class="min-w-0">
-            <h2 class="text-lg font-bold truncate" style="color: var(--text);">Hola, {{ auth.user?.first_name }}</h2>
-            <p class="text-sm" style="color: var(--text-muted);">{{ todayStr }}</p>
-            <p class="text-brand-400 font-mono font-semibold text-base mt-0.5">{{ currentTime }}</p>
-          </div>
         </div>
       </div>
 
-      <!-- Recovered points notice -->
-      <div v-if="recoveredPoints > 0" class="glass-card p-4 animate-in"
-        style="background: rgba(99,102,241,0.1); border: 1px solid rgba(99,102,241,0.25);">
-        <div class="flex items-start gap-3">
-          <CloudArrowUpIcon class="w-5 h-5 text-brand-400 flex-shrink-0 mt-0.5" />
+      <!-- Navigation Links (Hidden on small screens, shown on md up) -->
+      <nav class="flex-1 overflow-y-auto py-6 px-4 space-y-1.5 hidden md:block">
+        <p class="px-3 text-[11px] font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500 mb-3">Menú Principal</p>
+        
+        <router-link to="/checkin" class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-brand-50 text-brand-600 dark:bg-brand-500/10 dark:text-brand-400 font-semibold group transition-all">
+          <MapPinIcon class="w-5 h-5 group-hover:scale-110 transition-transform" />
+          Mi Check-in
+        </router-link>
+        
+        <router-link to="/history" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white group transition-all">
+          <ClockIcon class="w-5 h-5 group-hover:scale-110 transition-transform" />
+          Historial
+        </router-link>
+
+        <router-link to="/qr" class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-slate-600 dark:text-slate-400 font-medium hover:bg-slate-50 dark:hover:bg-white/5 hover:text-slate-900 dark:hover:text-white group transition-all">
+          <QrCodeIcon class="w-5 h-5 group-hover:scale-110 transition-transform" />
+          Escanear QR
+        </router-link>
+      </nav>
+
+      <!-- Desktop Bottom Actions -->
+      <div class="p-4 border-t border-slate-200 dark:border-white/5 hidden md:block space-y-3">
+        <div class="flex items-center justify-between px-2">
+          <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Tema</span>
+          <ThemeToggle />
+        </div>
+        <router-link to="/profile" class="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all">
+          <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-brand-100 dark:bg-brand-900/40 border border-brand-200 dark:border-brand-800">
+            <img v-if="auth.user?.avatar_url" :src="auth.user.avatar_url" class="w-full h-full object-cover" alt="Perfil" />
+            <div v-else class="w-full h-full text-brand-600 dark:text-brand-400 flex items-center justify-center text-xs font-bold">
+              {{ auth.user?.first_name?.[0] ?? '' }}
+            </div>
+          </div>
+          <div class="overflow-hidden">
+            <p class="text-sm font-semibold text-slate-900 dark:text-white truncate">{{ auth.user?.first_name }} {{ auth.user?.last_name }}</p>
+            <p class="text-xs text-slate-500 dark:text-slate-400 truncate">Ver perfil</p>
+          </div>
+        </router-link>
+        
+        <button @click="showLogoutModal = true" class="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl text-rose-500 dark:text-rose-400 font-semibold hover:bg-rose-50 dark:hover:bg-rose-500/10 transition-colors mt-2">
+          <ArrowLeftOnRectangleIcon class="w-4 h-4" />
+          Cerrar Sesión
+        </button>
+      </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <main class="flex-1 relative overflow-y-auto flex flex-col md:pt-6 md:px-8 max-w-5xl mx-auto w-full">
+      
+      <!-- GPS background warning banner -->
+      <Transition name="slide-banner">
+        <div v-if="showHiddenWarning" class="glass-card mb-4 mx-4 md:mx-0 p-4 border border-amber-200 dark:border-amber-500/20 bg-amber-50/80 dark:bg-amber-900/20 flex items-start sm:items-center gap-4">
+          <div class="p-2 bg-amber-100 dark:bg-amber-500/20 rounded-full text-amber-500 dark:text-amber-400">
+            <ExclamationTriangleIcon class="w-5 h-5 flex-shrink-0" />
+          </div>
+          <div class="flex-1">
+            <h4 class="text-amber-800 dark:text-amber-400 font-bold text-sm">GPS posiblemente pausado</h4>
+            <p class="text-amber-700/80 dark:text-amber-300/70 text-xs mt-0.5 leading-relaxed">La app estuvo en segundo plano. Algunos puntos podrían no haberse registrado.</p>
+          </div>
+          <button @click="showHiddenWarning = false" class="p-1.5 hover:bg-amber-200/50 dark:hover:bg-amber-500/20 rounded-lg text-amber-600 dark:text-amber-400/60 transition-colors">
+            <XMarkIcon class="w-5 h-5" />
+          </button>
+        </div>
+      </Transition>
+
+      <div class="px-4 py-6 md:py-0 space-y-6 flex-1">
+        
+        <!-- Header Section -->
+        <header class="flex flex-col sm:flex-row sm:items-end justify-between gap-4 animate-slide-up">
           <div>
-            <p class="text-brand-300 font-semibold text-sm">Puntos GPS recuperados</p>
-            <p class="text-sm mt-0.5" style="color: var(--text-muted);">Se recuperaron {{ recoveredPoints }} puntos de una sesión anterior.</p>
+            <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">Hola, {{ auth.user?.first_name }} 👋</h2>
+            <p class="text-slate-500 dark:text-slate-400 font-medium mt-1">{{ todayStr }}</p>
           </div>
-        </div>
-      </div>
+          <div class="glass-card px-5 py-3 border border-slate-200 dark:border-white/10 flex items-center justify-between gap-6 shadow-sm">
+            <div class="flex flex-col">
+              <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">Hora actual</span>
+              <span class="text-xl font-bold font-mono text-brand-600 dark:text-brand-400">{{ currentTime }}</span>
+            </div>
+            <div class="h-10 w-px bg-slate-200 dark:bg-white/10"></div>
+            <div class="flex flex-col items-end">
+              <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">Status GPS</span>
+              <div v-if="isTracking" class="flex items-center gap-1.5 mt-1">
+                <span class="relative flex h-2.5 w-2.5">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                </span>
+                <span class="text-sm font-semibold text-emerald-600 dark:text-emerald-400">Activo</span>
+              </div>
+              <div v-else class="flex items-center gap-1.5 mt-1">
+                <span class="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-600"></span>
+                <span class="text-sm font-semibold text-slate-500 dark:text-slate-400">Inactivo</span>
+              </div>
+            </div>
+          </div>
+        </header>
 
-      <!-- Status card -->
-      <div class="glass-card p-4 animate-in" style="animation-delay: 0.05s;">
-        <div class="flex items-center gap-3">
-          <div :class="activeRecordId ? 'bg-emerald-500/20' : ''"
-            class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-            :style="!activeRecordId ? 'background: var(--input-bg)' : ''">
-            <SignalIcon v-if="activeRecordId" class="w-5 h-5 text-emerald-400" />
-            <MinusCircleIcon v-else class="w-5 h-5" style="color: var(--text-muted);" />
+        <!-- Recovered points notice -->
+        <div v-if="recoveredPoints > 0" class="glass-card p-4 border-brand-200 dark:border-brand-500/30 bg-brand-50 dark:bg-brand-900/20 flex items-center gap-4 animate-in">
+          <div class="p-2 bg-white dark:bg-brand-500/20 rounded-xl text-brand-500">
+            <CloudArrowUpIcon class="w-6 h-6 flex-shrink-0" />
           </div>
           <div>
-            <p :class="activeRecordId ? 'text-emerald-400' : ''" class="font-semibold text-sm"
-              :style="!activeRecordId ? 'color: var(--text-muted)' : ''">
-              {{ activeRecordId ? 'Entrada registrada actualmente' : 'Sin entrada activa' }}
-            </p>
-            <p v-if="entryTime" class="text-xs" style="color: var(--text-muted);">Desde las {{ entryTime }}</p>
+            <h4 class="text-brand-800 dark:text-brand-300 font-bold text-sm">Sincronización Completada</h4>
+            <p class="text-brand-600/80 dark:text-brand-200/70 text-xs mt-0.5">Se recuperaron {{ recoveredPoints }} puntos GPS de tu sesión anterior.</p>
           </div>
         </div>
+
+        <!-- Main Status Card -->
+        <section class="glass-card overflow-hidden animate-slide-up" style="animation-delay: 0.1s;">
+          <div class="p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 md:gap-10">
+            
+            <!-- Status Indicator -->
+            <div class="relative group">
+              <div class="absolute -inset-1 bg-gradient-to-r blur opacity-20 group-hover:opacity-40 transition duration-1000 rounded-full"
+                :class="activeRecordId ? 'from-emerald-400 to-teal-500' : 'from-slate-400 to-slate-300 dark:from-slate-600 dark:to-slate-700'"></div>
+              <div class="relative w-24 h-24 sm:w-32 sm:h-32 rounded-full flex items-center justify-center ring-4 ring-white dark:ring-surface-900 shadow-md transition-all"
+                :class="activeRecordId ? 'bg-emerald-50 text-emerald-500 dark:bg-emerald-500/10 dark:text-emerald-400' : 'bg-slate-50 text-slate-400 dark:bg-surface-800 dark:text-slate-500'">
+                <SignalIcon v-if="activeRecordId" class="w-10 h-10 sm:w-14 sm:h-14 animate-pulse-slow" />
+                <MinusCircleIcon v-else class="w-10 h-10 sm:w-14 sm:h-14" />
+              </div>
+            </div>
+
+            <!-- Status Details -->
+            <div class="flex-1 text-center md:text-left">
+              <h3 class="text-lg sm:text-xl font-bold tracking-tight mb-2"
+                :class="activeRecordId ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-500 dark:text-slate-400'">
+                {{ activeRecordId ? 'Jornada Activa' : 'No has iniciado turno' }}
+              </h3>
+              
+              <div class="bg-slate-50 dark:bg-white/5 rounded-2xl p-4 inline-flex flex-col md:block w-full text-left">
+                <div class="flex items-center gap-3">
+                  <ClockIcon class="w-5 h-5 text-slate-400" />
+                  <div>
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Hora de Entrada</p>
+                    <p class="text-sm font-bold text-slate-900 dark:text-white">{{ entryTime || '--:--' }}</p>
+                  </div>
+                </div>
+                <!-- Additional Context if active -->
+                <div v-if="activeRecordId" class="mt-3 pt-3 border-t border-slate-200 dark:border-white/10 flex items-center gap-3">
+                  <MapPinIcon class="w-5 h-5 text-emerald-500" />
+                  <div>
+                    <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Puntos registrados</p>
+                    <p class="text-sm font-bold text-slate-900 dark:text-white">{{ locationPoints.length }} pts</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <!-- CTAs inside card on Desktop -->
+            <div class="w-full md:w-auto flex-shrink-0">
+              <button
+                v-if="!activeRecordId"
+                @click="startCheckProcess('entry')"
+                :disabled="processing"
+                class="btn-success btn-xl w-full md:min-w-[200px]"
+              >
+                <span v-if="processing" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                <MapPinIcon v-else class="w-6 h-6" />
+                <span>Registrar Entrada</span>
+              </button>
+
+              <button
+                v-if="activeRecordId"
+                @click="startCheckProcess('exit')"
+                :disabled="processing"
+                class="btn-danger btn-xl w-full md:min-w-[200px]"
+              >
+                <span v-if="processing" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                <ArrowRightOnRectangleIcon v-else class="w-6 h-6" />
+                <span>Registrar Salida</span>
+              </button>
+            </div>
+          </div>
+        </section>
+
       </div>
 
-      <!-- Main buttons -->
-      <div class="space-y-3 animate-in" style="animation-delay: 0.1s;">
-        <button
-          v-if="!activeRecordId"
-          @click="startCheckProcess('entry')"
-          :disabled="processing"
-          class="btn-success btn-xl w-full"
-          style="background: linear-gradient(135deg, #059669, #10b981); box-shadow: 0 4px 20px rgba(16,185,129,0.3);"
-        >
+      <!-- Mobile Bottom Navigation Bar (Hidden on md up) -->
+      <nav class="md:hidden glass-panel fixed bottom-4 left-4 right-4 z-20 flex justify-between items-center px-6 py-3 border border-white/20 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
+        <router-link to="/checkin" class="flex flex-col items-center gap-1 text-brand-600 dark:text-brand-400">
           <MapPinIcon class="w-6 h-6" />
-          <span>Registrar Entrada</span>
-        </button>
+          <span class="text-[10px] font-bold">Inicio</span>
+        </router-link>
+        
+        <router-link to="/history" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+          <ClockIcon class="w-6 h-6" />
+          <span class="text-[10px] font-semibold">Historial</span>
+        </router-link>
 
-        <button
-          v-if="activeRecordId"
-          @click="startCheckProcess('exit')"
-          :disabled="processing"
-          class="btn-danger btn-xl w-full"
-          style="background: linear-gradient(135deg, #dc2626, #f43f5e); box-shadow: 0 4px 20px rgba(244,63,94,0.3);"
-        >
-          <ArrowRightOnRectangleIcon class="w-6 h-6" />
-          <span>Registrar Salida</span>
+        <div class="relative -top-6">
+          <router-link to="/qr" class="w-14 h-14 bg-gradient-to-br from-brand-500 to-violet-600 rounded-full flex items-center justify-center text-white shadow-glow-brand ring-4 ring-white dark:ring-surface-950 transition-transform active:scale-95">
+            <QrCodeIcon class="w-6 h-6" />
+          </router-link>
+        </div>
+
+        <router-link to="/profile" class="flex flex-col items-center gap-1 text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors">
+          <UserCircleIcon class="w-6 h-6" />
+          <span class="text-[10px] font-semibold">Perfil</span>
+        </router-link>
+        
+        <button @click="showLogoutModal = true" class="flex flex-col items-center gap-1 text-slate-400 hover:text-rose-500 transition-colors">
+          <ArrowLeftOnRectangleIcon class="w-6 h-6" />
+          <span class="text-[10px] font-semibold">Salir</span>
         </button>
-      </div>
-    </div>
+      </nav>
+      <!-- End mobile nav padding -->
+      <div class="h-24 md:h-0"></div>
+    </main>
 
     <!-- ===== Modals ===== -->
     <Teleport to="body">
 
       <!-- Location error / guide modal -->
       <Transition name="modal">
-        <div v-if="showLocationErrorModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0"
-          style="background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);">
-          <div class="w-full max-w-sm glass-card p-6 animate-in">
-            <div class="flex items-center gap-3 mb-4">
-              <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style="background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3);">
-                <MapPinIcon class="w-5 h-5 text-rose-400" />
-              </div>
-              <div>
-                <h3 class="font-bold text-base" style="color: var(--text);">
-                  {{ locationErrorType === 'inapp' ? 'Abre la página en Safari' :
-                     locationErrorType === 'unavailable' ? 'GPS no disponible' :
-                     locationErrorType === 'timeout' ? 'Tiempo de espera agotado' :
-                     'Ubicación bloqueada' }}
-                </h3>
-                <p class="text-xs" style="color: var(--text-muted);">
-                  {{ locationErrorType === 'inapp' ? 'El browser de WhatsApp no tiene acceso al GPS' :
-                     locationErrorType === 'unavailable' ? 'No se detectó señal GPS' :
-                     locationErrorType === 'timeout' ? 'El GPS tardó demasiado en responder' :
-                     'Sigue los pasos de abajo para activarla' }}
-                  <span v-if="locationErrorCode" class="ml-1 opacity-50">(código {{ locationErrorCode }})</span>
-                </p>
+        <div v-if="showLocationErrorModal" class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center sm:p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm">
+          <div class="w-full max-w-md glass-panel p-6 sm:p-8 animate-slide-up rounded-t-[2rem] sm:rounded-3xl border-b-0 sm:border-b border-t border-x border-white/20 dark:border-white/10 m-0">
+            <div class="flex items-center justify-between mb-6">
+              <div class="flex items-center gap-4">
+                <div class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 bg-rose-50 dark:bg-rose-500/10 border border-rose-100 dark:border-rose-500/20 text-rose-500">
+                  <MapPinIcon class="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 class="font-bold text-lg text-slate-900 dark:text-white">
+                    {{ locationErrorType === 'inapp' ? 'Abre la página en Safari' :
+                       locationErrorType === 'unavailable' ? 'GPS no disponible' :
+                       locationErrorType === 'timeout' ? 'Tiempo de espera agotado' :
+                       'Ubicación bloqueada' }}
+                  </h3>
+                  <p class="text-sm text-slate-500 dark:text-slate-400 mt-0.5">
+                    {{ locationErrorType === 'inapp' ? 'El browser interno bloquea el GPS' :
+                       locationErrorType === 'unavailable' ? 'No se detectó señal GPS' :
+                       locationErrorType === 'timeout' ? 'El GPS tardó demasiado' :
+                       'Sigue los pasos para activarla' }}
+                    <span v-if="locationErrorCode" class="opacity-50">(Error: {{ locationErrorCode }})</span>
+                  </p>
+                </div>
               </div>
             </div>
 
             <!-- In-app browser (WKWebView) -->
             <template v-if="locationErrorType === 'inapp'">
-              <div class="rounded-xl p-4 mb-5" style="background: rgba(99,102,241,0.07); border: 1px solid rgba(99,102,241,0.2);">
-                <p class="text-xs font-semibold mb-3 text-brand-400">Cómo abrir en Safari</p>
-                <ol class="space-y-2">
-                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                    <span class="font-bold text-brand-400 flex-shrink-0">1.</span>
-                    Toca el ícono de <strong style="color: var(--text);">tres puntos (···)</strong> o el ícono de <strong style="color: var(--text);">compartir</strong> en la barra inferior de WhatsApp.
+              <div class="bg-brand-50 dark:bg-brand-500/5 border border-brand-100 dark:border-brand-500/20 rounded-2xl p-5 mb-6">
+                <p class="text-sm font-bold mb-3 text-brand-600 dark:text-brand-400 uppercase tracking-wider">Cómo abrir en Safari</p>
+                <ol class="space-y-3">
+                  <li class="text-sm text-slate-600 dark:text-slate-300 flex items-start gap-3">
+                    <span class="w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center flex-shrink-0 font-bold text-xs">1</span>
+                    <span class="mt-0.5">Toca el ícono de <strong class="text-slate-900 dark:text-white">tres puntos (···)</strong> en la barra inferior.</span>
                   </li>
-                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                    <span class="font-bold text-brand-400 flex-shrink-0">2.</span>
-                    Selecciona <strong style="color: var(--text);">"Abrir en Safari"</strong> o <strong style="color: var(--text);">"Abrir en navegador"</strong>.
-                  </li>
-                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                    <span class="font-bold text-brand-400 flex-shrink-0">3.</span>
-                    Inicia sesión nuevamente y el GPS funcionará correctamente.
+                  <li class="text-sm text-slate-600 dark:text-slate-300 flex items-start gap-3">
+                    <span class="w-6 h-6 rounded-full bg-brand-100 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center flex-shrink-0 font-bold text-xs">2</span>
+                    <span class="mt-0.5">Selecciona <strong class="text-slate-900 dark:text-white">"Abrir en navegador"</strong>.</span>
                   </li>
                 </ol>
               </div>
@@ -186,19 +286,15 @@
 
             <!-- GPS unavailable or timeout -->
             <template v-else-if="locationErrorType === 'unavailable' || locationErrorType === 'timeout'">
-              <div class="rounded-xl p-4 mb-5" style="background: rgba(245,158,11,0.07); border: 1px solid rgba(245,158,11,0.2);">
-                <ol class="space-y-2">
-                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                    <span class="font-bold text-amber-400 flex-shrink-0">1.</span>
-                    Ve a un lugar con buena señal o al aire libre.
+              <div class="bg-amber-50 dark:bg-amber-500/5 border border-amber-100 dark:border-amber-500/20 rounded-2xl p-5 mb-6">
+                <ol class="space-y-3">
+                  <li class="text-sm text-slate-600 dark:text-slate-300 flex items-start gap-3">
+                    <span class="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0 font-bold text-xs">1</span>
+                    <span class="mt-0.5">Ve a un lugar con buena señal o al aire libre.</span>
                   </li>
-                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                    <span class="font-bold text-amber-400 flex-shrink-0">2.</span>
-                    Asegúrate de que el <strong style="color: var(--text);">GPS del teléfono</strong> esté activado.
-                  </li>
-                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                    <span class="font-bold text-amber-400 flex-shrink-0">3.</span>
-                    Vuelve a intentarlo.
+                  <li class="text-sm text-slate-600 dark:text-slate-300 flex items-start gap-3">
+                    <span class="w-6 h-6 rounded-full bg-amber-100 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center flex-shrink-0 font-bold text-xs">2</span>
+                    <span class="mt-0.5">Asegúrate de que el GPS esté <strong class="text-slate-900 dark:text-white">activado</strong>.</span>
                   </li>
                 </ol>
               </div>
@@ -206,85 +302,41 @@
 
             <!-- Permission denied -->
             <template v-else>
-              <!-- Paso 0: Verificar Servicios de Localización globales -->
-              <div class="rounded-xl p-3 mb-3 flex items-start gap-2"
-                style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.25);">
-                <ExclamationTriangleIcon class="w-4 h-4 text-rose-400 flex-shrink-0 mt-0.5" />
-                <p class="text-xs leading-relaxed" style="color: var(--text-muted);">
-                  iOS bloqueó la ubicación. Hay <strong style="color: var(--text);">dos lugares</strong> donde revisar:
-                </p>
-              </div>
-
-              <!-- Paso 1: Configuración iOS global (causa más común) -->
-              <div class="rounded-xl p-4 mb-3" style="background: rgba(99,102,241,0.10); border: 2px solid rgba(99,102,241,0.35);">
-                <p class="text-xs font-bold mb-2" style="color: var(--text);">① Configuración del iPhone (revisa primero)</p>
-                <ol class="space-y-1.5">
-                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                    <span class="font-bold text-brand-400 flex-shrink-0">1.</span>
-                    Abre <strong style="color: var(--text);">Configuración → Privacidad y Seguridad → Servicios de Localización</strong>.
+              <!-- Paso 1: Configuración iOS global -->
+              <div class="bg-brand-50 dark:bg-brand-500/5 border border-brand-100 dark:border-brand-500/20 rounded-2xl p-4 mb-4">
+                <p class="text-xs font-bold mb-2.5 text-brand-600 dark:text-brand-400 uppercase tracking-wider">① Config. del iPhone (Revisar primero)</p>
+                <ol class="space-y-2">
+                  <li class="text-sm text-slate-600 dark:text-slate-300 flex items-start gap-2">
+                    <span class="text-brand-500 font-bold mt-px">1.</span> Ve a <strong>Configuración → Privacidad → Localización</strong>.
                   </li>
-                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                    <span class="font-bold text-brand-400 flex-shrink-0">2.</span>
-                    Asegúrate de que los Servicios de Localización estén <strong style="color: var(--text);">activados</strong> (toggle verde).
-                  </li>
-                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                    <span class="font-bold text-brand-400 flex-shrink-0">3.</span>
-                    En la lista busca <strong style="color: var(--text);">Safari</strong> → ponlo en <strong style="color: var(--text);">"Al usar la app"</strong>.
-                  </li>
-                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                    <span class="font-bold text-brand-400 flex-shrink-0">4.</span>
-                    Regresa aquí y toca <strong style="color: var(--text);">"Recargar página"</strong>.
+                  <li class="text-sm text-slate-600 dark:text-slate-300 flex items-start gap-2">
+                    <span class="text-brand-500 font-bold mt-px">2.</span> Busca <strong>Safari</strong> y ponlo en <strong>"Al usar la app"</strong>.
                   </li>
                 </ol>
               </div>
 
               <!-- Paso 2: AA del sitio en Safari -->
-              <div class="rounded-xl p-4 mb-3" style="background: rgba(99,102,241,0.05); border: 1px solid rgba(99,102,241,0.2);">
-                <p class="text-xs font-bold mb-2" style="color: var(--text);">② Permiso del sitio en Safari</p>
-                <ol class="space-y-1.5">
-                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                    <span class="font-bold text-brand-400 flex-shrink-0">1.</span>
-                    Toca las letras <strong style="color: var(--text);">"AA"</strong> a la izquierda de la barra de dirección de Safari.
+              <div class="bg-slate-50 dark:bg-white/5 border border-slate-200 dark:border-white/10 rounded-2xl p-4 mb-6">
+                <p class="text-xs font-bold mb-2.5 text-slate-500 dark:text-slate-400 uppercase tracking-wider">② En esta página (Safari)</p>
+                <ol class="space-y-2">
+                  <li class="text-sm text-slate-600 dark:text-slate-300 flex items-start gap-2">
+                    <span class="text-slate-400 dark:text-slate-500 font-bold mt-px">1.</span> Toca las letras <strong>"AA"</strong> en la barra web.
                   </li>
-                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                    <span class="font-bold text-brand-400 flex-shrink-0">2.</span>
-                    Toca <strong style="color: var(--text);">"Ajustes del sitio web"</strong>.
-                  </li>
-                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                    <span class="font-bold text-brand-400 flex-shrink-0">3.</span>
-                    En <strong style="color: var(--text);">Ubicación</strong> selecciona <strong style="color: var(--text);">"Permitir"</strong>.
-                  </li>
-                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                    <span class="font-bold text-brand-400 flex-shrink-0">4.</span>
-                    Regresa aquí y toca <strong style="color: var(--text);">"Recargar página"</strong>.
-                  </li>
-                </ol>
-              </div>
-
-              <!-- Android -->
-              <div class="rounded-xl p-4 mb-5" style="background: rgba(16,185,129,0.07); border: 1px solid rgba(16,185,129,0.2);">
-                <p class="text-xs font-semibold mb-2 text-emerald-400">En Android (Chrome)</p>
-                <ol class="space-y-1.5">
-                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                    <span class="font-bold text-emerald-400 flex-shrink-0">1.</span>
-                    Toca el ícono de <strong style="color: var(--text);">candado</strong> junto a la URL → <strong style="color: var(--text);">Permisos → Ubicación → Permitir</strong>.
-                  </li>
-                  <li class="text-xs flex items-start gap-2" style="color: var(--text-muted);">
-                    <span class="font-bold text-emerald-400 flex-shrink-0">2.</span>
-                    Recarga la página y vuelve a intentarlo.
+                  <li class="text-sm text-slate-600 dark:text-slate-300 flex items-start gap-2">
+                    <span class="text-slate-400 dark:text-slate-500 font-bold mt-px">2.</span> Ajustes del sitio web → Ubicación <strong>"Permitir"</strong>.
                   </li>
                 </ol>
               </div>
             </template>
 
-            <div class="space-y-2">
+            <div class="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-3">
+              <button @click="cancelProcess" class="btn-secondary btn-lg w-full order-last sm:order-first">Cancerlar</button>
               <button v-if="locationErrorType === 'denied'" @click="reloadPage()" class="btn-primary btn-lg w-full">
-                <ArrowPathRoundedSquareIcon class="w-5 h-5" /> Recargar página
+                <ArrowPathRoundedSquareIcon class="w-5 h-5" /> Recargar
               </button>
               <button v-else-if="locationErrorType !== 'inapp'" @click="retryLocation()" class="btn-primary btn-lg w-full">
                 <ArrowPathRoundedSquareIcon class="w-5 h-5" /> Reintentar
               </button>
-              <button @click="cancelProcess" class="btn-secondary btn-md w-full">Cerrar</button>
             </div>
           </div>
         </div>

@@ -1,44 +1,44 @@
 <template>
-  <div class="min-h-screen min-h-dvh flex items-center justify-center p-4 relative overflow-hidden bg-[#f8fafc]">
+  <div class="min-h-screen min-h-dvh flex items-center justify-center p-4 relative overflow-hidden bg-mesh dark:bg-surface-950">
     
-    <!-- Animated background elements -->
+    <!-- Animated background elements (refined) -->
     <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
-      <div class="absolute w-[600px] h-[600px] rounded-full blur-[120px] opacity-20 bg-gradient-to-br from-blue-400 to-indigo-300 animate-float-slow -top-20 -left-20"></div>
-      <div class="absolute w-[500px] h-[500px] rounded-full blur-[100px] opacity-15 bg-gradient-to-br from-purple-300 to-pink-200 animate-float-delayed -bottom-20 -right-20"></div>
-      <div class="absolute inset-0 opacity-[0.03]" style="background-image: radial-gradient(#000 1px, transparent 1px); background-size: 30px 30px;"></div>
+      <div class="absolute w-[800px] h-[800px] rounded-full blur-[120px] opacity-10 bg-brand-400 animate-float-slow -top-40 -left-40 mix-blend-screen"></div>
+      <div class="absolute w-[600px] h-[600px] rounded-full blur-[100px] opacity-[0.08] bg-sky-300 animate-float-delayed -bottom-20 -right-20 mix-blend-screen"></div>
+      <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMTI4LCAxMjgsIDEyOCwgMC4yKSIvPjwvc3ZnPg==')] opacity-50"></div>
     </div>
 
     <!-- Main Card -->
-    <div class="relative z-10 w-full max-w-[450px] bg-white/80 backdrop-blur-2xl rounded-[3rem] shadow-[0_20px_50px_rgba(0,0,0,0.05)] border border-white p-8 lg:p-12 animate-in-scale">
+    <div class="relative z-10 w-full max-w-[420px] glass-panel border border-white/20 dark:border-white/5 p-8 sm:p-10 animate-slide-up">
       
-      <div class="text-center mb-10">
-        <div class="inline-flex p-4 rounded-3xl bg-blue-50 text-blue-500 mb-6 animate-bounce-subtle">
-          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-8 h-8">
+      <div class="text-center mb-8">
+        <div class="inline-flex p-3 rounded-2xl bg-brand-50 text-brand-600 dark:bg-brand-900/40 dark:text-brand-400 mb-6 shadow-inner-light ring-1 ring-brand-500/10 animate-bounce-subtle">
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.8" stroke="currentColor" class="w-7 h-7">
             <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z" />
           </svg>
         </div>
-        <h2 class="text-3xl font-extrabold text-slate-800 tracking-tight mb-2">Bienvenido</h2>
-        <p class="text-slate-500 font-medium">Ingresa tus credenciales para continuar</p>
+        <h2 class="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">Bienvenido de nuevo</h2>
+        <p class="text-slate-500 dark:text-slate-400 font-medium text-sm">Ingresa a tu cuenta para continuar</p>
       </div>
 
-      <form @submit.prevent="handleLogin" class="space-y-6">
-        <div class="space-y-1 animate-slide-right" style="animation-delay: 0.1s">
-          <label class="block text-sm font-bold text-slate-700 ml-1">Correo Electrónico</label>
+      <form @submit.prevent="handleLogin" class="space-y-5">
+        <div class="space-y-1 animate-slide-up" style="animation-delay: 0.1s; animation-fill-mode: both;">
+          <label class="label-base">Correo Electrónico</label>
           <div class="relative group">
             <input v-model="form.email" type="email" 
-              class="w-full px-6 py-4 rounded-2xl text-slate-800 bg-slate-100/50 border border-transparent focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all duration-300 outline-none placeholder-slate-400 font-medium"
+              class="input-base focus:ring-4 focus:ring-brand-500/20"
               placeholder="ejemplo@correo.com" required autocomplete="email" />
           </div>
         </div>
         
-        <div class="space-y-1 animate-slide-right" style="animation-delay: 0.2s">
-          <label class="block text-sm font-bold text-slate-700 ml-1">Contraseña</label>
+        <div class="space-y-1 animate-slide-up" style="animation-delay: 0.2s; animation-fill-mode: both;">
+          <label class="label-base">Contraseña</label>
           <div class="relative group">
             <input v-model="form.password" :type="showPwd ? 'text' : 'password'" 
-              class="w-full px-6 py-4 rounded-2xl text-slate-800 bg-slate-100/50 border border-transparent focus:border-blue-400 focus:bg-white focus:ring-4 focus:ring-blue-100 transition-all duration-300 outline-none placeholder-slate-400 font-medium tracking-tight"
+              class="input-base tracking-widest focus:ring-4 focus:ring-brand-500/20"
               placeholder="••••••••" required autocomplete="current-password" />
             <button type="button" @click="showPwd = !showPwd"
-              class="absolute right-4 top-1/2 -translate-y-1/2 p-2 rounded-xl text-slate-400 hover:text-blue-500 hover:bg-blue-50 transition-colors">
+              class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-300 transition-colors focus:outline-none">
               <EyeSlashIcon v-if="showPwd" class="w-5 h-5" />
               <EyeIcon v-else class="w-5 h-5" />
             </button>
@@ -46,34 +46,33 @@
         </div>
 
         <!-- reCAPTCHA v2 Container -->
-        <div class="space-y-1 animate-fade-in" style="animation-delay: 0.3s">
-          <label class="block text-sm font-bold text-slate-700 ml-1">Verificación de seguridad</label>
-          <div class="flex items-center justify-center bg-slate-100/50 rounded-2xl border border-transparent p-4 min-h-[100px] overflow-hidden group-focus-within:border-blue-400 transition-all duration-300">
-            <div id="recaptcha-container" class="scale-[0.85] sm:scale-100 origin-center"></div>
+        <div class="space-y-1 animate-fade-in" style="animation-delay: 0.3s; animation-fill-mode: both;">
+          <label class="label-base">Verificación</label>
+          <div class="flex items-center justify-center bg-slate-50 dark:bg-surface-800 rounded-xl border border-slate-200 dark:border-white/10 p-2 min-h-[90px] overflow-hidden transition-all shadow-sm">
+            <div id="recaptcha-container" class="scale-[0.8] sm:scale-95 origin-center"></div>
           </div>
         </div>
 
         <Transition name="fade">
-          <div v-if="error" class="flex items-center gap-3 bg-red-50 border border-red-100 text-red-500 rounded-2xl px-5 py-4 text-sm font-bold animate-shake">
-            <ExclamationTriangleIcon class="w-5 h-5 flex-shrink-0" />
-            <span>{{ error }}</span>
+          <div v-if="error" class="flex items-start gap-3 bg-rose-50/80 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-600 dark:text-rose-400 rounded-xl px-4 py-3 text-sm font-semibold animate-shake">
+            <ExclamationTriangleIcon class="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <span class="leading-snug">{{ error }}</span>
           </div>
         </Transition>
 
-        <button type="submit" class="relative w-full py-4 rounded-2xl font-black text-white overflow-hidden group transition-all duration-300 hover:shadow-2xl hover:shadow-blue-200 active:scale-95 animate-slide-up" :disabled="loading" style="animation-delay: 0.4s">
-          <div class="absolute inset-0 bg-gradient-to-r from-blue-500 to-indigo-600 transition-transform duration-500 group-hover:scale-110"></div>
-          <div class="relative flex items-center justify-center gap-3">
-            <span v-if="loading" class="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-            <span class="tracking-widest uppercase text-sm">{{ loading ? 'Cargando...' : 'Entrar ahora' }}</span>
+        <button type="submit" class="btn-primary w-full py-3.5 rounded-xl font-bold tracking-wide mt-2 animate-slide-up hover:ring-4 hover:ring-brand-500/20 transition-all" :disabled="loading" style="animation-delay: 0.4s; animation-fill-mode: both;">
+          <div class="relative flex items-center justify-center gap-2">
+            <span v-if="loading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+            <span>{{ loading ? 'Ingresando...' : 'Iniciar Sesión' }}</span>
           </div>
         </button>
       </form>
 
-      <div class="mt-10 text-center animate-fade-in" style="animation-delay: 0.5s">
-        <p class="text-slate-400 font-medium text-sm">
-          ¿Aún no tienes cuenta? 
-          <router-link to="/register" class="text-blue-600 font-bold hover:text-blue-700 hover:underline transition-all">
-            Crea una aquí
+      <div class="mt-8 text-center animate-fade-in" style="animation-delay: 0.5s; animation-fill-mode: both;">
+        <p class="text-slate-500 dark:text-slate-400 font-medium text-sm">
+          ¿No tienes una cuenta? 
+          <router-link to="/register" class="text-brand-600 dark:text-brand-400 font-bold hover:text-brand-700 dark:hover:text-brand-300 hover:underline underline-offset-4 transition-all">
+            Regístrate aquí
           </router-link>
         </p>
       </div>
