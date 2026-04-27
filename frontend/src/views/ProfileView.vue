@@ -3,7 +3,7 @@
 
     <!-- Header -->
     <header class="sticky top-0 z-20 px-4 py-3 safe-top flex items-center gap-3"
-      style="background: var(--nav-bg); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border-subtle); --header-base-padding: 0.75rem;">
+      style="background: var(--nav-bg); backdrop-filter: blur(14px); border-bottom: 1px solid var(--border-subtle);">
       <router-link to="/checkin"
         class="w-9 h-9 rounded-xl flex items-center justify-center transition-all"
         style="color: var(--text-muted);"
