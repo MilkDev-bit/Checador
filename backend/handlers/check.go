@@ -35,14 +35,14 @@ type LocationPointRequest struct {
 
 // ipAPIResponse maps the fields we use from ip-api.com (free, no key needed).
 type ipAPIResponse struct {
-	Status      string  `json:"status"`
-	Country     string  `json:"country"`
-	City        string  `json:"city"`
-	Lat         float64 `json:"lat"`
-	Lon         float64 `json:"lon"`
-	Proxy       bool    `json:"proxy"`
-	Hosting     bool    `json:"hosting"`
-	Mobile      bool    `json:"mobile"`
+	Status  string  `json:"status"`
+	Country string  `json:"country"`
+	City    string  `json:"city"`
+	Lat     float64 `json:"lat"`
+	Lon     float64 `json:"lon"`
+	Proxy   bool    `json:"proxy"`
+	Hosting bool    `json:"hosting"`
+	Mobile  bool    `json:"mobile"`
 }
 
 // getClientIP extracts the real client IP honoring X-Forwarded-For (set by nginx).
@@ -164,7 +164,11 @@ func RegisterCheck(c *gin.Context) {
 	err = database.DB.QueryRow(
 		`INSERT INTO check_records (user_id, type, timestamp, photo_site_path, photo_selfie_path)
  VALUES ($1, $2, $3, $4, $5)
- RETURNING id, user_id, type, timestamp, photo_site_path, photo_selfie_path, is_suspicious, suspicious_reason, ip_country, ip_city, created_at`,
+ RETURNING id, user_id, type, timestamp,
+           COALESCE(photo_site_path, ''), COALESCE(photo_selfie_path, ''),
+           is_suspicious,
+           COALESCE(suspicious_reason, ''), COALESCE(ip_country, ''), COALESCE(ip_city, ''),
+           created_at`,
 		userID, req.Type, ts, photoSiteData, photoSelfieData,
 	).Scan(&record.ID, &record.UserID, &record.Type, &record.Timestamp,
 		&record.PhotoSitePath, &record.PhotoSelfiePath,
