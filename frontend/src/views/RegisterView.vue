@@ -125,9 +125,11 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { useThemeStore } from '@/stores/theme'
 import { EyeIcon, EyeSlashIcon, ExclamationTriangleIcon, CheckCircleIcon } from '@heroicons/vue/24/outline'
 
 const auth = useAuthStore()
+const themeStore = useThemeStore()
 const router = useRouter()
 const loading = ref(false)
 const error = ref('')
@@ -142,7 +144,7 @@ onMounted(() => {
       try {
         recaptchaWidgetId.value = window.grecaptcha.render('recaptcha-container', {
           sitekey: '6LdUjcgsAAAAAI0pgOSk7QMEmq-zjD4saihqzaa-', 
-          theme: 'light'
+          theme: themeStore.isDark ? 'dark' : 'light'
         })
       } catch (e) {
         console.warn('Recaptcha error:', e)
