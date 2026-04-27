@@ -10,8 +10,6 @@
           <div class="w-10 h-10 rounded-xl flex items-center justify-center text-xl"
             style="background: linear-gradient(135deg, #6366f1, #8b5cf6);"><CheckCircleIcon class="w-5 h-5 text-white" /></div>
           <div>
-            <p style="color: var(--text);" class="font-bold text-base leading-none">PaseLista</p>
-            <p style="color: var(--text-muted);" class="text-xs mt-0.5">Panel Admin</p>
           </div>
         </div>
       </div>
