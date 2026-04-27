@@ -20,8 +20,8 @@ jobs:
     - name: Set up Go
       uses: actions/setup-go@v4
       with:
-        go-version: '1.20'
-        # Tip: Esto acelera futuras ejecuciones guardando las dependencias
+        # Actualizamos de '1.20' a '1.22'
+        go-version: '1.22'
         cache: true
         cache-dependency-path: backend/go.sum
 
