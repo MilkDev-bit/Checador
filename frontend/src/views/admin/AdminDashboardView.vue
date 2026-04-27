@@ -368,12 +368,18 @@
         </div>
 
         <!-- ===== PROFILE TAB ===== -->
-        <div v-if="activeTab === 'profile'" class="max-w-lg space-y-5 animate-in">
+        <div v-if="activeTab === 'profile'" class="animate-in">
+
+          <!-- Layout: avatar card full-width arriba, luego 2 columnas en lg -->
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+
+            <!-- Col izquierda: Avatar + Cover + Info de cuenta -->
+            <div class="space-y-5">
 
           <!-- Avatar + Cover card -->
           <div class="glass-card overflow-hidden">
             <!-- Cover -->
-            <div class="relative h-28 group cursor-pointer" @click="triggerAdminCoverPick">
+            <div class="relative h-36 group cursor-pointer" @click="triggerAdminCoverPick">
               <div class="absolute inset-0 overflow-hidden">
                 <img v-if="adminCoverPreview || auth.user?.cover_url"
                   :src="adminCoverPreview || auth.user?.cover_url"
@@ -395,15 +401,15 @@
             <div class="px-5 pb-5">
               <div class="flex items-end gap-4 -mt-9 mb-4">
                 <!-- Avatar -->
-                <div class="relative flex-shrink-0 group w-[72px] h-[72px] cursor-pointer"
+                <div class="relative flex-shrink-0 group w-[80px] h-[80px] cursor-pointer"
                   @click="triggerAdminAvatarPick"
                   style="filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));">
-                  <div class="w-[72px] h-[72px] rounded-2xl overflow-hidden ring-4 ring-[var(--card-bg)]"
+                  <div class="w-[80px] h-[80px] rounded-2xl overflow-hidden ring-4 ring-[var(--card-bg)]"
                     style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
                     <img v-if="adminAvatarPreview || auth.user?.avatar_url"
                       :src="adminAvatarPreview || auth.user?.avatar_url"
                       class="w-full h-full object-cover" />
-                    <div v-else class="w-full h-full flex items-center justify-center text-white text-xl font-black select-none">
+                    <div v-else class="w-full h-full flex items-center justify-center text-white text-2xl font-black select-none">
                       {{ adminInitials }}
                     </div>
                   </div>
@@ -414,7 +420,7 @@
                 </div>
 
                 <div class="mb-1 min-w-0 flex-1 pt-10">
-                  <p class="font-black text-lg truncate leading-tight" style="color: var(--text);">{{ auth.user?.first_name }} {{ auth.user?.last_name }}</p>
+                  <p class="font-black text-xl truncate leading-tight" style="color: var(--text);">{{ auth.user?.first_name }} {{ auth.user?.last_name }}</p>
                   <p class="text-sm truncate" style="color: var(--text-muted);">{{ auth.user?.email }}</p>
                   <span class="badge badge-blue mt-1.5">Administrador</span>
                 </div>
@@ -460,6 +466,40 @@
               </Transition>
             </div>
           </div>
+
+          <!-- Account info -->
+          <div class="glass-card p-6">
+            <div class="flex items-center gap-3 mb-5">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style="background: rgba(6,182,212,0.12); border: 1px solid rgba(6,182,212,0.2);">
+                <InformationCircleIcon class="w-5 h-5 text-cyan-400" />
+              </div>
+              <h2 class="font-bold text-base" style="color: var(--text);">Información de cuenta</h2>
+            </div>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between py-2.5 px-3 rounded-xl" style="background: var(--input-bg);">
+                <span class="text-sm" style="color: var(--text-muted);">Nombre</span>
+                <span class="text-sm font-semibold" style="color: var(--text);">{{ auth.user?.first_name }} {{ auth.user?.last_name }}</span>
+              </div>
+              <div class="flex items-center justify-between py-2.5 px-3 rounded-xl" style="background: var(--input-bg);">
+                <span class="text-sm" style="color: var(--text-muted);">Correo</span>
+                <span class="text-sm font-semibold truncate max-w-[200px]" style="color: var(--text);">{{ auth.user?.email }}</span>
+              </div>
+              <div class="flex items-center justify-between py-2.5 px-3 rounded-xl" style="background: var(--input-bg);">
+                <span class="text-sm" style="color: var(--text-muted);">Miembro desde</span>
+                <span class="text-sm font-semibold" style="color: var(--text);">{{ adminMemberSince }}</span>
+              </div>
+              <div class="flex items-center justify-between py-2.5 px-3 rounded-xl" style="background: var(--input-bg);">
+                <span class="text-sm" style="color: var(--text-muted);">Rol</span>
+                <span class="badge badge-blue">Administrador</span>
+              </div>
+            </div>
+          </div>
+
+            </div><!-- /col izquierda -->
+
+            <!-- Col derecha: Cambiar correo + Cambiar contraseña -->
+            <div class="space-y-5">
 
           <!-- Change email -->
           <div class="glass-card p-6">
@@ -567,35 +607,9 @@
             </form>
           </div>
 
-          <!-- Account info -->
-          <div class="glass-card p-6">
-            <div class="flex items-center gap-3 mb-5">
-              <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                style="background: rgba(6,182,212,0.12); border: 1px solid rgba(6,182,212,0.2);">
-                <InformationCircleIcon class="w-5 h-5 text-cyan-400" />
-              </div>
-              <h2 class="font-bold text-base" style="color: var(--text);">Información de cuenta</h2>
-            </div>
-            <div class="space-y-3">
-              <div class="flex items-center justify-between py-2.5 px-3 rounded-xl" style="background: var(--input-bg);">
-                <span class="text-sm" style="color: var(--text-muted);">Nombre</span>
-                <span class="text-sm font-semibold" style="color: var(--text);">{{ auth.user?.first_name }} {{ auth.user?.last_name }}</span>
-              </div>
-              <div class="flex items-center justify-between py-2.5 px-3 rounded-xl" style="background: var(--input-bg);">
-                <span class="text-sm" style="color: var(--text-muted);">Correo</span>
-                <span class="text-sm font-semibold truncate max-w-[200px]" style="color: var(--text);">{{ auth.user?.email }}</span>
-              </div>
-              <div class="flex items-center justify-between py-2.5 px-3 rounded-xl" style="background: var(--input-bg);">
-                <span class="text-sm" style="color: var(--text-muted);">Miembro desde</span>
-                <span class="text-sm font-semibold" style="color: var(--text);">{{ adminMemberSince }}</span>
-              </div>
-              <div class="flex items-center justify-between py-2.5 px-3 rounded-xl" style="background: var(--input-bg);">
-                <span class="text-sm" style="color: var(--text-muted);">Rol</span>
-                <span class="badge badge-blue">Administrador</span>
-              </div>
-            </div>
-          </div>
+            </div><!-- /col derecha -->
 
+          </div><!-- /grid -->
         </div>
 
       </div>
