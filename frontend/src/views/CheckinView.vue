@@ -4,19 +4,28 @@
     <header class="sticky top-0 z-20 px-4 py-3 flex items-center justify-between"
       style="background: var(--nav-bg); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-subtle);">
       <div class="flex items-center gap-3">
-        <div class="w-8 h-8 rounded-lg flex items-center justify-center"
+        <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
           style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
           <CheckCircleIcon class="w-4 h-4 text-white" />
         </div>
         <div>
           <p class="font-semibold text-sm leading-none" style="color: var(--text);">PaseLista</p>
-          <p class="text-xs mt-0.5 truncate max-w-[160px]" style="color: var(--text-muted);">{{ auth.user?.project_name }}</p>
+          <p class="text-xs mt-0.5 truncate max-w-[130px]" style="color: var(--text-muted);">{{ auth.user?.project_name }}</p>
         </div>
       </div>
       <div class="flex items-center gap-1">
         <router-link to="/qr" class="btn-ghost text-xs px-3 py-2">QR</router-link>
         <router-link to="/history" class="btn-ghost text-xs px-3 py-2">Historial</router-link>
         <ThemeToggle />
+        <!-- Avatar / profile button -->
+        <router-link to="/profile"
+          class="w-8 h-8 rounded-xl overflow-hidden flex-shrink-0 transition-all hover:ring-2 ring-brand-400/60"
+          style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+          <img v-if="auth.user?.avatar_url" :src="auth.user.avatar_url" class="w-full h-full object-cover" alt="Perfil" />
+          <span v-else class="w-full h-full flex items-center justify-center text-white text-xs font-black">
+            {{ auth.user?.first_name?.[0] ?? '' }}{{ auth.user?.last_name?.[0] ?? '' }}
+          </span>
+        </router-link>
         <button @click="showLogoutModal = true" class="btn-ghost text-xs px-3 py-2 text-rose-400">Salir</button>
       </div>
     </header>
@@ -51,10 +60,14 @@
       <!-- Greeting card -->
       <div class="glass-card p-5 animate-in">
         <div class="flex items-center gap-4">
-          <div class="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
+          <router-link to="/profile"
+            class="w-14 h-14 rounded-2xl overflow-hidden flex-shrink-0 transition-transform hover:scale-105"
             style="background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.3)); border: 1px solid rgba(99,102,241,0.3);">
-            <HandRaisedIcon class="w-7 h-7 text-brand-400" />
-          </div>
+            <img v-if="auth.user?.avatar_url" :src="auth.user.avatar_url" class="w-full h-full object-cover" alt="Avatar" />
+            <div v-else class="w-full h-full flex items-center justify-center">
+              <HandRaisedIcon class="w-7 h-7 text-brand-400" />
+            </div>
+          </router-link>
           <div class="min-w-0">
             <h2 class="text-lg font-bold truncate" style="color: var(--text);">Hola, {{ auth.user?.first_name }}</h2>
             <p class="text-sm" style="color: var(--text-muted);">{{ todayStr }}</p>

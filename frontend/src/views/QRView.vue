@@ -8,6 +8,14 @@
       </router-link>
       <h1 class="font-bold text-base flex-1" style="color: var(--text);">Código QR de Acceso</h1>
       <ThemeToggle />
+      <router-link to="/profile"
+        class="w-8 h-8 rounded-xl overflow-hidden flex-shrink-0 transition-all hover:ring-2 ring-brand-400/60"
+        style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+        <img v-if="auth?.user?.avatar_url" :src="auth.user.avatar_url" class="w-full h-full object-cover" alt="Perfil" />
+        <span v-else class="w-full h-full flex items-center justify-center text-white text-xs font-black">
+          {{ auth?.user?.first_name?.[0] ?? '' }}{{ auth?.user?.last_name?.[0] ?? '' }}
+        </span>
+      </router-link>
     </header>
 
     <div class="max-w-sm mx-auto px-4 pt-8 pb-10 text-center space-y-5">
@@ -44,8 +52,11 @@
 <script setup>
 import { ref, onMounted } from 'vue'
 import api from '@/api'
+import { useAuthStore } from '@/stores/auth'
 import { ArrowLeftIcon, QrCodeIcon, ArrowDownTrayIcon } from '@heroicons/vue/24/outline'
 import ThemeToggle from '@/components/ThemeToggle.vue'
+
+const auth = useAuthStore()
 
 const qrUrl = ref('')
 const checkinUrl = ref('')

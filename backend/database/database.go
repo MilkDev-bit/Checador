@@ -95,6 +95,7 @@ func Migrate() {
 		`ALTER TABLE check_records ADD COLUMN IF NOT EXISTS suspicious_reason TEXT`,
 		`ALTER TABLE check_records ADD COLUMN IF NOT EXISTS ip_country VARCHAR(100)`,
 		`ALTER TABLE check_records ADD COLUMN IF NOT EXISTS ip_city VARCHAR(100)`,
+		`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT`,
 	}
 	for _, q := range alterQueries {
 		if _, err := DB.Exec(q); err != nil {
