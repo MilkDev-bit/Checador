@@ -10,7 +10,6 @@
         <ArrowLeftIcon class="w-5 h-5" />
       </router-link>
       <h1 class="font-bold text-base flex-1" style="color: var(--text);">Historial de Registros</h1>
-      <ThemeToggle />
       <router-link to="/profile"
         class="w-8 h-8 rounded-xl overflow-hidden flex-shrink-0 transition-all hover:ring-2 ring-brand-400/60"
         style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
@@ -135,7 +134,6 @@ import {
   ArrowLeftIcon, MapPinIcon, ArrowRightOnRectangleIcon,
   ClipboardDocumentListIcon, BuildingOffice2Icon, UserCircleIcon, XMarkIcon
 } from '@heroicons/vue/24/outline'
-import ThemeToggle from '@/components/ThemeToggle.vue'
 
 const auth = useAuthStore()
 const records = ref([])

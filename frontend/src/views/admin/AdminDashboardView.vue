@@ -43,7 +43,7 @@
         </div>
         <div class="flex items-center justify-between mb-2">
           <span class="text-xs" style="color: var(--text-muted);">Tema</span>
-          <ThemeToggle />
+          <button @click="theme.toggle()" class="px-2 py-1 rounded bg-surface-200 dark:bg-surface-800 text-xs">Toggle Tema</button>
         </div>
         <button @click="showLogoutModal = true" class="btn-secondary btn-sm w-full text-rose-400 border-rose-500/20 hover:bg-rose-500/10">
           Cerrar Sesión

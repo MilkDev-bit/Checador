@@ -18,7 +18,6 @@
         
         <!-- Mobile Actions -->
         <div class="flex items-center gap-2 md:hidden">
-          <ThemeToggle />
           <router-link to="/profile" class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 transition-transform active:scale-95 ring-2 ring-brand-100 dark:ring-brand-900/50">
             <img v-if="auth.user?.avatar_url" :src="auth.user.avatar_url" class="w-full h-full object-cover" alt="Perfil" />
             <div v-else class="w-full h-full bg-brand-500 flex items-center justify-center text-white text-xs font-bold">
@@ -53,10 +52,6 @@
 
       <!-- Desktop Bottom Actions -->
       <div class="p-4 border-t border-slate-200 dark:border-white/5 hidden md:block space-y-3">
-        <div class="flex items-center justify-between px-2">
-          <span class="text-xs font-semibold text-slate-500 dark:text-slate-400">Tema</span>
-          <ThemeToggle />
-        </div>
         <router-link to="/profile" class="flex items-center gap-3 px-3 py-2 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-all">
           <div class="w-8 h-8 rounded-full overflow-hidden flex-shrink-0 bg-brand-100 dark:bg-brand-900/40 border border-brand-200 dark:border-brand-800">
             <img v-if="auth.user?.avatar_url" :src="auth.user.avatar_url" class="w-full h-full object-cover" alt="Perfil" />
@@ -525,7 +520,6 @@ import {
   InformationCircleIcon, DevicePhoneMobileIcon, ArrowPathRoundedSquareIcon,
   QrCodeIcon, ClockIcon, Bars3BottomRightIcon
 } from '@heroicons/vue/24/outline'
-import ThemeToggle from '@/components/ThemeToggle.vue'
 
 const auth = useAuthStore()
 const router = useRouter()

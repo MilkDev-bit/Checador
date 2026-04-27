@@ -11,8 +11,7 @@
         @mouseleave="e => e.currentTarget.style.background='transparent'">
         <ArrowLeftIcon class="w-5 h-5" />
       </router-link>
-      <h1 class="font-bold text-base flex-1" style="color: var(--text);">Mi Perfil</h1>
-      <ThemeToggle />
+      <h1 class="font-bold text-base" style="color: var(--text);">Mi Perfil</h1>
     </header>
 
     <div class="max-w-lg mx-auto px-4 pt-6 space-y-5">
@@ -237,7 +236,34 @@
           </button>
         </form>
       </div>
-
+      <!-- ── Appearance card ────────────────────────── -->
+      <div class="glass-card p-6 animate-in" style="animation-delay: 0.15s">
+        <div class="flex items-center gap-3 mb-5">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+            style="background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.2);">
+            <SunIcon class="w-5 h-5 text-amber-400" />
+          </div>
+          <h2 class="font-bold text-base" style="color: var(--text);">Apariencia</h2>
+        </div>
+        <div class="flex items-center justify-between py-3 px-4 rounded-xl" style="background: var(--input-bg);">
+          <div>
+            <p class="text-sm font-semibold" style="color: var(--text);">Modo Oscuro</p>
+            <p class="text-xs mt-0.5" style="color: var(--text-muted);">Cambiar tema visual</p>
+          </div>
+          <button
+            @click="theme.toggle()"
+            class="relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
+            :class="theme.isDark ? 'bg-brand-500' : 'bg-slate-300 dark:bg-surface-600'"
+            role="switch"
+            :aria-checked="theme.isDark"
+          >
+            <span
+              class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
+              :class="theme.isDark ? 'translate-x-5' : 'translate-x-0'"
+            ></span>
+          </button>
+        </div>
+      </div>
       <!-- ── Account info card ─────────────────────────── -->
       <div class="glass-card p-6 animate-in" style="animation-delay: 0.18s">
         <div class="flex items-center gap-3 mb-5">
@@ -277,14 +303,15 @@
 import { ref, computed } from 'vue'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api'
-import ThemeToggle from '@/components/ThemeToggle.vue'
+import { useThemeStore } from '@/stores/theme'
 import {
   ArrowLeftIcon, CameraIcon, EnvelopeIcon, LockClosedIcon,
   CheckIcon, XMarkIcon, CheckCircleIcon, ExclamationTriangleIcon,
-  EyeIcon, EyeSlashIcon, InformationCircleIcon, UserCircleIcon, PhotoIcon
+  EyeIcon, EyeSlashIcon, InformationCircleIcon, UserCircleIcon, PhotoIcon, SunIcon
 } from '@heroicons/vue/24/outline'
 
 const auth = useAuthStore()
+const theme = useThemeStore()
 
 // ── Cover / Banner ────────────────────────────────────────
 const coverInput = ref(null)
