@@ -93,7 +93,34 @@ func UpdatePassword(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Contraseña actualizada correctamente"})
 }
 
-// UpdateAvatar stores a base64-encoded image data URL as the user's avatar.
+// UpdateCover stores a base64-encoded image data URL as the user's cover/banner.
+func UpdateCover(c *gin.Context) {
+	userID := c.GetString("user_id")
+
+	var req UpdateAvatarRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Imagen requerida"})
+		return
+	}
+
+	if !strings.HasPrefix(req.AvatarURL, "data:image/") {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Formato de imagen no válido"})
+		return
+	}
+
+	if len(req.AvatarURL) > 1_000_000 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Imagen demasiado grande. Máximo 700 KB"})
+		return
+	}
+
+	_, err := database.DB.Exec(`UPDATE users SET cover_url = $1 WHERE id = $2`, req.AvatarURL, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al guardar la portada"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Portada actualizada", "cover_url": req.AvatarURL})
+}
 func UpdateAvatar(c *gin.Context) {
 	userID := c.GetString("user_id")
 

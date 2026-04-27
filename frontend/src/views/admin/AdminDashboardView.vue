@@ -18,11 +18,13 @@
       <nav class="flex-1 px-3 py-4 space-y-1">
         <button v-for="item in navItems" :key="item.id"
           @click="activeTab = item.id"
-          :class="activeTab === item.id ? 'text-white' : 'text-slate-400 hover:text-white hover:bg-white/5'"
-          class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-medium transition-all">
-          <component :is="item.icon" class="w-5 h-5" />
+          :class="activeTab === item.id
+            ? 'bg-gradient-to-r from-brand-500/90 to-violet-600/90 text-white shadow-md'
+            : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--input-bg)]'"
+          class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all">
+          <component :is="item.icon" class="w-5 h-5 flex-shrink-0" />
           <span>{{ item.label }}</span>
-          <div v-if="activeTab === item.id" class="ml-auto w-1.5 h-1.5 rounded-full bg-brand-400"></div>
+          <div v-if="activeTab === item.id" class="ml-auto w-1.5 h-1.5 rounded-full bg-white/70"></div>
         </button>
         <div v-if="activeTab !== 'users' && activeTab !== 'overview'" class="absolute left-64 top-0 bottom-0 w-0.5 bg-brand-500/20 pointer-events-none"></div>
       </nav>
@@ -87,25 +89,25 @@
 
           <!-- Stats grid -->
           <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
-            <div class="stat-card col-span-2 lg:col-span-1" style="background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.25);">
-              <p class="stat-label flex items-center gap-1"><UsersIcon class="w-4 h-4" /> Usuarios</p>
-              <p class="stat-value text-brand-400">{{ stats.total_users }}</p>
+            <div class="stat-card col-span-2 lg:col-span-1" style="background: rgba(99,102,241,0.1); border-color: rgba(99,102,241,0.3);">
+              <p class="stat-label flex items-center gap-1"><UsersIcon class="w-4 h-4 text-brand-500 dark:text-brand-400" /> Usuarios</p>
+              <p class="stat-value text-brand-600 dark:text-brand-400">{{ stats.total_users }}</p>
             </div>
-            <div class="stat-card" style="background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.25);">
-              <p class="stat-label flex items-center gap-1"><MapPinIcon class="w-4 h-4" /> Entradas</p>
-              <p class="stat-value text-emerald-400">{{ stats.entries_total }}</p>
+            <div class="stat-card" style="background: rgba(16,185,129,0.1); border-color: rgba(16,185,129,0.3);">
+              <p class="stat-label flex items-center gap-1"><MapPinIcon class="w-4 h-4 text-emerald-600 dark:text-emerald-400" /> Entradas</p>
+              <p class="stat-value text-emerald-600 dark:text-emerald-400">{{ stats.entries_total }}</p>
             </div>
-            <div class="stat-card" style="background: rgba(244,63,94,0.1); border-color: rgba(244,63,94,0.25);">
-              <p class="stat-label flex items-center gap-1"><ArrowRightOnRectangleIcon class="w-4 h-4" /> Salidas</p>
-              <p class="stat-value text-rose-400">{{ stats.exits_total }}</p>
+            <div class="stat-card" style="background: rgba(244,63,94,0.1); border-color: rgba(244,63,94,0.3);">
+              <p class="stat-label flex items-center gap-1"><ArrowRightOnRectangleIcon class="w-4 h-4 text-rose-600 dark:text-rose-400" /> Salidas</p>
+              <p class="stat-value text-rose-600 dark:text-rose-400">{{ stats.exits_total }}</p>
             </div>
-            <div class="stat-card" style="background: rgba(251,191,36,0.1); border-color: rgba(251,191,36,0.25);">
-              <p class="stat-label flex items-center gap-1"><SignalIcon class="w-4 h-4" /> Activos</p>
-              <p class="stat-value text-amber-400">{{ stats.active_now }}</p>
+            <div class="stat-card" style="background: rgba(251,191,36,0.1); border-color: rgba(251,191,36,0.3);">
+              <p class="stat-label flex items-center gap-1"><SignalIcon class="w-4 h-4 text-amber-600 dark:text-amber-400" /> Activos</p>
+              <p class="stat-value text-amber-600 dark:text-amber-400">{{ stats.active_now }}</p>
             </div>
-            <div class="stat-card" style="background: rgba(6,182,212,0.1); border-color: rgba(6,182,212,0.25);">
-              <p class="stat-label flex items-center gap-1"><ClipboardDocumentListIcon class="w-4 h-4" /> Registros</p>
-              <p class="stat-value text-cyan-400">{{ stats.records_today }}</p>
+            <div class="stat-card" style="background: rgba(6,182,212,0.1); border-color: rgba(6,182,212,0.3);">
+              <p class="stat-label flex items-center gap-1"><ClipboardDocumentListIcon class="w-4 h-4 text-cyan-600 dark:text-cyan-400" /> Registros</p>
+              <p class="stat-value text-cyan-600 dark:text-cyan-400">{{ stats.records_today }}</p>
             </div>
           </div>
 
@@ -113,7 +115,7 @@
           <div class="glass-card overflow-hidden">
             <div class="px-5 py-4 flex items-center justify-between" style="border-bottom: 1px solid var(--border-subtle);">
               <h3 class="font-semibold" style="color: var(--text);">Registros recientes</h3>
-              <button @click="activeTab = 'records'" class="text-brand-400 text-sm hover:text-brand-300 transition-colors">
+              <button @click="activeTab = 'records'" class="text-brand-600 dark:text-brand-400 text-sm hover:text-brand-700 dark:hover:text-brand-300 font-semibold transition-colors">
                 Ver todos →
               </button>
             </div>
@@ -166,12 +168,10 @@
                       <div class="flex items-center gap-2">
                         <button v-if="r.has_site_photo || r.has_selfie_photo"
                           @click="openPhotosModal(r)"
-                          class="text-xs px-2 py-1 rounded-lg transition-all flex-shrink-0"
-                          style="color: #a78bfa;">Fotos</button>
+                          class="text-xs px-2 py-1 rounded-lg font-semibold transition-all flex-shrink-0 bg-violet-100 text-violet-700 hover:bg-violet-200 dark:bg-violet-500/15 dark:text-violet-400">Fotos</button>
                         <span v-else class="text-xs" style="color: var(--text-dim);">Sin fotos</span>
                         <button @click="openRouteModal(r)" :disabled="r.location_count === 0"
-                          class="text-xs px-2 py-1 rounded-lg transition-all flex-shrink-0"
-                          :style="r.location_count > 0 ? 'color: #818cf8;' : 'color: var(--text-dim); opacity: 0.4;'">Mapa</button>
+                          class="text-xs px-2 py-1 rounded-lg font-semibold transition-all flex-shrink-0 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-400 disabled:opacity-40 disabled:cursor-not-allowed">Mapa</button>
                       </div>
                     </td>
                   </tr>
@@ -283,12 +283,10 @@
                       <div class="flex items-center gap-2">
                         <button v-if="r.has_site_photo || r.has_selfie_photo"
                           @click="openPhotosModal(r)"
-                          class="text-xs px-2 py-1 rounded-lg transition-all flex-shrink-0"
-                          style="color: #a78bfa;">Fotos</button>
+                          class="text-xs px-2 py-1 rounded-lg font-semibold transition-all flex-shrink-0 bg-violet-100 text-violet-700 hover:bg-violet-200 dark:bg-violet-500/15 dark:text-violet-400">Fotos</button>
                         <span v-else class="text-xs" style="color: var(--text-dim);">Sin fotos</span>
                         <button @click="openRouteModal(r)" :disabled="r.location_count === 0"
-                          class="text-xs px-2 py-1 rounded-lg transition-all flex-shrink-0"
-                          :style="r.location_count > 0 ? 'color: #818cf8;' : 'color: var(--text-dim); opacity: 0.4;'">Mapa</button>
+                          class="text-xs px-2 py-1 rounded-lg font-semibold transition-all flex-shrink-0 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-400 disabled:opacity-40 disabled:cursor-not-allowed">Mapa</button>
                       </div>
                     </td>
                   </tr>
@@ -369,6 +367,237 @@
           </div>
         </div>
 
+        <!-- ===== PROFILE TAB ===== -->
+        <div v-if="activeTab === 'profile'" class="max-w-lg space-y-5 animate-in">
+
+          <!-- Avatar + Cover card -->
+          <div class="glass-card overflow-hidden">
+            <!-- Cover -->
+            <div class="relative h-28 group cursor-pointer" @click="triggerAdminCoverPick">
+              <div class="absolute inset-0 overflow-hidden">
+                <img v-if="adminCoverPreview || auth.user?.cover_url"
+                  :src="adminCoverPreview || auth.user?.cover_url"
+                  class="w-full h-full object-cover" />
+                <div v-else class="w-full h-full"
+                  style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);">
+                  <div class="absolute inset-0 opacity-20"
+                    style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 18px 18px;"></div>
+                </div>
+              </div>
+              <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-200 flex items-center justify-center">
+                <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 bg-black/60 text-white text-xs font-semibold px-3 py-1.5 rounded-full">
+                  <CameraIcon class="w-3.5 h-3.5" /> Cambiar portada
+                </div>
+              </div>
+              <input ref="adminCoverInput" type="file" accept="image/*" class="hidden" @change="onAdminCoverChange" />
+            </div>
+
+            <div class="px-5 pb-5">
+              <div class="flex items-end gap-4 -mt-9 mb-4">
+                <!-- Avatar -->
+                <div class="relative flex-shrink-0 group w-[72px] h-[72px] cursor-pointer"
+                  @click="triggerAdminAvatarPick"
+                  style="filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));">
+                  <div class="w-[72px] h-[72px] rounded-2xl overflow-hidden ring-4 ring-[var(--card-bg)]"
+                    style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                    <img v-if="adminAvatarPreview || auth.user?.avatar_url"
+                      :src="adminAvatarPreview || auth.user?.avatar_url"
+                      class="w-full h-full object-cover" />
+                    <div v-else class="w-full h-full flex items-center justify-center text-white text-xl font-black select-none">
+                      {{ adminInitials }}
+                    </div>
+                  </div>
+                  <div class="absolute inset-0 rounded-2xl bg-black/0 group-hover:bg-black/50 transition-all duration-200 flex items-center justify-center">
+                    <CameraIcon class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </div>
+                  <input ref="adminFileInput" type="file" accept="image/*" class="hidden" @change="onAdminAvatarChange" />
+                </div>
+
+                <div class="mb-1 min-w-0 flex-1 pt-10">
+                  <p class="font-black text-lg truncate leading-tight" style="color: var(--text);">{{ auth.user?.first_name }} {{ auth.user?.last_name }}</p>
+                  <p class="text-sm truncate" style="color: var(--text-muted);">{{ auth.user?.email }}</p>
+                  <span class="badge badge-blue mt-1.5">Administrador</span>
+                </div>
+              </div>
+
+              <!-- Cover pending -->
+              <Transition name="fade">
+                <div v-if="adminCoverPreview" class="flex gap-2 mb-3 p-3 rounded-xl" style="background: var(--input-bg);">
+                  <div class="flex items-center gap-2 flex-1 text-sm" style="color: var(--text-muted);">
+                    <PhotoIcon class="w-4 h-4 flex-shrink-0" /> Nueva portada lista
+                  </div>
+                  <button @click="saveAdminCover" :disabled="savingAdminCover" class="btn btn-primary btn-sm">
+                    <span v-if="savingAdminCover" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    <CheckIcon v-else class="w-3.5 h-3.5" /> Guardar
+                  </button>
+                  <button @click="cancelAdminCover" class="btn btn-secondary btn-sm px-3"><XMarkIcon class="w-3.5 h-3.5" /></button>
+                </div>
+              </Transition>
+
+              <!-- Avatar pending -->
+              <Transition name="fade">
+                <div v-if="adminAvatarPreview" class="flex gap-2 mb-3 p-3 rounded-xl" style="background: var(--input-bg);">
+                  <div class="flex items-center gap-2 flex-1 text-sm" style="color: var(--text-muted);">
+                    <UserCircleIcon class="w-4 h-4 flex-shrink-0" /> Nueva foto de perfil lista
+                  </div>
+                  <button @click="saveAdminAvatar" :disabled="savingAdminAvatar" class="btn btn-primary btn-sm">
+                    <span v-if="savingAdminAvatar" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                    <CheckIcon v-else class="w-3.5 h-3.5" /> Guardar
+                  </button>
+                  <button @click="cancelAdminAvatar" class="btn btn-secondary btn-sm px-3"><XMarkIcon class="w-3.5 h-3.5" /></button>
+                </div>
+              </Transition>
+
+              <Transition name="fade">
+                <div v-if="adminAvatarOk" class="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-xl px-4 py-2.5 text-sm font-semibold">
+                  <CheckCircleIcon class="w-4 h-4 flex-shrink-0" /> Foto actualizada correctamente
+                </div>
+              </Transition>
+              <Transition name="fade">
+                <div v-if="adminAvatarErr" class="flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl px-4 py-2.5 text-sm font-semibold">
+                  <ExclamationTriangleIcon class="w-4 h-4 flex-shrink-0" /> {{ adminAvatarErr }}
+                </div>
+              </Transition>
+            </div>
+          </div>
+
+          <!-- Change email -->
+          <div class="glass-card p-6">
+            <div class="flex items-center gap-3 mb-5">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style="background: rgba(99,102,241,0.12); border: 1px solid rgba(99,102,241,0.2);">
+                <EnvelopeIcon class="w-5 h-5 text-brand-400" />
+              </div>
+              <div>
+                <h2 class="font-bold text-base" style="color: var(--text);">Cambiar correo</h2>
+                <p class="text-xs" style="color: var(--text-muted);">Actual: {{ auth.user?.email }}</p>
+              </div>
+            </div>
+            <form @submit.prevent="handleAdminEmailUpdate" class="space-y-4">
+              <div>
+                <label class="input-label">Nuevo correo electrónico</label>
+                <input v-model="adminEmailForm.newEmail" type="email" class="input" placeholder="nuevo@correo.com" required autocomplete="email" />
+              </div>
+              <Transition name="fade">
+                <div v-if="adminEmailMsg.text" class="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold"
+                  :class="adminEmailMsg.ok ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-500' : 'bg-rose-500/10 border border-rose-500/20 text-rose-500'">
+                  <CheckCircleIcon v-if="adminEmailMsg.ok" class="w-4 h-4 flex-shrink-0" />
+                  <ExclamationTriangleIcon v-else class="w-4 h-4 flex-shrink-0" />
+                  {{ adminEmailMsg.text }}
+                </div>
+              </Transition>
+              <button type="submit" :disabled="savingAdminEmail" class="btn btn-primary btn-md w-full">
+                <span v-if="savingAdminEmail" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                <CheckIcon v-else class="w-4 h-4" />
+                {{ savingAdminEmail ? 'Guardando...' : 'Actualizar correo' }}
+              </button>
+            </form>
+          </div>
+
+          <!-- Change password -->
+          <div class="glass-card p-6">
+            <div class="flex items-center gap-3 mb-5">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style="background: rgba(139,92,246,0.12); border: 1px solid rgba(139,92,246,0.2);">
+                <LockClosedIcon class="w-5 h-5 text-violet-400" />
+              </div>
+              <div>
+                <h2 class="font-bold text-base" style="color: var(--text);">Cambiar contraseña</h2>
+                <p class="text-xs" style="color: var(--text-muted);">Elige una contraseña segura</p>
+              </div>
+            </div>
+            <form @submit.prevent="handleAdminPwdUpdate" class="space-y-4">
+              <div>
+                <label class="input-label">Contraseña actual</label>
+                <div class="relative">
+                  <input v-model="adminPwdForm.current" :type="showAdminCurrent ? 'text' : 'password'"
+                    class="input pr-12" placeholder="••••••••" required />
+                  <button type="button" @click="showAdminCurrent = !showAdminCurrent"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-colors"
+                    style="color: var(--text-muted);">
+                    <EyeSlashIcon v-if="showAdminCurrent" class="w-4 h-4" />
+                    <EyeIcon v-else class="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label class="input-label">Nueva contraseña</label>
+                <div class="relative">
+                  <input v-model="adminPwdForm.newPwd" :type="showAdminNew ? 'text' : 'password'"
+                    class="input pr-12" placeholder="Mínimo 8 caracteres" required minlength="8" />
+                  <button type="button" @click="showAdminNew = !showAdminNew"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-colors"
+                    style="color: var(--text-muted);">
+                    <EyeSlashIcon v-if="showAdminNew" class="w-4 h-4" />
+                    <EyeIcon v-else class="w-4 h-4" />
+                  </button>
+                </div>
+                <div v-if="adminPwdForm.newPwd" class="mt-2 flex items-center gap-2">
+                  <div class="flex gap-1 flex-1">
+                    <div v-for="n in 4" :key="n" class="h-1 flex-1 rounded-full transition-all duration-300"
+                      :style="n <= adminPwdStrength.level ? `background: ${adminPwdStrength.color}` : 'background: var(--input-border)'"></div>
+                  </div>
+                  <span class="text-xs font-semibold" :style="`color: ${adminPwdStrength.color}`">{{ adminPwdStrength.label }}</span>
+                </div>
+              </div>
+              <div>
+                <label class="input-label">Confirmar nueva contraseña</label>
+                <input v-model="adminPwdForm.confirm" type="password"
+                  class="input" :class="adminPwdForm.confirm && adminPwdMismatch ? 'ring-2 ring-rose-500/30 border-rose-500/40' : ''"
+                  placeholder="••••••••" required />
+                <p v-if="adminPwdForm.confirm && adminPwdMismatch" class="text-xs text-rose-400 mt-1 font-semibold flex items-center gap-1">
+                  <ExclamationTriangleIcon class="w-3.5 h-3.5" /> Las contraseñas no coinciden
+                </p>
+              </div>
+              <Transition name="fade">
+                <div v-if="adminPwdMsg.text" class="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold"
+                  :class="adminPwdMsg.ok ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-500' : 'bg-rose-500/10 border border-rose-500/20 text-rose-500'">
+                  <CheckCircleIcon v-if="adminPwdMsg.ok" class="w-4 h-4 flex-shrink-0" />
+                  <ExclamationTriangleIcon v-else class="w-4 h-4 flex-shrink-0" />
+                  {{ adminPwdMsg.text }}
+                </div>
+              </Transition>
+              <button type="submit" :disabled="savingAdminPwd || adminPwdMismatch"
+                class="btn w-full btn-md text-white font-bold"
+                style="background: linear-gradient(135deg, #7c3aed, #6366f1); box-shadow: 0 4px 15px rgba(124,58,237,0.25);">
+                <span v-if="savingAdminPwd" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                <LockClosedIcon v-else class="w-4 h-4" />
+                {{ savingAdminPwd ? 'Guardando...' : 'Cambiar contraseña' }}
+              </button>
+            </form>
+          </div>
+
+          <!-- Account info -->
+          <div class="glass-card p-6">
+            <div class="flex items-center gap-3 mb-5">
+              <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                style="background: rgba(6,182,212,0.12); border: 1px solid rgba(6,182,212,0.2);">
+                <InformationCircleIcon class="w-5 h-5 text-cyan-400" />
+              </div>
+              <h2 class="font-bold text-base" style="color: var(--text);">Información de cuenta</h2>
+            </div>
+            <div class="space-y-3">
+              <div class="flex items-center justify-between py-2.5 px-3 rounded-xl" style="background: var(--input-bg);">
+                <span class="text-sm" style="color: var(--text-muted);">Nombre</span>
+                <span class="text-sm font-semibold" style="color: var(--text);">{{ auth.user?.first_name }} {{ auth.user?.last_name }}</span>
+              </div>
+              <div class="flex items-center justify-between py-2.5 px-3 rounded-xl" style="background: var(--input-bg);">
+                <span class="text-sm" style="color: var(--text-muted);">Correo</span>
+                <span class="text-sm font-semibold truncate max-w-[200px]" style="color: var(--text);">{{ auth.user?.email }}</span>
+              </div>
+              <div class="flex items-center justify-between py-2.5 px-3 rounded-xl" style="background: var(--input-bg);">
+                <span class="text-sm" style="color: var(--text-muted);">Miembro desde</span>
+                <span class="text-sm font-semibold" style="color: var(--text);">{{ adminMemberSince }}</span>
+              </div>
+              <div class="flex items-center justify-between py-2.5 px-3 rounded-xl" style="background: var(--input-bg);">
+                <span class="text-sm" style="color: var(--text-muted);">Rol</span>
+                <span class="badge badge-blue">Administrador</span>
+              </div>
+            </div>
+          </div>
+
+        </div>
+
       </div>
     </main>
 
@@ -377,10 +606,10 @@
       style="background: var(--nav-bg); backdrop-filter: blur(12px); border-top: 1px solid var(--border-subtle);">
       <button v-for="item in navItems" :key="item.id"
         @click="activeTab = item.id"
-        :class="activeTab === item.id ? 'text-brand-400' : 'text-slate-500'"
+        :class="activeTab === item.id ? 'text-brand-500 dark:text-brand-400' : 'text-slate-500 dark:text-slate-500'"
         class="flex flex-col items-center gap-1 px-4 py-1 transition-colors">
         <component :is="item.icon" class="w-6 h-6" />
-        <span class="text-xs font-medium">{{ item.label }}</span>
+        <span class="text-xs font-semibold">{{ item.label }}</span>
       </button>
     </nav>
 
@@ -592,7 +821,9 @@ import 'leaflet/dist/leaflet.css'
 import {
   CheckCircleIcon, MapPinIcon, ArrowRightOnRectangleIcon, SignalIcon,
   ClipboardDocumentListIcon, UsersIcon, ChartBarIcon, UserCircleIcon,
-  BuildingOffice2Icon, CalendarIcon, MagnifyingGlassIcon, XMarkIcon, ExclamationTriangleIcon
+  BuildingOffice2Icon, CalendarIcon, MagnifyingGlassIcon, XMarkIcon, ExclamationTriangleIcon,
+  CameraIcon, EnvelopeIcon, LockClosedIcon, CheckIcon, PhotoIcon,
+  EyeIcon, EyeSlashIcon, InformationCircleIcon
 } from '@heroicons/vue/24/outline'
 import { useThemeStore } from '@/stores/theme'
 import ThemeToggle from '@/components/ThemeToggle.vue'
@@ -605,7 +836,8 @@ const activeTab = ref('overview')
 const navItems = [
   { id: 'overview', icon: ChartBarIcon, label: 'Resumen', description: 'Vista general del día' },
   { id: 'records', icon: ClipboardDocumentListIcon, label: 'Registros', description: 'Todas las entradas y salidas' },
-  { id: 'users', icon: UsersIcon, label: 'Usuarios', description: 'Personas registradas en el sistema' }
+  { id: 'users', icon: UsersIcon, label: 'Usuarios', description: 'Personas registradas en el sistema' },
+  { id: 'profile', icon: UserCircleIcon, label: 'Mi Perfil', description: 'Configuración de tu cuenta' },
 ]
 const currentNavItem = computed(() => navItems.find(n => n.id === activeTab.value))
 
@@ -866,6 +1098,150 @@ function formatTimeOnly(iso) {
 }
 
 const showLogoutModal = ref(false)
+
+// ── Admin Profile ─────────────────────────────────────────
+const adminFileInput = ref(null)
+const adminCoverInput = ref(null)
+const adminAvatarPreview = ref('')
+const adminCoverPreview = ref('')
+const savingAdminAvatar = ref(false)
+const savingAdminCover = ref(false)
+const adminAvatarOk = ref(false)
+const adminAvatarErr = ref('')
+
+const adminEmailForm = ref({ newEmail: '' })
+const savingAdminEmail = ref(false)
+const adminEmailMsg = ref({ text: '', ok: false })
+
+const adminPwdForm = ref({ current: '', newPwd: '', confirm: '' })
+const savingAdminPwd = ref(false)
+const adminPwdMsg = ref({ text: '', ok: false })
+const showAdminCurrent = ref(false)
+const showAdminNew = ref(false)
+
+const adminPwdMismatch = computed(() =>
+  adminPwdForm.value.confirm.length > 0 && adminPwdForm.value.newPwd !== adminPwdForm.value.confirm
+)
+
+const adminPwdStrength = computed(() => {
+  const p = adminPwdForm.value.newPwd
+  let score = 0
+  if (p.length >= 8) score++
+  if (/[A-Z]/.test(p)) score++
+  if (/[0-9]/.test(p)) score++
+  if (/[^A-Za-z0-9]/.test(p)) score++
+  return [
+    { level: 1, color: '#ef4444', label: 'Débil' },
+    { level: 2, color: '#f97316', label: 'Regular' },
+    { level: 3, color: '#eab308', label: 'Buena' },
+    { level: 4, color: '#22c55e', label: 'Fuerte' },
+  ][Math.max(score - 1, 0)]
+})
+
+const adminInitials = computed(() => {
+  const u = auth.user
+  if (!u) return '?'
+  return `${u.first_name?.[0] ?? ''}${u.last_name?.[0] ?? ''}`.toUpperCase()
+})
+
+function readFile(file, callback) {
+  if (!file || !file.type.startsWith('image/')) return
+  const reader = new FileReader()
+  reader.onload = ev => callback(ev.target.result)
+  reader.readAsDataURL(file)
+}
+
+function triggerAdminAvatarPick() { adminFileInput.value?.click() }
+function onAdminAvatarChange(e) {
+  const f = e.target.files?.[0]
+  if (!f) return
+  if (f.size > 500_000) { adminAvatarErr.value = 'Máximo 500 KB'; return }
+  adminAvatarErr.value = ''
+  readFile(f, v => { adminAvatarPreview.value = v })
+}
+function cancelAdminAvatar() { adminAvatarPreview.value = ''; if (adminFileInput.value) adminFileInput.value.value = '' }
+
+async function saveAdminAvatar() {
+  if (!adminAvatarPreview.value) return
+  savingAdminAvatar.value = true
+  try {
+    await api.put('/profile/avatar', { avatar_url: adminAvatarPreview.value })
+    auth.user.avatar_url = adminAvatarPreview.value
+    auth.persistUser()
+    adminAvatarOk.value = true
+    adminAvatarPreview.value = ''
+    setTimeout(() => { adminAvatarOk.value = false }, 3000)
+  } catch (e) {
+    adminAvatarErr.value = e.response?.data?.error ?? 'Error al guardar'
+  } finally {
+    savingAdminAvatar.value = false
+  }
+}
+
+function triggerAdminCoverPick() { adminCoverInput.value?.click() }
+function onAdminCoverChange(e) {
+  const f = e.target.files?.[0]
+  if (!f) return
+  readFile(f, v => { adminCoverPreview.value = v })
+}
+function cancelAdminCover() { adminCoverPreview.value = ''; if (adminCoverInput.value) adminCoverInput.value.value = '' }
+
+async function saveAdminCover() {
+  if (!adminCoverPreview.value) return
+  savingAdminCover.value = true
+  try {
+    await api.put('/profile/cover', { avatar_url: adminCoverPreview.value })
+    auth.user.cover_url = adminCoverPreview.value
+    auth.persistUser()
+    adminCoverPreview.value = ''
+  } catch (e) {
+    adminAvatarErr.value = e.response?.data?.error ?? 'Error al guardar la portada'
+  } finally {
+    savingAdminCover.value = false
+  }
+}
+
+async function handleAdminEmailUpdate() {
+  savingAdminEmail.value = true
+  adminEmailMsg.value = { text: '', ok: false }
+  try {
+    await api.put('/profile/email', { email: adminEmailForm.value.newEmail })
+    auth.user.email = adminEmailForm.value.newEmail
+    auth.persistUser()
+    adminEmailForm.value.newEmail = ''
+    adminEmailMsg.value = { text: 'Correo actualizado correctamente', ok: true }
+    setTimeout(() => { adminEmailMsg.value.text = '' }, 4000)
+  } catch (e) {
+    adminEmailMsg.value = { text: e.response?.data?.error ?? 'Error', ok: false }
+  } finally {
+    savingAdminEmail.value = false
+  }
+}
+
+async function handleAdminPwdUpdate() {
+  if (adminPwdMismatch.value) return
+  savingAdminPwd.value = true
+  adminPwdMsg.value = { text: '', ok: false }
+  try {
+    await api.put('/profile/password', {
+      current_password: adminPwdForm.value.current,
+      new_password: adminPwdForm.value.newPwd,
+    })
+    adminPwdForm.value = { current: '', newPwd: '', confirm: '' }
+    adminPwdMsg.value = { text: 'Contraseña cambiada correctamente', ok: true }
+    setTimeout(() => { adminPwdMsg.value.text = '' }, 4000)
+  } catch (e) {
+    adminPwdMsg.value = { text: e.response?.data?.error ?? 'Error', ok: false }
+  } finally {
+    savingAdminPwd.value = false
+  }
+}
+
+const adminMemberSince = computed(() => {
+  const d = auth.user?.created_at
+  if (!d) return '—'
+  return new Intl.DateTimeFormat('es-MX', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(d))
+})
 
 async function handleLogout() {
   showLogoutModal.value = false

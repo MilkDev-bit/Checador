@@ -130,11 +130,11 @@ func Me(c *gin.Context) {
 	userID := c.GetString("user_id")
 
 	var user models.User
-	var avatarURL sql.NullString
+	var avatarURL, coverURL sql.NullString
 	err := database.DB.QueryRow(
-		`SELECT id, first_name, last_name, project_name, email, role, avatar_url, created_at FROM users WHERE id = $1`,
+		`SELECT id, first_name, last_name, project_name, email, role, avatar_url, cover_url, created_at FROM users WHERE id = $1`,
 		userID,
-	).Scan(&user.ID, &user.FirstName, &user.LastName, &user.ProjectName, &user.Email, &user.Role, &avatarURL, &user.CreatedAt)
+	).Scan(&user.ID, &user.FirstName, &user.LastName, &user.ProjectName, &user.Email, &user.Role, &avatarURL, &coverURL, &user.CreatedAt)
 
 	if err != nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
@@ -142,6 +142,9 @@ func Me(c *gin.Context) {
 	}
 	if avatarURL.Valid {
 		user.AvatarURL = avatarURL.String
+	}
+	if coverURL.Valid {
+		user.CoverURL = coverURL.String
 	}
 
 	c.JSON(http.StatusOK, user)

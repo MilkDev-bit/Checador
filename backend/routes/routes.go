@@ -30,6 +30,7 @@ func Register(r *gin.Engine) {
 		auth.PUT("/profile/email", handlers.UpdateEmail)
 		auth.PUT("/profile/password", handlers.UpdatePassword)
 		auth.PUT("/profile/avatar", handlers.UpdateAvatar)
+		auth.PUT("/profile/cover", handlers.UpdateCover)
 		auth.POST("/checks", handlers.RegisterCheck)
 		auth.GET("/checks", handlers.GetMyRecords)
 		auth.GET("/checks/:id/route", handlers.GetRecordRoute)

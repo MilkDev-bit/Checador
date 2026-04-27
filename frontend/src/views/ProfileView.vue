@@ -17,67 +17,108 @@
 
     <div class="max-w-lg mx-auto px-4 pt-6 space-y-5">
 
-      <!-- ── Avatar card ─────────────────────────────────── -->
-      <div class="glass-card p-6 animate-in">
-        <!-- Gradient banner -->
-        <div class="h-24 rounded-2xl mb-0 -mx-0 relative overflow-hidden"
-          style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);">
-          <div class="absolute inset-0 opacity-20"
-            style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 18px 18px;"></div>
+      <!-- ── Avatar + Cover card ───────────────────────── -->
+      <div class="glass-card overflow-hidden animate-in">
+
+        <!-- Cover / Banner -->
+        <div class="relative h-28 group cursor-pointer" @click="triggerCoverPick">
+          <!-- Cover image or gradient fallback -->
+          <div class="absolute inset-0 overflow-hidden">
+            <img v-if="coverPreview || auth.user?.cover_url"
+              :src="coverPreview || auth.user?.cover_url"
+              class="w-full h-full object-cover" alt="Portada" />
+            <div v-else class="w-full h-full"
+              style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #06b6d4 100%);">
+              <div class="absolute inset-0 opacity-20"
+                style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 18px 18px;"></div>
+            </div>
+          </div>
+          <!-- Hover overlay for cover -->
+          <div class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-200 flex items-center justify-center">
+            <div class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 bg-black/60 text-white text-xs font-semibold px-3 py-1.5 rounded-full backdrop-blur-sm">
+              <CameraIcon class="w-3.5 h-3.5" /> Cambiar portada
+            </div>
+          </div>
+          <input ref="coverInput" type="file" accept="image/*" class="hidden" @change="onCoverChange" />
         </div>
 
         <!-- Avatar overlapping banner -->
-        <div class="flex items-end gap-4 -mt-10 mb-4">
-          <div class="relative flex-shrink-0">
-            <div class="w-20 h-20 rounded-2xl ring-4 overflow-hidden cursor-pointer group transition-transform hover:scale-105"
-              style="ring-color: var(--card-bg); background: linear-gradient(135deg, #6366f1, #8b5cf6);"
-              @click="triggerAvatarPick">
-              <img v-if="previewUrl || auth.user?.avatar_url"
-                :src="previewUrl || auth.user?.avatar_url"
-                class="w-full h-full object-cover" alt="Avatar" />
-              <div v-else class="w-full h-full flex items-center justify-center text-white text-2xl font-black">
-                {{ initials }}
+        <div class="px-5 pb-5">
+          <div class="flex items-end gap-4 -mt-9 mb-4">
+            <!-- Avatar wrapper — needs position:relative and group here -->
+            <div class="relative flex-shrink-0 group w-[72px] h-[72px] cursor-pointer"
+              @click="triggerAvatarPick"
+              style="filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));">
+              <div class="w-[72px] h-[72px] rounded-2xl overflow-hidden ring-4 ring-[var(--card-bg)]"
+                style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
+                <img v-if="previewUrl || auth.user?.avatar_url"
+                  :src="previewUrl || auth.user?.avatar_url"
+                  class="w-full h-full object-cover" alt="Avatar" />
+                <div v-else class="w-full h-full flex items-center justify-center text-white text-xl font-black select-none">
+                  {{ initials }}
+                </div>
               </div>
-              <!-- Overlay on hover -->
-              <div class="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center rounded-2xl">
-                <CameraIcon class="w-6 h-6 text-white" />
+              <!-- Hover overlay over avatar -->
+              <div class="absolute inset-0 rounded-2xl bg-black/0 group-hover:bg-black/50 transition-all duration-200 flex items-center justify-center">
+                <CameraIcon class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
               </div>
+              <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="onFileChange" />
             </div>
-            <input ref="fileInput" type="file" accept="image/*" class="hidden" @change="onFileChange" />
+
+            <div class="mb-1 min-w-0 flex-1 pt-10">
+              <p class="font-black text-lg truncate leading-tight" style="color: var(--text);">{{ fullName }}</p>
+              <p class="text-sm truncate" style="color: var(--text-muted);">{{ auth.user?.email }}</p>
+              <span class="badge mt-1.5" :class="auth.isAdmin ? 'badge-blue' : 'badge-gray'">
+                {{ auth.isAdmin ? 'Administrador' : 'Usuario' }}
+              </span>
+            </div>
           </div>
-          <div class="mb-1 min-w-0">
-            <p class="font-black text-lg truncate" style="color: var(--text);">{{ fullName }}</p>
-            <p class="text-sm truncate" style="color: var(--text-muted);">{{ auth.user?.email }}</p>
-            <span class="badge mt-1" :class="auth.isAdmin ? 'badge-blue' : 'badge-gray'">
-              {{ auth.isAdmin ? 'Administrador' : 'Usuario' }}
-            </span>
-          </div>
+
+          <!-- Cover save/cancel -->
+          <Transition name="fade">
+            <div v-if="coverPreview" class="flex gap-2 mb-3 p-3 rounded-xl" style="background: var(--input-bg);">
+              <div class="flex items-center gap-2 flex-1 text-sm" style="color: var(--text-muted);">
+                <PhotoIcon class="w-4 h-4 flex-shrink-0" /> Nueva portada lista
+              </div>
+              <button @click="saveCover" :disabled="savingCover" class="btn btn-primary btn-sm">
+                <span v-if="savingCover" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                <CheckIcon v-else class="w-3.5 h-3.5" />
+                Guardar
+              </button>
+              <button @click="cancelCover" class="btn btn-secondary btn-sm px-3">
+                <XMarkIcon class="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </Transition>
+
+          <!-- Avatar save/cancel -->
+          <Transition name="fade">
+            <div v-if="previewUrl" class="flex gap-2 mb-3 p-3 rounded-xl" style="background: var(--input-bg);">
+              <div class="flex items-center gap-2 flex-1 text-sm" style="color: var(--text-muted);">
+                <UserCircleIcon class="w-4 h-4 flex-shrink-0" /> Nueva foto de perfil lista
+              </div>
+              <button @click="saveAvatar" :disabled="savingAvatar" class="btn btn-primary btn-sm">
+                <span v-if="savingAvatar" class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                <CheckIcon v-else class="w-3.5 h-3.5" />
+                Guardar
+              </button>
+              <button @click="cancelAvatar" class="btn btn-secondary btn-sm px-3">
+                <XMarkIcon class="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </Transition>
+
+          <Transition name="fade">
+            <div v-if="avatarSuccess" class="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-xl px-4 py-2.5 text-sm font-semibold">
+              <CheckCircleIcon class="w-4 h-4 flex-shrink-0" /> Foto de perfil actualizada
+            </div>
+          </Transition>
+          <Transition name="fade">
+            <div v-if="avatarError" class="flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl px-4 py-2.5 text-sm font-semibold">
+              <ExclamationTriangleIcon class="w-4 h-4 flex-shrink-0" /> {{ avatarError }}
+            </div>
+          </Transition>
         </div>
-
-        <!-- Avatar action buttons -->
-        <Transition name="fade">
-          <div v-if="previewUrl" class="flex gap-3 mt-1">
-            <button @click="saveAvatar" :disabled="savingAvatar" class="btn btn-primary btn-sm flex-1">
-              <span v-if="savingAvatar" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
-              <CheckIcon v-else class="w-4 h-4" />
-              {{ savingAvatar ? 'Guardando...' : 'Guardar foto' }}
-            </button>
-            <button @click="cancelAvatar" class="btn btn-secondary btn-sm px-4">
-              <XMarkIcon class="w-4 h-4" />
-            </button>
-          </div>
-        </Transition>
-
-        <Transition name="fade">
-          <div v-if="avatarSuccess" class="mt-3 flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-xl px-4 py-2.5 text-sm font-semibold">
-            <CheckCircleIcon class="w-4 h-4 flex-shrink-0" /> Foto de perfil actualizada
-          </div>
-        </Transition>
-        <Transition name="fade">
-          <div v-if="avatarError" class="mt-3 flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-400 rounded-xl px-4 py-2.5 text-sm font-semibold">
-            <ExclamationTriangleIcon class="w-4 h-4 flex-shrink-0" /> {{ avatarError }}
-          </div>
-        </Transition>
       </div>
 
       <!-- ── Change email card ───────────────────────────── -->
@@ -240,10 +281,50 @@ import ThemeToggle from '@/components/ThemeToggle.vue'
 import {
   ArrowLeftIcon, CameraIcon, EnvelopeIcon, LockClosedIcon,
   CheckIcon, XMarkIcon, CheckCircleIcon, ExclamationTriangleIcon,
-  EyeIcon, EyeSlashIcon, InformationCircleIcon
+  EyeIcon, EyeSlashIcon, InformationCircleIcon, UserCircleIcon, PhotoIcon
 } from '@heroicons/vue/24/outline'
 
 const auth = useAuthStore()
+
+// ── Cover / Banner ────────────────────────────────────────
+const coverInput = ref(null)
+const coverPreview = ref('')
+const savingCover = ref(false)
+
+function triggerCoverPick() { coverInput.value?.click() }
+
+function onCoverChange(e) {
+  const file = e.target.files?.[0]
+  if (!file) return
+  if (!file.type.startsWith('image/')) return
+  if (file.size > 700_000) {
+    avatarError.value = 'La portada supera el límite de 700 KB'
+    return
+  }
+  const reader = new FileReader()
+  reader.onload = ev => { coverPreview.value = ev.target.result }
+  reader.readAsDataURL(file)
+}
+
+function cancelCover() {
+  coverPreview.value = ''
+  if (coverInput.value) coverInput.value.value = ''
+}
+
+async function saveCover() {
+  if (!coverPreview.value) return
+  savingCover.value = true
+  try {
+    await api.put('/profile/cover', { avatar_url: coverPreview.value })
+    auth.user.cover_url = coverPreview.value
+    auth.persistUser()
+    coverPreview.value = ''
+  } catch (e) {
+    avatarError.value = e.response?.data?.error ?? 'Error al guardar la portada'
+  } finally {
+    savingCover.value = false
+  }
+}
 
 // ── Avatar ────────────────────────────────────────────────
 const fileInput = ref(null)
