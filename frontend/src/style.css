@@ -44,6 +44,14 @@
 
   html { scroll-behavior: smooth; }
 
+  /* Utility for iOS Safe Areas */
+  .safe-top {
+    padding-top: max(var(--header-base-padding, 0.75rem), env(safe-area-inset-top));
+  }
+  .safe-bottom {
+    padding-bottom: max(var(--footer-base-padding, 0.75rem), env(safe-area-inset-bottom));
+  }
+
   body {
     background: var(--bg);
     color: var(--text);

@@ -48,8 +48,8 @@
     </aside>
 
     <!-- Mobile top bar -->
-    <header class="lg:hidden sticky top-0 z-20 px-4 py-3 flex items-center justify-between"
-      style="background: var(--nav-bg); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-subtle);">
+    <header class="lg:hidden sticky top-0 z-20 px-4 py-3 safe-top flex items-center justify-between"
+      style="background: var(--nav-bg); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-subtle); --header-base-padding: 0.75rem;">
       <div class="flex items-center gap-2">
         <div class="w-8 h-8 rounded-lg flex items-center justify-center"
           style="background: linear-gradient(135deg, #6366f1, #8b5cf6);"><CheckCircleIcon class="w-5 h-5 text-white" /></div>

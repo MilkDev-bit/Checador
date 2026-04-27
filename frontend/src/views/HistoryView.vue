@@ -1,8 +1,8 @@
 <template>
   <div class="min-h-screen min-h-dvh bg-mesh pb-10" style="background-color: var(--bg);">
     <!-- Header -->
-    <header class="sticky top-0 z-10 px-4 py-3 flex items-center gap-3"
-      style="background: var(--nav-bg); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-subtle);">
+    <header class="sticky top-0 z-10 px-4 py-3 safe-top flex items-center gap-3"
+      style="background: var(--nav-bg); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-subtle); --header-base-padding: 0.75rem;">
       <router-link to="/checkin" class="w-8 h-8 rounded-xl flex items-center justify-center transition-all"
         style="color: var(--text-muted);"
         @mouseenter="e => e.currentTarget.style.background='var(--input-bg)'"
