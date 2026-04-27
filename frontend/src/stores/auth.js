@@ -8,6 +8,7 @@ export const useAuthStore = defineStore('auth', () => {
   const isLoggedIn = computed(() => !!user.value)
   const isAdmin = computed(() => user.value?.role === 'admin')
 
+  
   function persistUser() {
     localStorage.setItem('user', JSON.stringify(user.value))
   }
