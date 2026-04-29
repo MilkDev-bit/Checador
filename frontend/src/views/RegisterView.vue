@@ -37,9 +37,20 @@
 
         <div class="space-y-1 animate-slide-up" style="animation-delay: 0.3s; animation-fill-mode: both;">
           <label class="label-base">Proyecto</label>
-          <input v-model="form.project_name" type="text" 
+          <select v-model="selectedProject"
             class="input-base focus:ring-4 focus:ring-brand-500/20"
-            placeholder="Nombre de tu empresa o sucursal" required />
+            required>
+            <option value="" disabled>Selecciona un proyecto...</option>
+            <option v-for="p in projectOptions" :key="p" :value="p">{{ p }}</option>
+            <option value="__otro__">Otro (escribe el nombre)</option>
+          </select>
+          <input v-if="selectedProject === '__otro__'"
+            :value="form.project_name"
+            type="text"
+            class="input-base focus:ring-4 focus:ring-brand-500/20 mt-2"
+            placeholder="Escribe el nombre del proyecto"
+            @input="form.project_name = $event.target.value.toUpperCase()"
+            required />
         </div>
         
         <div class="space-y-1 animate-slide-up" style="animation-delay: 0.4s; animation-fill-mode: both;">
@@ -122,7 +133,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
@@ -151,6 +162,77 @@ onMounted(() => {
       }
     }
   }, 100)
+})
+
+const projectOptions = [
+  'WM MIRAMONTES CONCURSO ANUAL',
+  'SC BLVD REPÚBLICA',
+  'MB TLAXIACO CENTRO',
+  'BAE SEGUNDA SECCIÓN LOS PUERTOS',
+  'BAE TOTOLINGA',
+  'MB HUATUSCO',
+  'WM GUADALUPE GUADALAJARA PARQUES',
+  'MB ZARAGOZA COAHUILA',
+  'SC JUAN PABLO MUNICH',
+  'MB ACALA',
+  'SM CELAYA IRRIGACIÓN',
+  'BAE JUMIL',
+  'BAE GUAYMAS',
+  'BAE DE LA CRUZ',
+  'BAE ANDROMEDA TEMIXCO',
+  'BAE IZUCAR',
+  'BAE DIAMANTE ESCOBEDO',
+  'BA LAS AZUCENAS',
+  'BAE MISIÓN DE LA SILLA',
+  'MB JUAN ALDAMA',
+  'BAE TRINIDAD SANTORUM',
+  'MB SUCHIAPA SUR',
+  'BAE MONTES CARPATOS',
+  'SC LA HUERTA MORELIA',
+  'MB TICUL',
+  'BAE COLONIA BONANZA',
+  'BA ENSENADA',
+  'SC MAHATMA GANDHI',
+  'BAE AVENIDA JACARANDAS',
+  'BAE CHUBURNA MÉRIDA',
+  'MB TLALTENANGO',
+  'BA CHIAUTEMPAN',
+  'BAE LOS TUZOS',
+  'MB AHUALULCO DEL SONIDO',
+  'BAE 5 DE MAYO CULHUACAN',
+  'BD PLAZA ROMOS',
+  'BAE SAN JUAN DE LA VEGA',
+  'BAE COSTA DORADA VERACRUZ',
+  'MB SANTIAGO TUXTLA',
+  'WE MANUEL AVILA CAMACHO',
+  'MB BRAVO ZAPOTILTIC',
+  'BAE FEDERALISMO NORTE',
+  'SM CARRETERA',
+  'SM AVENIDA PACIFICO',
+  'BAE JUAN PABLO SUR',
+  'BAE AMADO NERVO GTO',
+  'BALCONES DE HUENTITLAN',
+  'BA MATA DE PITA',
+  'BAE RÍO CALZADAS',
+  'BAE LOMA DEL PEDREGAL',
+  'TOREO DIAMANTE',
+  'BAE UNIDAD MODELO II',
+  'BAE AMPLIACIÓN 23 DE NOVIEMBRE',
+  'MB ESCUINAPA PROLONGACIÓN',
+  'MB HUIXTLA',
+  'MB LERDO DE TEJADA',
+  'BAE JARDINES DE LA SILLA',
+  'HACIENDA DEL PEDREGAL',
+]
+
+const selectedProject = ref('')
+
+watch(selectedProject, (val) => {
+  if (val !== '__otro__') {
+    form.value.project_name = val
+  } else {
+    form.value.project_name = ''
+  }
 })
 
 const form = ref({
