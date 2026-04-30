@@ -35,7 +35,7 @@
         <div class="flex items-center gap-3 mb-3">
           <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold overflow-hidden"
             style="background: linear-gradient(135deg, rgba(99,102,241,0.4), rgba(139,92,246,0.4)); border: 1px solid rgba(99,102,241,0.3);">
-            <img v-if="auth.user?.avatar_url" :src="auth.user.avatar_url" class="w-full h-full object-cover" alt="Perfil" />
+            <img v-if="auth.user?.avatar_url" :src="auth.user.avatar_url" loading="lazy" class="w-full h-full object-cover" alt="Perfil" />
             <span v-else>{{ auth.user?.first_name?.[0] }}</span>
           </div>
           <div class="min-w-0">
@@ -328,11 +328,11 @@
           <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
             <div v-for="(user, i) in paginatedUsers" :key="user.id"
               class="glass-card p-5 animate-in"
-              :style="`animation-delay: ${i * 0.03}s`">
+              :style="`animation-delay: ${Math.min(i * 0.03, 0.3)}s`">
               <div class="flex items-start gap-3 mb-4">
                 <div class="w-12 h-12 rounded-2xl overflow-hidden flex items-center justify-center text-lg font-bold flex-shrink-0"
                   style="background: linear-gradient(135deg, rgba(99,102,241,0.3), rgba(139,92,246,0.3)); border: 1px solid rgba(99,102,241,0.25);">
-                  <img v-if="user.avatar_url" :src="user.avatar_url" class="w-full h-full object-cover" />
+                  <img v-if="user.avatar_url" :src="user.avatar_url" loading="lazy" class="w-full h-full object-cover" />
                   <span v-else>{{ user.first_name[0] }}{{ user.last_name[0] }}</span>
                 </div>
                 <div class="min-w-0">

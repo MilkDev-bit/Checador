@@ -37,9 +37,9 @@
       </div>
 
       <!-- Records -->
-      <div v-for="(record, i) in records" :key="record.id"
+      <div v-for="(record, i) in paginatedRecords" :key="record.id"
         class="glass-card overflow-hidden animate-in"
-        :style="`animation-delay: ${i * 0.04}s`">
+        :style="`animation-delay: ${Math.min(i * 0.04, 0.3)}s`">
 
         <!-- Record header -->
         <div class="px-5 py-4 flex items-center justify-between">
@@ -70,14 +70,25 @@
             <p class="text-xs mb-1.5 flex items-center gap-1" style="color: var(--text-muted);">
               <BuildingOffice2Icon class="w-3 h-3" /> Sitio
             </p>
-            <img :src="record.photo_site_path" class="w-full h-28 object-cover rounded-xl" />
+            <img :src="record.photo_site_path" loading="lazy" class="w-full h-28 object-cover rounded-xl" />
           </div>
           <div v-if="record.photo_selfie_path">
             <p class="text-xs mb-1.5 flex items-center gap-1" style="color: var(--text-muted);">
               <UserCircleIcon class="w-3 h-3" /> Selfie
             </p>
-            <img :src="record.photo_selfie_path" class="w-full h-28 object-cover rounded-xl" />
+            <img :src="record.photo_selfie_path" loading="lazy" class="w-full h-28 object-cover rounded-xl" />
           </div>
+        </div>
+      </div>
+      <!-- Pagination -->
+      <div v-if="totalPages > 1" class="flex items-center justify-between pt-2">
+        <p class="text-xs" style="color: var(--text-muted);">
+          Página <span style="color: var(--text); font-weight: 600;">{{ currentPage }}</span> de {{ totalPages }}
+          &nbsp;·&nbsp; {{ records.length }} registros
+        </p>
+        <div class="flex items-center gap-2">
+          <button class="btn-secondary text-xs px-3 py-1.5" :disabled="currentPage === 1" @click="currentPage--">← Anterior</button>
+          <button class="btn-secondary text-xs px-3 py-1.5" :disabled="currentPage === totalPages" @click="currentPage++">Siguiente →</button>
         </div>
       </div>
     </div>
@@ -127,7 +138,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import api from '@/api'
 import { useAuthStore } from '@/stores/auth'
 import {
@@ -140,6 +151,15 @@ const records = ref([])
 const loading = ref(true)
 const showRouteModal = ref(false)
 const routePoints = ref([])
+
+// Pagination
+const currentPage = ref(1)
+const recordsPerPage = 20
+const paginatedRecords = computed(() => {
+  const start = (currentPage.value - 1) * recordsPerPage
+  return records.value.slice(start, start + recordsPerPage)
+})
+const totalPages = computed(() => Math.max(1, Math.ceil(records.value.length / recordsPerPage)))
 
 onMounted(async () => {
   try {

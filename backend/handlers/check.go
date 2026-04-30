@@ -305,7 +305,7 @@ func GetMyRecords(c *gin.Context) {
 
 	rows, err := database.DB.Query(
 		`SELECT id, user_id, type, timestamp, photo_site_path, photo_selfie_path, created_at
- FROM check_records WHERE user_id = $1 ORDER BY timestamp DESC`,
+ FROM check_records WHERE user_id = $1 ORDER BY timestamp DESC LIMIT 200`,
 		userID,
 	)
 	if err != nil {
