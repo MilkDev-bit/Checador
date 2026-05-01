@@ -15,7 +15,8 @@ export default defineConfig({
       manifest: {
         name: 'Checador',
         short_name: 'Checador',
-        description: 'Aplicación de Control de Asistencia y GPS',
+        description: 'Control de Asistencia',
+        prefer_related_applications: false,
         theme_color: '#0f1629',
         background_color: '#0f1629',
         display: 'standalone',
