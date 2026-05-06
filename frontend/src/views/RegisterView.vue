@@ -5,7 +5,7 @@
     <div class="absolute inset-0 z-0 overflow-hidden pointer-events-none">
       <div class="absolute w-[800px] h-[800px] rounded-full blur-[120px] opacity-10 bg-brand-400 animate-float-slow -top-40 -left-40 mix-blend-screen"></div>
       <div class="absolute w-[600px] h-[600px] rounded-full blur-[100px] opacity-[0.08] bg-sky-300 animate-float-delayed -bottom-20 -right-20 mix-blend-screen"></div>
-      <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMTI4LCAxMjgsIDEyOCwgMC4yKSIvPjwvc3ZnPg==')] opacity-50"></div>
+      <div class="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGNpcmNsZSBjeD0iMSIgY3k9IjEiIHI9IjEiIGZpbGw9InJnYmEoMjU1LDI1NSwyNTUsMC4wNSkiLz48L3N2Zz4=')] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_100%)]"></div>
     </div>
 
     <!-- Container -->
@@ -68,7 +68,7 @@
                 class="input-base tracking-widest focus:ring-4 focus:ring-brand-500/20"
                 placeholder="••••••••" required minlength="8" />
               <button type="button" @click="showPwd = !showPwd"
-                class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-300 transition-colors focus:outline-none">
+                class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-300 transition-colors focus:outline-none focus:ring-2 focus:ring-brand-500/50">
                 <EyeSlashIcon v-if="showPwd" class="w-5 h-5" />
                 <EyeIcon v-else class="w-5 h-5" />
               </button>
@@ -94,25 +94,25 @@
         <!-- reCAPTCHA v2 Container -->
         <div class="space-y-1 animate-fade-in" style="animation-delay: 0.7s; animation-fill-mode: both;">
           <label class="label-base">Verificación de seguridad</label>
-          <div class="flex items-center justify-center bg-slate-50 dark:bg-surface-800 rounded-xl border border-slate-200 dark:border-white/10 p-2 min-h-[90px] overflow-hidden transition-all shadow-sm">
+          <div class="flex items-center justify-center bg-slate-50 dark:bg-surface-800 rounded-xl border border-slate-200 dark:border-white/10 p-2 min-h-[90px] overflow-hidden transition-all shadow-inner">
             <div id="recaptcha-container" class="scale-[0.8] sm:scale-95 origin-center"></div>
           </div>
         </div>
 
         <Transition name="fade">
-          <div v-if="error" class="flex items-start gap-3 bg-rose-50/80 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-600 dark:text-rose-400 rounded-xl px-4 py-3 text-sm font-semibold animate-shake">
+          <div v-if="error" class="flex items-start gap-3 bg-rose-50/80 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-600 dark:text-rose-400 rounded-xl px-4 py-3 text-sm font-medium animate-shake">
             <ExclamationTriangleIcon class="w-5 h-5 flex-shrink-0 mt-0.5" />
             <span class="leading-snug">{{ error }}</span>
           </div>
         </Transition>
         <Transition name="fade">
-          <div v-if="success" class="flex items-start gap-3 bg-emerald-50/80 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-xl px-4 py-3 text-sm font-semibold">
+          <div v-if="success" class="flex items-start gap-3 bg-emerald-50/80 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20 text-emerald-600 dark:text-emerald-400 rounded-xl px-4 py-3 text-sm font-medium">
             <CheckCircleIcon class="w-5 h-5 flex-shrink-0 mt-0.5" />
             <span class="leading-snug">¡Cuenta creada con éxito! Redirigiendo...</span>
           </div>
         </Transition>
 
-        <button type="submit" class="btn-primary w-full py-3.5 rounded-xl font-bold tracking-wide mt-2 animate-slide-up hover:ring-4 hover:ring-brand-500/20 transition-all" :disabled="loading || passwordMismatch" style="animation-delay: 0.8s; animation-fill-mode: both;">
+        <button type="submit" class="btn-primary w-full py-3.5 rounded-xl font-bold tracking-wide mt-2 animate-slide-up hover:ring-4 hover:ring-brand-500/20 transition-all" :disabled="loading || passwordMismatch">
           <div class="relative flex items-center justify-center gap-2">
             <span v-if="loading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             <span>{{ loading ? 'Procesando...' : 'Registrarme' }}</span>
@@ -223,6 +223,14 @@ const projectOptions = [
   'MB LERDO DE TEJADA',
   'BAE JARDINES DE LA SILLA',
   'HACIENDA DEL PEDREGAL',
+  'BAE COLONIA LOS GONZALEZ',
+  'MB HALACHÓ',
+  'SM SANTA MONICA',
+  'BAE LAS CEREZAS',
+  'VICENTE GUERRERO',
+  'BAE RÍO RIHN',
+  'BAE FENIX TAMAULIPAS',
+  'BANCO DE FOMENTO'
 ]
 
 const selectedProject = ref('')
