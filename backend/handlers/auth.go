@@ -3,6 +3,7 @@ package handlers
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"net/http"
 	"net/url"
 	"os"
@@ -13,6 +14,7 @@ import (
 	"paselista/models"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-playground/validator/v10"
 	"github.com/golang-jwt/jwt/v5"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -32,10 +34,41 @@ type LoginRequest struct {
 	RecaptchaToken string `json:"recaptcha_token" binding:"required"`
 }
 
+func bindingErrorMessage(err error) string {
+	var ve validator.ValidationErrors
+	if errors.As(err, &ve) {
+		for _, fe := range ve {
+			field := fe.Field()
+			tag := fe.Tag()
+			switch field {
+			case "Email":
+				if tag == "email" {
+					return "El formato del correo es inválido."
+				}
+				return "El correo es requerido."
+			case "Password":
+				if tag == "min" {
+					return "La contraseña debe tener al menos 8 caracteres."
+				}
+				return "La contraseña es requerida."
+			case "RecaptchaToken":
+				return "El token de reCAPTCHA es requerido."
+			case "FirstName":
+				return "El nombre es requerido."
+			case "LastName":
+				return "El apellido es requerido."
+			case "ProjectName":
+				return "El nombre del proyecto es requerido."
+			}
+		}
+	}
+	return "Los datos proporcionados son inválidos."
+}
+
 func Register(c *gin.Context) {
 	var req RegisterRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Todos los campos son requeridos, incluyendo el reCAPTCHA."})
+		c.JSON(http.StatusBadRequest, gin.H{"error": bindingErrorMessage(err)})
 		return
 	}
 
@@ -75,7 +108,7 @@ func Register(c *gin.Context) {
 func Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Correo, contraseña y reCAPTCHA son requeridos."})
+		c.JSON(http.StatusBadRequest, gin.H{"error": bindingErrorMessage(err)})
 		return
 	}
 
