@@ -13,13 +13,15 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,vue}']
       },
       manifest: {
-        name: 'Checador',
-        short_name: 'Checador',
+        id: '/',
+        name: 'PaseLista',
+        short_name: 'PaseLista',
         description: 'Control de Asistencia',
         prefer_related_applications: false,
         theme_color: '#0f1629',
         background_color: '#0f1629',
         display: 'standalone',
+        orientation: 'portrait',
         start_url: '/',
         scope: '/',
         icons: [
@@ -30,12 +32,6 @@ export default defineConfig({
             purpose: 'any'
           },
           {
-            src: '/icon-192.png',
-            sizes: '192x192',
-            type: 'image/png',
-            purpose: 'maskable'
-          },
-          {
             src: '/icon-512.png',
             sizes: '512x512',
             type: 'image/png',
@@ -46,6 +42,15 @@ export default defineConfig({
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable'
+          }
+        ],
+        screenshots: [
+          {
+            src: '/icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            form_factor: 'narrow',
+            label: 'Control de asistencia PaseLista'
           }
         ]
       }
