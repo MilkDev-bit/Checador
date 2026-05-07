@@ -79,7 +79,7 @@
           <div class="flex flex-wrap items-center gap-3">
             <div class="flex items-center gap-2">
               <label class="text-slate-400 text-sm">Fecha:</label>
-              <input type="date" v-model="filters.date" @change="loadAll"
+              <input type="date" v-model="filters.date_from" @change="loadAll"
                 class="input text-sm py-2 w-40" />
             </div>
             <button @click="setToday" class="badge-blue cursor-pointer hover:opacity-80 transition-opacity">Hoy</button>
@@ -185,10 +185,14 @@
           <!-- Filter bar -->
           <div class="glass-card p-4">
             <div class="flex flex-wrap gap-3">
-              <div class="flex items-center gap-2 flex-1 min-w-[150px]">
-                <CalendarIcon class="w-4 h-4" style="color: var(--text-muted);" />
-                <input type="date" v-model="filters.date" @change="loadRecords"
-                  class="input text-sm py-2 flex-1" placeholder="Fecha" />
+              <!-- Date range -->
+              <div class="flex items-center gap-2 flex-1 min-w-[280px]">
+                <CalendarIcon class="w-4 h-4 flex-shrink-0" style="color: var(--text-muted);" />
+                <input type="date" v-model="filters.date_from" @change="loadRecords"
+                  class="input text-sm py-2 flex-1" title="Desde" />
+                <span class="text-xs" style="color: var(--text-muted);">–</span>
+                <input type="date" v-model="filters.date_to" @change="loadRecords"
+                  class="input text-sm py-2 flex-1" title="Hasta" />
               </div>
               <div class="flex items-center gap-2 flex-1 min-w-[150px]">
                 <BuildingOffice2Icon class="w-4 h-4" style="color: var(--text-muted);" />
@@ -215,14 +219,21 @@
             </div>
           </div>
 
-          <!-- Count -->
-          <div class="flex items-center justify-between">
+          <!-- Count + Excel -->
+          <div class="flex items-center justify-between gap-3 flex-wrap">
             <p class="text-slate-400 text-sm">
               <span style="color: var(--text); font-weight: 600;">{{ records.length }}</span> <span style="color: var(--text-muted);">registros encontrados</span>
             </p>
-            <div v-if="loadingRecords" class="flex items-center gap-2 text-slate-500 text-sm">
-              <div class="w-3 h-3 border border-brand-500/40 border-t-brand-500 rounded-full animate-spin"></div>
-              Cargando...
+            <div class="flex items-center gap-3">
+              <div v-if="loadingRecords" class="flex items-center gap-2 text-slate-500 text-sm">
+                <div class="w-3 h-3 border border-brand-500/40 border-t-brand-500 rounded-full animate-spin"></div>
+                Cargando...
+              </div>
+              <button v-if="records.length > 0" @click="exportExcel"
+                class="btn-secondary btn-sm flex items-center gap-1.5 text-green-400 border-green-500/20 hover:bg-green-500/10">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 3v12"/></svg>
+                Descargar Excel
+              </button>
             </div>
           </div>
 
@@ -241,7 +252,10 @@
                     <th class="hidden sm:table-cell">Proyecto</th>
                     <th>Tipo</th>
                     <th>Fecha / Hora</th>
+                    <th class="hidden lg:table-cell">Horario</th>
+                    <th class="hidden lg:table-cell">Retraso / Adelanto</th>
                     <th class="hidden md:table-cell">GPS</th>
+                    <th class="hidden xl:table-cell">Comentario del día</th>
                     <th>Acciones</th>
                   </tr>
                 </thead>
@@ -273,10 +287,48 @@
                     <td>
                       <p class="text-xs whitespace-nowrap" style="color: var(--text-muted);">{{ formatDate(r.timestamp) }}</p>
                     </td>
+                    <!-- Horario programado -->
+                    <td class="hidden lg:table-cell">
+                      <span v-if="r.entry_schedule || r.exit_schedule" class="text-xs whitespace-nowrap" style="color: var(--text-muted);">
+                        {{ r.entry_schedule || '—' }} / {{ r.exit_schedule || '—' }}
+                      </span>
+                      <span v-else class="text-xs" style="color: var(--text-dim);">Sin horario</span>
+                    </td>
+                    <!-- Retraso / Adelanto -->
+                    <td class="hidden lg:table-cell">
+                      <template v-if="r.entry_schedule || r.exit_schedule">
+                        <span v-if="(r.deviation_min ?? 0) === 0" class="badge badge-blue text-xs">Puntual</span>
+                        <template v-else>
+                          <span v-if="r.type === 'entry'"
+                            :class="r.deviation_min > 0 ? 'badge-red' : 'badge-green'"
+                            class="badge text-xs whitespace-nowrap">
+                            {{ r.deviation_min > 0 ? '+' : '' }}{{ r.deviation_min }}m
+                            {{ r.deviation_min > 0 ? 'tarde' : 'temprano' }}
+                          </span>
+                          <span v-else
+                            :class="r.deviation_min < 0 ? 'badge-red' : 'badge-green'"
+                            class="badge text-xs whitespace-nowrap">
+                            {{ r.deviation_min > 0 ? '+' : '' }}{{ r.deviation_min }}m
+                            {{ r.deviation_min > 0 ? 'extra' : 'temprano' }}
+                          </span>
+                        </template>
+                      </template>
+                      <span v-else class="text-xs" style="color: var(--text-dim);">—</span>
+                    </td>
                     <td class="hidden md:table-cell">
                       <span :class="r.location_count > 0 ? 'badge-blue' : 'badge-gray'" class="badge">
                         {{ r.location_count }} pts
                       </span>
+                    </td>
+                    <!-- Comentario del día -->
+                    <td class="hidden xl:table-cell max-w-[200px]">
+                      <div class="flex items-center gap-1.5">
+                        <span v-if="r.day_comment" class="text-xs truncate" style="color: var(--text-muted);">{{ r.day_comment }}</span>
+                        <span v-else class="text-xs" style="color: var(--text-dim);">—</span>
+                        <button @click="openCommentEditor(r)" class="flex-shrink-0 p-0.5 rounded hover:bg-white/10 transition-colors" title="Editar comentario">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" style="color: var(--text-dim);"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                        </button>
+                      </div>
                     </td>
                     <td>
                       <div class="flex items-center gap-2">
@@ -353,6 +405,13 @@
                   <span class="text-xs w-16" style="color: var(--text-dim);">Registro</span>
                   <span class="text-xs" style="color: var(--text-muted);">{{ formatDateShort(user.created_at) }}</span>
                 </div>
+              </div>
+              <div class="mt-4 pt-3" style="border-top: 1px solid var(--border-subtle);">
+                <button @click="openScheduleModal(user)"
+                  class="w-full btn-secondary btn-sm flex items-center justify-center gap-1.5">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  Horario laboral
+                </button>
               </div>
             </div>
           </div>
@@ -832,6 +891,67 @@
         </div>
       </Transition>
 
+      <!-- Schedule modal -->
+      <Transition name="modal">
+        <div v-if="scheduleModal.show" class="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style="background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);"
+          @click.self="scheduleModal.show = false">
+          <div class="w-full max-w-sm glass-card animate-in" style="background: var(--modal-bg);">
+            <div class="flex items-center justify-between px-5 pt-5 pb-3" style="border-bottom: 1px solid var(--border-subtle);">
+              <div>
+                <h3 class="font-bold" style="color: var(--text);">Horario Laboral</h3>
+                <p class="text-xs mt-0.5" style="color: var(--text-muted);">{{ scheduleModal.user?.first_name }} {{ scheduleModal.user?.last_name }}</p>
+              </div>
+              <button @click="scheduleModal.show = false" class="w-8 h-8 rounded-lg flex items-center justify-center" style="color: var(--text-muted);">
+                <XMarkIcon class="w-5 h-5" />
+              </button>
+            </div>
+            <div class="p-5 space-y-4">
+              <div>
+                <label class="block text-xs font-semibold mb-1.5" style="color: var(--text-muted);">Hora de entrada</label>
+                <input type="time" v-model="scheduleModal.entry_time" class="input w-full text-sm py-2" />
+              </div>
+              <div>
+                <label class="block text-xs font-semibold mb-1.5" style="color: var(--text-muted);">Hora de salida</label>
+                <input type="time" v-model="scheduleModal.exit_time" class="input w-full text-sm py-2" />
+              </div>
+              <div class="flex gap-3 pt-1">
+                <button @click="scheduleModal.show = false" class="btn-secondary flex-1">Cancelar</button>
+                <button @click="saveSchedule" :disabled="scheduleModal.saving || !scheduleModal.entry_time || !scheduleModal.exit_time"
+                  class="btn-primary flex-1 disabled:opacity-50">
+                  {{ scheduleModal.saving ? 'Guardando...' : 'Guardar' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+
+      <!-- Comment edit modal -->
+      <Transition name="modal">
+        <div v-if="editingComment" class="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style="background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);"
+          @click.self="editingComment = null">
+          <div class="w-full max-w-md glass-card animate-in" style="background: var(--modal-bg);">
+            <div class="flex items-center justify-between px-5 pt-5 pb-3" style="border-bottom: 1px solid var(--border-subtle);">
+              <h3 class="font-bold" style="color: var(--text);">Comentario del día · {{ editingComment?.record_date }}</h3>
+              <button @click="editingComment = null" class="w-8 h-8 rounded-lg flex items-center justify-center" style="color: var(--text-muted);">
+                <XMarkIcon class="w-5 h-5" />
+              </button>
+            </div>
+            <div class="p-5 space-y-4">
+              <textarea v-model="editingComment.text" rows="4"
+                class="input w-full text-sm py-2 resize-none"
+                placeholder="Motivo de llegada tarde, salida anticipada, ausencia..."></textarea>
+              <div class="flex gap-3">
+                <button @click="editingComment = null" class="btn-secondary flex-1">Cancelar</button>
+                <button @click="saveComment" :disabled="!editingComment.text.trim()" class="btn-primary flex-1 disabled:opacity-50">Guardar</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+
       <!-- Logout confirmation modal -->
       <Transition name="modal">
         <div v-if="showLogoutModal" class="fixed inset-0 z-50 flex items-center justify-center px-4"
@@ -869,6 +989,7 @@ import {
   EyeIcon, EyeSlashIcon, InformationCircleIcon, SunIcon
 } from '@heroicons/vue/24/outline'
 import { useThemeStore } from '@/stores/theme'
+import * as XLSX from 'xlsx'
 
 const auth = useAuthStore()
 const theme = useThemeStore()
@@ -890,17 +1011,17 @@ const users = ref([])
 const projects = ref([])
 const loadingRecords = ref(false)
 
-const filters = ref({ date: todayISO(), project: '', type: '', search: '' })
+const filters = ref({ date_from: todayISO(), date_to: todayISO(), project: '', type: '', search: '' })
 
 function todayISO() {
   return new Date().toISOString().split('T')[0]
 }
 
-function setToday() { filters.value.date = todayISO(); loadAll() }
-function clearDate() { filters.value.date = ''; loadAll() }
+function setToday() { filters.value.date_from = todayISO(); filters.value.date_to = todayISO(); loadAll() }
+function clearDate() { filters.value.date_from = ''; filters.value.date_to = ''; loadAll() }
 
 function clearFilters() {
-  filters.value = { date: todayISO(), project: '', type: '', search: '' }
+  filters.value = { date_from: todayISO(), date_to: todayISO(), project: '', type: '', search: '' }
   recordsPage.value = 1
   loadAll()
 }
@@ -917,7 +1038,8 @@ async function loadAll() {
 
 async function loadStats() {
   try {
-    const params = filters.value.date ? { date: filters.value.date } : {}
+    const params = {}
+    if (filters.value.date_from) params.date = filters.value.date_from
     const { data } = await api.get('/admin/stats', { params })
     stats.value = data
   } catch {}
@@ -927,7 +1049,8 @@ async function loadRecords() {
   loadingRecords.value = true
   try {
     const params = {}
-    if (filters.value.date) params.date = filters.value.date
+    if (filters.value.date_from) params.date_from = filters.value.date_from
+    if (filters.value.date_to) params.date_to = filters.value.date_to
     if (filters.value.project) params.project = filters.value.project
     if (filters.value.type) params.type = filters.value.type
     if (filters.value.search) params.search = filters.value.search
@@ -937,6 +1060,84 @@ async function loadRecords() {
   } catch {} finally {
     loadingRecords.value = false
   }
+}
+
+// ─── Excel export ────────────────────────────────────────────────────────────
+function deviationLabel(r) {
+  if (!r.entry_schedule && !r.exit_schedule) return '—'
+  const dev = r.deviation_min ?? 0
+  if (dev === 0) return 'Puntual'
+  const abs = Math.abs(dev)
+  const h = Math.floor(abs / 60)
+  const m = abs % 60
+  const hhmm = h > 0 ? `${h}h ${m}m` : `${m}m`
+  if (r.type === 'entry') return dev > 0 ? `+${hhmm} tarde` : `-${hhmm} temprano`
+  return dev > 0 ? `+${hhmm} extra` : `-${hhmm} temprano`
+}
+
+function exportExcel() {
+  const rows = records.value.map(r => ({
+    Nombre: `${r.first_name} ${r.last_name}`,
+    Correo: r.email,
+    Proyecto: r.project_name,
+    Tipo: r.type === 'entry' ? 'Entrada' : 'Salida',
+    'Fecha / Hora': formatDate(r.timestamp),
+    'Horario Entrada': r.entry_schedule || '—',
+    'Horario Salida': r.exit_schedule || '—',
+    'Retraso / Adelanto': deviationLabel(r),
+    Comentario: r.day_comment || '',
+  }))
+  const ws = XLSX.utils.json_to_sheet(rows)
+  const wb = XLSX.utils.book_new()
+  XLSX.utils.book_append_sheet(wb, ws, 'Registros')
+  const date = filters.value.date_from || todayISO()
+  XLSX.writeFile(wb, `registros_${date}.xlsx`)
+}
+
+// ─── Inline comment editing ──────────────────────────────────────────────────
+const editingComment = ref(null)  // { user_id, record_date, text }
+
+async function saveComment() {
+  if (!editingComment.value) return
+  const { user_id, record_date, text } = editingComment.value
+  if (!text.trim()) return
+  try {
+    await api.post('/admin/records/comment', { user_id, record_date, comment: text.trim() })
+    records.value.forEach(r => {
+      if (r.user_id === user_id && r.timestamp?.slice(0, 10) === record_date) {
+        r.day_comment = text.trim()
+      }
+    })
+  } catch {}
+  editingComment.value = null
+}
+
+function openCommentEditor(r) {
+  const date = r.timestamp?.slice(0, 10) || todayISO()
+  editingComment.value = { user_id: r.user_id, record_date: date, text: r.day_comment || '' }
+}
+
+// ─── Work schedule modal ─────────────────────────────────────────────────────
+const scheduleModal = ref({ show: false, user: null, entry_time: '', exit_time: '', saving: false })
+
+async function openScheduleModal(user) {
+  scheduleModal.value = { show: true, user, entry_time: '', exit_time: '', saving: false }
+  try {
+    const { data } = await api.get(`/admin/users/${user.id}/schedule`)
+    scheduleModal.value.entry_time = data.entry_time || ''
+    scheduleModal.value.exit_time = data.exit_time || ''
+  } catch {}
+}
+
+async function saveSchedule() {
+  const { user, entry_time, exit_time } = scheduleModal.value
+  if (!entry_time || !exit_time) return
+  scheduleModal.value.saving = true
+  try {
+    await api.post(`/admin/users/${user.id}/schedule`, { entry_time, exit_time })
+    scheduleModal.value.show = false
+  } catch {}
+  scheduleModal.value.saving = false
 }
 
 async function loadUsers() {

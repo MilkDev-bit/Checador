@@ -27,6 +27,12 @@ type AdminRecordRow struct {
 	SuspiciousReason string    `json:"suspicious_reason,omitempty"`
 	IPCountry        string    `json:"ip_country,omitempty"`
 	IPCity           string    `json:"ip_city,omitempty"`
+	// Schedule & deviation
+	EntrySchedule string `json:"entry_schedule,omitempty"` // "HH:MM"
+	ExitSchedule  string `json:"exit_schedule,omitempty"`  // "HH:MM"
+	DeviationMin  int    `json:"deviation_min"`            // positive = late/overtime, negative = early
+	// Daily comment (same for all records of that user on that day)
+	DayComment string `json:"day_comment,omitempty"`
 }
 
 type AdminStats struct {
@@ -83,6 +89,8 @@ func AdminGetStats(c *gin.Context) {
 
 func AdminGetRecords(c *gin.Context) {
 	dateStr := c.Query("date")
+	dateFrom := c.Query("date_from")
+	dateTo := c.Query("date_to")
 	projectFilter := strings.TrimSpace(c.Query("project"))
 	typeFilter := c.Query("type")
 	search := strings.TrimSpace(c.Query("search"))
@@ -91,6 +99,7 @@ func AdminGetRecords(c *gin.Context) {
 	where := []string{"u.role = 'user'"}
 	argIdx := 1
 
+	// Single date (legacy) takes priority over range
 	if dateStr != "" {
 		date, err := time.Parse("2006-01-02", dateStr)
 		if err != nil {
@@ -102,6 +111,27 @@ func AdminGetRecords(c *gin.Context) {
 		where = append(where, fmt.Sprintf("cr.timestamp >= $%d AND cr.timestamp < $%d", argIdx, argIdx+1))
 		args = append(args, dateStart, dateEnd)
 		argIdx += 2
+	} else {
+		if dateFrom != "" {
+			df, err := time.Parse("2006-01-02", dateFrom)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date_from"})
+				return
+			}
+			where = append(where, fmt.Sprintf("cr.timestamp >= $%d", argIdx))
+			args = append(args, time.Date(df.Year(), df.Month(), df.Day(), 0, 0, 0, 0, time.Local))
+			argIdx++
+		}
+		if dateTo != "" {
+			dt, err := time.Parse("2006-01-02", dateTo)
+			if err != nil {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date_to"})
+				return
+			}
+			where = append(where, fmt.Sprintf("cr.timestamp < $%d", argIdx))
+			args = append(args, time.Date(dt.Year(), dt.Month(), dt.Day(), 0, 0, 0, 0, time.Local).Add(24*time.Hour))
+			argIdx++
+		}
 	}
 
 	if projectFilter != "" {
@@ -124,17 +154,24 @@ func AdminGetRecords(c *gin.Context) {
 		argIdx++
 	}
 
+	_ = argIdx // suppress unused warning
+
 	query := `SELECT cr.id, u.id, u.first_name, u.last_name, u.project_name, u.email,
 	           cr.type, cr.timestamp,
 	           (cr.photo_site_path IS NOT NULL AND cr.photo_site_path != '') AS has_site_photo,
 	           (cr.photo_selfie_path IS NOT NULL AND cr.photo_selfie_path != '') AS has_selfie_photo,
 	           (SELECT COUNT(*) FROM location_points lp WHERE lp.check_record_id = cr.id),
-	           cr.is_suspicious, COALESCE(cr.suspicious_reason,''), COALESCE(cr.ip_country,''), COALESCE(cr.ip_city,'')
-	           FROM check_records cr JOIN users u ON cr.user_id = u.id`
+	           cr.is_suspicious, COALESCE(cr.suspicious_reason,''), COALESCE(cr.ip_country,''), COALESCE(cr.ip_city,''),
+	           COALESCE(ws.entry_time,''), COALESCE(ws.exit_time,''),
+	           COALESCE((SELECT rc.comment FROM record_comments rc
+	                     WHERE rc.user_id = u.id AND rc.record_date = cr.timestamp::date),'')
+	           FROM check_records cr
+	           JOIN users u ON cr.user_id = u.id
+	           LEFT JOIN work_schedules ws ON ws.user_id = u.id`
 	if len(where) > 0 {
 		query += " WHERE " + strings.Join(where, " AND ")
 	}
-	query += " ORDER BY cr.timestamp DESC LIMIT 500"
+	query += " ORDER BY cr.timestamp DESC LIMIT 1000"
 
 	rows, err := database.DB.Query(query, args...)
 	if err != nil {
@@ -148,7 +185,12 @@ func AdminGetRecords(c *gin.Context) {
 		var r AdminRecordRow
 		rows.Scan(&r.RecordID, &r.UserID, &r.FirstName, &r.LastName, &r.ProjectName, &r.Email,
 			&r.Type, &r.Timestamp, &r.HasSitePhoto, &r.HasSelfiePhoto, &r.LocationCount,
-			&r.IsSuspicious, &r.SuspiciousReason, &r.IPCountry, &r.IPCity)
+			&r.IsSuspicious, &r.SuspiciousReason, &r.IPCountry, &r.IPCity,
+			&r.EntrySchedule, &r.ExitSchedule, &r.DayComment)
+
+		// Calculate deviation in minutes
+		r.DeviationMin = calcDeviation(r.Timestamp, r.Type, r.EntrySchedule, r.ExitSchedule)
+
 		records = append(records, r)
 	}
 
@@ -156,6 +198,30 @@ func AdminGetRecords(c *gin.Context) {
 		records = []AdminRecordRow{}
 	}
 	c.JSON(http.StatusOK, records)
+}
+
+// calcDeviation returns the deviation in minutes for a check record vs the work schedule.
+// For entries: positive = arrived late, negative = arrived early.
+// For exits:   positive = left late (overtime), negative = left early.
+func calcDeviation(ts time.Time, checkType, entrySchedule, exitSchedule string) int {
+	var schedule string
+	switch checkType {
+	case "entry":
+		schedule = entrySchedule
+	case "exit":
+		schedule = exitSchedule
+	default:
+		return 0
+	}
+	if len(schedule) != 5 {
+		return 0
+	}
+
+	var sh, sm int
+	fmt.Sscanf(schedule, "%d:%d", &sh, &sm)
+	scheduled := time.Date(ts.Year(), ts.Month(), ts.Day(), sh, sm, 0, 0, ts.Location())
+	diff := int(ts.Sub(scheduled).Minutes())
+	return diff
 }
 
 func AdminGetUsers(c *gin.Context) {

@@ -104,6 +104,24 @@ func Migrate() {
 		`ALTER TABLE check_records ADD COLUMN IF NOT EXISTS ip_city VARCHAR(100)`,
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_url TEXT`,
 		`ALTER TABLE users ADD COLUMN IF NOT EXISTS cover_url TEXT`,
+		// Work schedules — one per user
+		`CREATE TABLE IF NOT EXISTS work_schedules (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
+			entry_time VARCHAR(5) NOT NULL,
+			exit_time  VARCHAR(5) NOT NULL,
+			updated_at TIMESTAMP DEFAULT NOW()
+		)`,
+		// Daily comments — one per user per day
+		`CREATE TABLE IF NOT EXISTS record_comments (
+			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			user_id     UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			record_date DATE NOT NULL,
+			comment     TEXT NOT NULL,
+			created_at  TIMESTAMP DEFAULT NOW(),
+			updated_at  TIMESTAMP DEFAULT NOW(),
+			UNIQUE(user_id, record_date)
+		)`,
 	}
 	for _, q := range alterQueries {
 		if _, err := DB.Exec(q); err != nil {
