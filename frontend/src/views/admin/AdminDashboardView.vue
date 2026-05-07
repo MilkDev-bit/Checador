@@ -183,19 +183,27 @@
         <!-- ===== RECORDS TAB ===== -->
         <div v-if="activeTab === 'records'" class="space-y-5 animate-in">
           <!-- Filter bar -->
-          <div class="glass-card p-4">
-            <div class="flex flex-wrap gap-3">
-              <!-- Date range -->
-              <div class="flex items-center gap-2 flex-1 min-w-[280px]">
+          <div class="glass-card p-4 space-y-3">
+            <!-- Fila 1: Rango de fechas + accesos rápidos -->
+            <div class="flex flex-wrap items-center gap-3">
+              <div class="flex items-center gap-2">
                 <CalendarIcon class="w-4 h-4 flex-shrink-0" style="color: var(--text-muted);" />
+                <span class="text-xs font-medium" style="color: var(--text-muted);">Desde</span>
                 <input type="date" v-model="filters.date_from" @change="loadRecords"
-                  class="input text-sm py-2 flex-1" title="Desde" />
-                <span class="text-xs" style="color: var(--text-muted);">–</span>
-                <input type="date" v-model="filters.date_to" @change="loadRecords"
-                  class="input text-sm py-2 flex-1" title="Hasta" />
+                  class="input text-sm py-2 w-40" />
               </div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-medium" style="color: var(--text-muted);">Hasta</span>
+                <input type="date" v-model="filters.date_to" @change="loadRecords"
+                  class="input text-sm py-2 w-40" />
+              </div>
+              <button @click="setToday" class="badge-blue cursor-pointer hover:opacity-80 transition-opacity text-xs px-3 py-1.5 rounded-lg">Hoy</button>
+              <button @click="clearDate" class="badge-gray cursor-pointer hover:opacity-80 transition-opacity text-xs px-3 py-1.5 rounded-lg">Todos</button>
+            </div>
+            <!-- Fila 2: Proyecto, tipo, búsqueda, limpiar -->
+            <div class="flex flex-wrap items-center gap-3">
               <div class="flex items-center gap-2 flex-1 min-w-[150px]">
-                <BuildingOffice2Icon class="w-4 h-4" style="color: var(--text-muted);" />
+                <BuildingOffice2Icon class="w-4 h-4 flex-shrink-0" style="color: var(--text-muted);" />
                 <select v-model="filters.project" @change="loadRecords"
                   class="input text-sm py-2 flex-1">
                   <option value="">Todos los proyectos</option>
@@ -204,14 +212,14 @@
               </div>
               <div class="flex items-center gap-2">
                 <select v-model="filters.type" @change="loadRecords"
-                  class="input text-sm py-2 w-36">
+                  class="input text-sm py-2 w-44">
                   <option value="">Entradas y salidas</option>
                   <option value="entry">Solo entradas</option>
                   <option value="exit">Solo salidas</option>
                 </select>
               </div>
               <div class="flex items-center gap-2 flex-1 min-w-[180px]">
-                <MagnifyingGlassIcon class="w-4 h-4" style="color: var(--text-muted);" />
+                <MagnifyingGlassIcon class="w-4 h-4 flex-shrink-0" style="color: var(--text-muted);" />
                 <input v-model="filters.search" @input="debouncedLoad" type="text"
                   class="input text-sm py-2 flex-1" placeholder="Buscar por nombre o email..." />
               </div>
