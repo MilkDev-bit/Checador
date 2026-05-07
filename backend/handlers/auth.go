@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"log"
 	"net/http"
 	"net/url"
 	"os"
@@ -95,13 +96,23 @@ func Register(c *gin.Context) {
 
 	if err != nil {
 		if strings.Contains(err.Error(), "unique") {
-			c.JSON(http.StatusConflict, gin.H{"error": "Email already registered"})
+			c.JSON(http.StatusConflict, gin.H{"error": "El correo ya está registrado. Inicia sesión."})
 			return
 		}
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating user"})
 		return
 	}
 
+	// Auto-login: generate token and set cookie so the user doesn't need to log in separately.
+	token, err := generateToken(user.ID, user.Email, user.Role)
+	if err != nil {
+		// Token generation failed — still return success but without cookie.
+		log.Printf("WARNING: token generation after register failed: %v", err)
+		c.JSON(http.StatusCreated, gin.H{"message": "User created", "user": user})
+		return
+	}
+
+	c.SetCookie("jwt_token", token, int(24*time.Hour/time.Second), "/", "", true, true)
 	c.JSON(http.StatusCreated, gin.H{"message": "User created", "user": user})
 }
 
@@ -217,22 +228,30 @@ type RecaptchaResponse struct {
 func verifyRecaptcha(token string) bool {
 	secret := os.Getenv("RECAPTCHA_SECRET_KEY")
 	if secret == "" {
-		// Google's official testing secret key (always returns success)
-		secret = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
+		// No secret key configured — skip reCAPTCHA check and log a warning.
+		// Configure RECAPTCHA_SECRET_KEY in production to enforce it.
+		log.Println("WARNING: RECAPTCHA_SECRET_KEY not set, skipping reCAPTCHA verification")
+		return true
 	}
 
 	client := &http.Client{Timeout: 10 * time.Second}
 	resp, err := client.PostForm("https://www.google.com/recaptcha/api/siteverify",
 		url.Values{"secret": {secret}, "response": {token}})
 	if err != nil {
-		return false
+		// Network error reaching Google — fail open so users aren't locked out.
+		log.Printf("WARNING: reCAPTCHA verification network error (fail-open): %v", err)
+		return true
 	}
 	defer resp.Body.Close()
 
 	var result RecaptchaResponse
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
-		return false
+		log.Printf("WARNING: reCAPTCHA response decode error (fail-open): %v", err)
+		return true
 	}
 
+	if !result.Success {
+		log.Printf("reCAPTCHA rejected token, error-codes: %v", result.Errors)
+	}
 	return result.Success
 }

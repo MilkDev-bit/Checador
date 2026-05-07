@@ -79,7 +79,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
@@ -94,14 +94,29 @@ const showPwd = ref(false)
 const form = ref({ email: '', password: '' })
 const recaptchaWidgetId = ref(null)
 
+// reCAPTCHA tokens expire after 2 minutes. Auto-reset at 110s so the user
+// never unknowingly submits with an expired token.
+let recaptchaResetTimer = null
+
+function scheduleRecaptchaReset() {
+  clearTimeout(recaptchaResetTimer)
+  recaptchaResetTimer = setTimeout(() => {
+    if (recaptchaWidgetId.value !== null && window.grecaptcha) {
+      window.grecaptcha.reset(recaptchaWidgetId.value)
+    }
+  }, 110_000)
+}
+
 onMounted(() => {
   const checkRecaptcha = setInterval(() => {
     if (window.grecaptcha && window.grecaptcha.render) {
       clearInterval(checkRecaptcha)
       try {
         recaptchaWidgetId.value = window.grecaptcha.render('recaptcha-container', {
-          sitekey: '6LdUjcgsAAAAAI0pgOSk7QMEmq-zjD4saihqzaa-', // Tu Clave pública
-          theme: themeStore.isDark ? 'dark' : 'light'
+          sitekey: '6LdUjcgsAAAAAI0pgOSk7QMEmq-zjD4saihqzaa-',
+          theme: themeStore.isDark ? 'dark' : 'light',
+          callback: scheduleRecaptchaReset,
+          'expired-callback': () => clearTimeout(recaptchaResetTimer),
         })
       } catch (e) {
         console.warn('Recaptcha error:', e)
@@ -109,6 +124,8 @@ onMounted(() => {
     }
   }, 100)
 })
+
+onUnmounted(() => clearTimeout(recaptchaResetTimer))
 
 async function handleLogin() {
   error.value = ''
@@ -125,7 +142,9 @@ async function handleLogin() {
 
   loading.value = true
   try {
-    const data = await auth.login(form.value.email, form.value.password, recaptchaToken)
+    // Trim both fields to prevent invisible-whitespace credential mismatches
+    const data = await auth.login(form.value.email.trim(), form.value.password.trim(), recaptchaToken)
+    clearTimeout(recaptchaResetTimer)
     if (data.user?.role === 'admin') {
       router.push('/admin')
     } else {

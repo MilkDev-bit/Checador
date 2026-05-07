@@ -133,7 +133,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
@@ -147,6 +147,16 @@ const error = ref('')
 const success = ref(false)
 const showPwd = ref(false)
 const recaptchaWidgetId = ref(null)
+let recaptchaResetTimer = null
+
+function scheduleRecaptchaReset() {
+  clearTimeout(recaptchaResetTimer)
+  recaptchaResetTimer = setTimeout(() => {
+    if (recaptchaWidgetId.value !== null && window.grecaptcha) {
+      window.grecaptcha.reset(recaptchaWidgetId.value)
+    }
+  }, 110_000)
+}
 
 onMounted(() => {
   const checkRecaptcha = setInterval(() => {
@@ -154,8 +164,10 @@ onMounted(() => {
       clearInterval(checkRecaptcha)
       try {
         recaptchaWidgetId.value = window.grecaptcha.render('recaptcha-container', {
-          sitekey: '6LdUjcgsAAAAAI0pgOSk7QMEmq-zjD4saihqzaa-', 
-          theme: themeStore.isDark ? 'dark' : 'light'
+          sitekey: '6LdUjcgsAAAAAI0pgOSk7QMEmq-zjD4saihqzaa-',
+          theme: themeStore.isDark ? 'dark' : 'light',
+          callback: scheduleRecaptchaReset,
+          'expired-callback': () => clearTimeout(recaptchaResetTimer),
         })
       } catch (e) {
         console.warn('Recaptcha error:', e)
@@ -163,6 +175,8 @@ onMounted(() => {
     }
   }, 100)
 })
+
+onUnmounted(() => clearTimeout(recaptchaResetTimer))
 
 const projectOptions = [
   'WM MIRAMONTES CONCURSO ANUAL',
@@ -269,12 +283,21 @@ async function handleRegister() {
   
   loading.value = true
   try {
-    await auth.register({
-      ...form.value,
+    const data = await auth.register({
+      first_name: form.value.first_name.trim(),
+      last_name: form.value.last_name.trim(),
+      project_name: form.value.project_name.trim(),
+      email: form.value.email.trim(),
+      password: form.value.password.trim(),
       recaptcha_token: recaptchaToken
     })
+    // Backend now sets the auth cookie on registration — store user and go directly.
+    if (data.user) {
+      auth.persistUser(data.user)
+    }
     success.value = true
-    setTimeout(() => router.push('/login'), 1500)
+    clearTimeout(recaptchaResetTimer)
+    setTimeout(() => router.push('/checkin'), 1500)
   } catch (e) {
     error.value = e.response?.data?.error || 'Error al crear el perfil'
     if (recaptchaWidgetId.value !== null) {
