@@ -126,13 +126,6 @@ func Login(c *gin.Context) {
 		req.Email,
 	).Scan(&user.ID, &user.FirstName, &user.LastName, &user.ProjectName, &user.Email, &user.Role, &user.PasswordHash, &avatarURL, &coverURL)
 
-	if avatarURL.Valid {
-		user.AvatarURL = avatarURL.String
-	}
-	if coverURL.Valid {
-		user.CoverURL = coverURL.String
-	}
-
 	if err == sql.ErrNoRows {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
@@ -140,6 +133,13 @@ func Login(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 		return
+	}
+
+	if avatarURL.Valid {
+		user.AvatarURL = avatarURL.String
+	}
+	if coverURL.Valid {
+		user.CoverURL = coverURL.String
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
@@ -221,7 +221,8 @@ func verifyRecaptcha(token string) bool {
 		secret = "6LeIxAcTAAAAAGG-vFI1TnRWxMZNFuojJ4WifJWe"
 	}
 
-	resp, err := http.PostForm("https://www.google.com/recaptcha/api/siteverify",
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.PostForm("https://www.google.com/recaptcha/api/siteverify",
 		url.Values{"secret": {secret}, "response": {token}})
 	if err != nil {
 		return false

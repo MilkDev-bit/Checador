@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"time"
 
 	_ "github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
@@ -32,6 +33,12 @@ func Connect() {
 	if err != nil {
 		log.Fatalf("Error connecting to database: %v", err)
 	}
+
+	// Connection pool tuning — prevents exhaustion under concurrent load
+	DB.SetMaxOpenConns(25)
+	DB.SetMaxIdleConns(10)
+	DB.SetConnMaxLifetime(5 * time.Minute)
+	DB.SetConnMaxIdleTime(2 * time.Minute)
 
 	if err = DB.Ping(); err != nil {
 		log.Fatalf("Error pinging database: %v", err)
