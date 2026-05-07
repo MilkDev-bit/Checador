@@ -291,7 +291,7 @@ async function handleRegister() {
       password: form.value.password.trim(),
       recaptcha_token: recaptchaToken
     })
-    // Backend now sets the auth cookie on registration — store user and go directly.
+    // Store user already handled inside auth.register()
     if (data.user) {
       auth.persistUser(data.user)
     }

@@ -113,7 +113,7 @@ func Register(c *gin.Context) {
 	}
 
 	c.SetCookie("jwt_token", token, int(24*time.Hour/time.Second), "/", "", true, true)
-	c.JSON(http.StatusCreated, gin.H{"message": "User created", "user": user})
+	c.JSON(http.StatusCreated, gin.H{"message": "User created", "user": user, "token": token})
 }
 
 func Login(c *gin.Context) {
@@ -164,11 +164,12 @@ func Login(c *gin.Context) {
 		return
 	}
 
-	// Set HttpOnly, Secure, SameSite=Strict cookie
+	// Set HttpOnly, Secure cookie AND return token in body for clients that can't use cookies.
 	c.SetCookie("jwt_token", token, int(24*time.Hour/time.Second), "/", "", true, true)
 
 	c.JSON(http.StatusOK, gin.H{
-		"user": user,
+		"user":  user,
+		"token": token,
 	})
 }
 
