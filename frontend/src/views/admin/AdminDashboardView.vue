@@ -297,29 +297,29 @@
                     </td>
                     <!-- Horario programado -->
                     <td class="hidden lg:table-cell">
-                      <span v-if="r.entry_schedule || r.exit_schedule" class="text-xs whitespace-nowrap" style="color: var(--text-muted);">
-                        {{ r.entry_schedule || '—' }} / {{ r.exit_schedule || '—' }}
-                      </span>
+                      <template v-if="(r.type === 'entry' && r.entry_schedule) || (r.type === 'exit' && r.exit_schedule)">
+                        <span class="text-xs whitespace-nowrap" style="color: var(--text-muted);">
+                          {{ r.type === 'entry' ? r.entry_schedule : r.exit_schedule }}
+                        </span>
+                      </template>
                       <span v-else class="text-xs" style="color: var(--text-dim);">Sin horario</span>
                     </td>
-                    <!-- Retraso / Adelanto -->
+                    <!-- Retraso / Adelanto (calculado en frontend con zona horaria local) -->
                     <td class="hidden lg:table-cell">
-                      <template v-if="r.entry_schedule || r.exit_schedule">
-                        <span v-if="(r.deviation_min ?? 0) === 0" class="badge badge-blue text-xs">Puntual</span>
-                        <template v-else>
-                          <span v-if="r.type === 'entry'"
-                            :class="r.deviation_min > 0 ? 'badge-red' : 'badge-green'"
-                            class="badge text-xs whitespace-nowrap">
-                            {{ r.deviation_min > 0 ? '+' : '' }}{{ r.deviation_min }}m
-                            {{ r.deviation_min > 0 ? 'tarde' : 'temprano' }}
-                          </span>
-                          <span v-else
-                            :class="r.deviation_min < 0 ? 'badge-red' : 'badge-green'"
-                            class="badge text-xs whitespace-nowrap">
-                            {{ r.deviation_min > 0 ? '+' : '' }}{{ r.deviation_min }}m
-                            {{ r.deviation_min > 0 ? 'extra' : 'temprano' }}
-                          </span>
-                        </template>
+                      <template v-if="computeDeviation(r) !== null">
+                        <span v-if="computeDeviation(r) === 0" class="badge badge-blue text-xs">Puntual</span>
+                        <span v-else-if="r.type === 'entry'"
+                          :class="computeDeviation(r) > 0 ? 'badge-red' : 'badge-green'"
+                          class="badge text-xs whitespace-nowrap">
+                          {{ computeDeviation(r) > 0 ? '+' : '' }}{{ computeDeviation(r) }}m
+                          {{ computeDeviation(r) > 0 ? 'retraso' : 'anticipado' }}
+                        </span>
+                        <span v-else
+                          :class="computeDeviation(r) < 0 ? 'badge-red' : 'badge-green'"
+                          class="badge text-xs whitespace-nowrap">
+                          {{ computeDeviation(r) > 0 ? '+' : '' }}{{ computeDeviation(r) }}m
+                          {{ computeDeviation(r) > 0 ? 'de más' : 'antes' }}
+                        </span>
                       </template>
                       <span v-else class="text-xs" style="color: var(--text-dim);">—</span>
                     </td>
@@ -1070,31 +1070,50 @@ async function loadRecords() {
   }
 }
 
-// ─── Excel export ────────────────────────────────────────────────────────────
-function deviationLabel(r) {
-  if (!r.entry_schedule && !r.exit_schedule) return '—'
-  const dev = r.deviation_min ?? 0
-  if (dev === 0) return 'Puntual'
+// ─── Desviación (calculada en el navegador para respetar zona horaria local) ──
+function computeDeviation(r) {
+  const schedule = r.type === 'entry' ? r.entry_schedule : r.exit_schedule
+  if (!schedule || schedule.length < 4) return null
+  const ts = new Date(r.timestamp)
+  if (isNaN(ts.getTime())) return null
+  const actualMin = ts.getHours() * 60 + ts.getMinutes()
+  const [sh, sm] = schedule.split(':').map(Number)
+  const scheduledMin = sh * 60 + sm
+  return actualMin - scheduledMin
+}
+
+function formatDeviation(dev, type) {
+  if (dev === null) return '—'
   const abs = Math.abs(dev)
   const h = Math.floor(abs / 60)
   const m = abs % 60
   const hhmm = h > 0 ? `${h}h ${m}m` : `${m}m`
-  if (r.type === 'entry') return dev > 0 ? `+${hhmm} tarde` : `-${hhmm} temprano`
-  return dev > 0 ? `+${hhmm} extra` : `-${hhmm} temprano`
+  if (dev === 0) return 'Puntual'
+  if (type === 'entry') return dev > 0 ? `+${hhmm} de retraso` : `-${hhmm} anticipado`
+  return dev > 0 ? `+${hhmm} de más` : `-${hhmm} antes de tiempo`
 }
 
+// ─── Excel export ─────────────────────────────────────────────────────────────
 function exportExcel() {
-  const rows = records.value.map(r => ({
-    Nombre: `${r.first_name} ${r.last_name}`,
-    Correo: r.email,
-    Proyecto: r.project_name,
-    Tipo: r.type === 'entry' ? 'Entrada' : 'Salida',
-    'Fecha / Hora': formatDate(r.timestamp),
-    'Horario Entrada': r.entry_schedule || '—',
-    'Horario Salida': r.exit_schedule || '—',
-    'Retraso / Adelanto': deviationLabel(r),
-    Comentario: r.day_comment || '',
-  }))
+  const rows = records.value.map(r => {
+    const ts = new Date(r.timestamp)
+    const fecha = isNaN(ts) ? '' : ts.toLocaleDateString('es-MX', { year: 'numeric', month: '2-digit', day: '2-digit' })
+    const hora = isNaN(ts) ? '' : ts.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit', hour12: false })
+    const horarioProg = r.type === 'entry' ? (r.entry_schedule || '—') : (r.exit_schedule || '—')
+    const dev = computeDeviation(r)
+    return {
+      Nombre: `${r.first_name || ''} ${r.last_name || ''}`.trim(),
+      Correo: r.email || '',
+      Proyecto: r.project_name || '',
+      Tipo: r.type === 'entry' ? 'Entrada' : 'Salida',
+      Fecha: fecha,
+      'Hora real': hora,
+      'Horario programado': horarioProg,
+      'Variación (min)': dev !== null ? dev : '',
+      'Variación': formatDeviation(dev, r.type),
+      'Comentario del día': r.day_comment || '',
+    }
+  })
   const ws = XLSX.utils.json_to_sheet(rows)
   const wb = XLSX.utils.book_new()
   XLSX.utils.book_append_sheet(wb, ws, 'Registros')
