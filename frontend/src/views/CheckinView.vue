@@ -107,13 +107,25 @@
             <div class="h-10 w-px bg-slate-200 dark:bg-white/10"></div>
             <div class="flex flex-col items-end">
               <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">Status GPS</span>
+              <!-- Rastreando activamente -->
               <div v-if="isTracking" class="flex items-center gap-1.5 mt-1">
                 <span class="relative flex h-2.5 w-2.5">
                   <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                 </span>
+                <span class="text-sm font-semibold text-emerald-600 dark:text-emerald-400">Rastreando</span>
+              </div>
+              <!-- Permiso concedido pero no rastreando -->
+              <div v-else-if="gpsPermission === 'granted'" class="flex items-center gap-1.5 mt-1">
+                <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
                 <span class="text-sm font-semibold text-emerald-600 dark:text-emerald-400">Activo</span>
               </div>
+              <!-- Permiso denegado -->
+              <div v-else-if="gpsPermission === 'denied'" class="flex items-center gap-1.5 mt-1">
+                <span class="w-2.5 h-2.5 rounded-full bg-rose-500"></span>
+                <span class="text-sm font-semibold text-rose-500">Sin permiso</span>
+              </div>
+              <!-- Sin respuesta aún -->
               <div v-else class="flex items-center gap-1.5 mt-1">
                 <span class="w-2.5 h-2.5 rounded-full bg-slate-300 dark:bg-slate-600"></span>
                 <span class="text-sm font-semibold text-slate-500 dark:text-slate-400">Inactivo</span>
@@ -577,6 +589,7 @@ const locationPoints = []
 const recoveredPoints = ref(0)
 const showHiddenWarning = ref(false)
 const isTracking = ref(false)
+const gpsPermission = ref('prompt') // 'granted' | 'denied' | 'prompt'
 
 // Wake lock
 let wakeLock = null
@@ -862,6 +875,15 @@ onMounted(async () => {
   updateTime()
   timeInterval = setInterval(updateTime, 1000)
   document.addEventListener('visibilitychange', handleVisibilityChange)
+
+  // Check GPS permission state (shows indicator even when not actively tracking)
+  if (navigator.permissions) {
+    try {
+      const perm = await navigator.permissions.query({ name: 'geolocation' })
+      gpsPermission.value = perm.state
+      perm.onchange = () => { gpsPermission.value = perm.state }
+    } catch {}
+  }
 
   // Sync state with backend so it survives cache clearing
   try {
