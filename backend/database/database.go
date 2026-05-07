@@ -112,6 +112,9 @@ func Migrate() {
 			exit_time  VARCHAR(5) NOT NULL,
 			updated_at TIMESTAMP DEFAULT NOW()
 		)`,
+		// Saturday schedule columns (optional — empty string means no Saturday schedule set)
+		`ALTER TABLE work_schedules ADD COLUMN IF NOT EXISTS sat_entry_time VARCHAR(5) NOT NULL DEFAULT ''`,
+		`ALTER TABLE work_schedules ADD COLUMN IF NOT EXISTS sat_exit_time  VARCHAR(5) NOT NULL DEFAULT ''`,
 		// Daily comments — one per user per day
 		`CREATE TABLE IF NOT EXISTS record_comments (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

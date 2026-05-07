@@ -162,7 +162,12 @@ func AdminGetRecords(c *gin.Context) {
 	           (cr.photo_selfie_path IS NOT NULL AND cr.photo_selfie_path != '') AS has_selfie_photo,
 	           (SELECT COUNT(*) FROM location_points lp WHERE lp.check_record_id = cr.id),
 	           cr.is_suspicious, COALESCE(cr.suspicious_reason,''), COALESCE(cr.ip_country,''), COALESCE(cr.ip_city,''),
-	           COALESCE(ws.entry_time,''), COALESCE(ws.exit_time,''),
+	           CASE WHEN EXTRACT(DOW FROM cr.timestamp) = 6
+	                THEN COALESCE(ws.sat_entry_time,'')
+	                ELSE COALESCE(ws.entry_time,'') END,
+	           CASE WHEN EXTRACT(DOW FROM cr.timestamp) = 6
+	                THEN COALESCE(ws.sat_exit_time,'')
+	                ELSE COALESCE(ws.exit_time,'') END,
 	           COALESCE((SELECT rc.comment FROM record_comments rc
 	                     WHERE rc.user_id = u.id AND rc.record_date = cr.timestamp::date),'')
 	           FROM check_records cr

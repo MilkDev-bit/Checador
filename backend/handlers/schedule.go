@@ -12,15 +12,19 @@ import (
 // ─── Work Schedule ────────────────────────────────────────────────────────────
 
 type WorkSchedule struct {
-	UserID    string    `json:"user_id"`
-	EntryTime string    `json:"entry_time"` // "HH:MM" 24h
-	ExitTime  string    `json:"exit_time"`  // "HH:MM" 24h
-	UpdatedAt time.Time `json:"updated_at"`
+	UserID       string    `json:"user_id"`
+	EntryTime    string    `json:"entry_time"`     // "HH:MM" 24h — lunes a viernes
+	ExitTime     string    `json:"exit_time"`      // "HH:MM" 24h — lunes a viernes
+	SatEntryTime string    `json:"sat_entry_time"` // "HH:MM" 24h — sábado (vacío = sin horario)
+	SatExitTime  string    `json:"sat_exit_time"`  // "HH:MM" 24h — sábado
+	UpdatedAt    time.Time `json:"updated_at"`
 }
 
 type SetScheduleRequest struct {
-	EntryTime string `json:"entry_time" binding:"required"`
-	ExitTime  string `json:"exit_time"  binding:"required"`
+	EntryTime    string `json:"entry_time"    binding:"required"`
+	ExitTime     string `json:"exit_time"     binding:"required"`
+	SatEntryTime string `json:"sat_entry_time"` // optional
+	SatExitTime  string `json:"sat_exit_time"`  // optional
 }
 
 // AdminGetUserSchedule returns the work schedule for a user.
@@ -30,13 +34,16 @@ func AdminGetUserSchedule(c *gin.Context) {
 
 	var ws WorkSchedule
 	err := database.DB.QueryRow(
-		`SELECT user_id, entry_time, exit_time, updated_at
+		`SELECT user_id, entry_time, exit_time, sat_entry_time, sat_exit_time, updated_at
 		 FROM work_schedules WHERE user_id = $1`, userID,
-	).Scan(&ws.UserID, &ws.EntryTime, &ws.ExitTime, &ws.UpdatedAt)
+	).Scan(&ws.UserID, &ws.EntryTime, &ws.ExitTime, &ws.SatEntryTime, &ws.SatExitTime, &ws.UpdatedAt)
 
 	if err != nil {
 		// No schedule set yet — return empty
-		c.JSON(http.StatusOK, gin.H{"user_id": userID, "entry_time": "", "exit_time": ""})
+		c.JSON(http.StatusOK, gin.H{
+			"user_id": userID, "entry_time": "", "exit_time": "",
+			"sat_entry_time": "", "sat_exit_time": "",
+		})
 		return
 	}
 	c.JSON(http.StatusOK, ws)
@@ -53,13 +60,24 @@ func AdminSetUserSchedule(c *gin.Context) {
 		return
 	}
 
-	// Validate HH:MM format
-	if len(req.EntryTime) != 5 || req.EntryTime[2] != ':' {
+	// Validate HH:MM format helpers
+	isValidTime := func(t string) bool {
+		return t == "" || (len(t) == 5 && t[2] == ':')
+	}
+	if !isValidTime(req.EntryTime) || req.EntryTime == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "entry_time must be HH:MM"})
 		return
 	}
-	if len(req.ExitTime) != 5 || req.ExitTime[2] != ':' {
+	if !isValidTime(req.ExitTime) || req.ExitTime == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "exit_time must be HH:MM"})
+		return
+	}
+	if !isValidTime(req.SatEntryTime) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "sat_entry_time must be HH:MM or empty"})
+		return
+	}
+	if !isValidTime(req.SatExitTime) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "sat_exit_time must be HH:MM or empty"})
 		return
 	}
 
@@ -72,13 +90,15 @@ func AdminSetUserSchedule(c *gin.Context) {
 	}
 
 	_, err := database.DB.Exec(
-		`INSERT INTO work_schedules (user_id, entry_time, exit_time, updated_at)
-		 VALUES ($1, $2, $3, NOW())
+		`INSERT INTO work_schedules (user_id, entry_time, exit_time, sat_entry_time, sat_exit_time, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, NOW())
 		 ON CONFLICT (user_id) DO UPDATE
-		   SET entry_time = EXCLUDED.entry_time,
-		       exit_time  = EXCLUDED.exit_time,
-		       updated_at = NOW()`,
-		userID, req.EntryTime, req.ExitTime,
+		   SET entry_time     = EXCLUDED.entry_time,
+		       exit_time      = EXCLUDED.exit_time,
+		       sat_entry_time = EXCLUDED.sat_entry_time,
+		       sat_exit_time  = EXCLUDED.sat_exit_time,
+		       updated_at     = NOW()`,
+		userID, req.EntryTime, req.ExitTime, req.SatEntryTime, req.SatExitTime,
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error saving schedule"})
@@ -86,9 +106,11 @@ func AdminSetUserSchedule(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"user_id":    userID,
-		"entry_time": req.EntryTime,
-		"exit_time":  req.ExitTime,
+		"user_id":        userID,
+		"entry_time":     req.EntryTime,
+		"exit_time":      req.ExitTime,
+		"sat_entry_time": req.SatEntryTime,
+		"sat_exit_time":  req.SatExitTime,
 	})
 }
 

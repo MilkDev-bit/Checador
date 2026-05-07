@@ -915,13 +915,31 @@
               </button>
             </div>
             <div class="p-5 space-y-4">
-              <div>
-                <label class="block text-xs font-semibold mb-1.5" style="color: var(--text-muted);">Hora de entrada</label>
-                <input type="time" v-model="scheduleModal.entry_time" class="input w-full text-sm py-2" />
+              <!-- Lunes – Viernes -->
+              <p class="text-xs font-bold uppercase tracking-wider" style="color: var(--text-muted);">Lunes – Viernes</p>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-semibold mb-1.5" style="color: var(--text-muted);">Entrada</label>
+                  <input type="time" v-model="scheduleModal.entry_time" class="input w-full text-sm py-2" />
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold mb-1.5" style="color: var(--text-muted);">Salida</label>
+                  <input type="time" v-model="scheduleModal.exit_time" class="input w-full text-sm py-2" />
+                </div>
               </div>
-              <div>
-                <label class="block text-xs font-semibold mb-1.5" style="color: var(--text-muted);">Hora de salida</label>
-                <input type="time" v-model="scheduleModal.exit_time" class="input w-full text-sm py-2" />
+              <!-- Sábado -->
+              <div style="border-top: 1px solid var(--border-subtle);" class="pt-3">
+                <p class="text-xs font-bold uppercase tracking-wider mb-3" style="color: var(--text-muted);">Sábado <span class="font-normal normal-case">(opcional)</span></p>
+                <div class="grid grid-cols-2 gap-3">
+                  <div>
+                    <label class="block text-xs font-semibold mb-1.5" style="color: var(--text-muted);">Entrada</label>
+                    <input type="time" v-model="scheduleModal.sat_entry_time" class="input w-full text-sm py-2" />
+                  </div>
+                  <div>
+                    <label class="block text-xs font-semibold mb-1.5" style="color: var(--text-muted);">Salida</label>
+                    <input type="time" v-model="scheduleModal.sat_exit_time" class="input w-full text-sm py-2" />
+                  </div>
+                </div>
               </div>
               <div class="flex gap-3 pt-1">
                 <button @click="scheduleModal.show = false" class="btn-secondary flex-1">Cancelar</button>
@@ -1145,23 +1163,25 @@ function openCommentEditor(r) {
 }
 
 // ─── Work schedule modal ─────────────────────────────────────────────────────
-const scheduleModal = ref({ show: false, user: null, entry_time: '', exit_time: '', saving: false })
+const scheduleModal = ref({ show: false, user: null, entry_time: '', exit_time: '', sat_entry_time: '', sat_exit_time: '', saving: false })
 
 async function openScheduleModal(user) {
-  scheduleModal.value = { show: true, user, entry_time: '', exit_time: '', saving: false }
+  scheduleModal.value = { show: true, user, entry_time: '', exit_time: '', sat_entry_time: '', sat_exit_time: '', saving: false }
   try {
     const { data } = await api.get(`/admin/users/${user.id}/schedule`)
-    scheduleModal.value.entry_time = data.entry_time || ''
-    scheduleModal.value.exit_time = data.exit_time || ''
+    scheduleModal.value.entry_time     = data.entry_time     || ''
+    scheduleModal.value.exit_time      = data.exit_time      || ''
+    scheduleModal.value.sat_entry_time = data.sat_entry_time || ''
+    scheduleModal.value.sat_exit_time  = data.sat_exit_time  || ''
   } catch {}
 }
 
 async function saveSchedule() {
-  const { user, entry_time, exit_time } = scheduleModal.value
+  const { user, entry_time, exit_time, sat_entry_time, sat_exit_time } = scheduleModal.value
   if (!entry_time || !exit_time) return
   scheduleModal.value.saving = true
   try {
-    await api.post(`/admin/users/${user.id}/schedule`, { entry_time, exit_time })
+    await api.post(`/admin/users/${user.id}/schedule`, { entry_time, exit_time, sat_entry_time, sat_exit_time })
     scheduleModal.value.show = false
   } catch {}
   scheduleModal.value.saving = false
