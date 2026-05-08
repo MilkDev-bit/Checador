@@ -1,0 +1,9 @@
+*.exe
+paselista
+test_build.exe
+uploads/
+.env
+.env.*
+.git
+.gitignore
+*.md

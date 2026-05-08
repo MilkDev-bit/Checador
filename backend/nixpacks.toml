@@ -1,0 +1,5 @@
+[phases.build]
+cmds = ["go build -o paselista ."]
+
+[start]
+cmd = "./paselista"
