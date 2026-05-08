@@ -58,7 +58,7 @@
           </div>
         </Transition>
 
-        <button type="submit" class="btn-primary w-full py-3.5 rounded-xl font-bold tracking-wide mt-2 animate-slide-up hover:ring-4 hover:ring-brand-500/20 transition-all" :disabled="loading" style="animation-delay: 0.4s; animation-fill-mode: both;">
+        <button type="submit" class="btn-primary w-full py-3.5 rounded-xl font-bold tracking-wide mt-2 animate-slide-up hover:ring-4 hover:ring-brand-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed" :disabled="loading || !recaptchaToken" style="animation-delay: 0.4s; animation-fill-mode: both;">
           <div class="relative flex items-center justify-center gap-2">
             <span v-if="loading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             <span>{{ loading ? 'Ingresando...' : 'Iniciar Sesión' }}</span>
@@ -93,6 +93,7 @@ const error = ref('')
 const showPwd = ref(false)
 const form = ref({ email: '', password: '' })
 const recaptchaWidgetId = ref(null)
+const recaptchaToken = ref('') // se llena en el callback, se vacía al expirar
 
 // reCAPTCHA tokens expire after 2 minutes. Auto-reset at 110s so the user
 // never unknowingly submits with an expired token.
@@ -103,8 +104,19 @@ function scheduleRecaptchaReset() {
   recaptchaResetTimer = setTimeout(() => {
     if (recaptchaWidgetId.value !== null && window.grecaptcha) {
       window.grecaptcha.reset(recaptchaWidgetId.value)
+      recaptchaToken.value = ''
     }
   }, 110_000)
+}
+
+function onRecaptchaSolved(token) {
+  recaptchaToken.value = token
+  scheduleRecaptchaReset()
+}
+
+function onRecaptchaExpired() {
+  recaptchaToken.value = ''
+  clearTimeout(recaptchaResetTimer)
 }
 
 onMounted(() => {
@@ -115,8 +127,8 @@ onMounted(() => {
         recaptchaWidgetId.value = window.grecaptcha.render('recaptcha-container', {
           sitekey: '6LdUjcgsAAAAAI0pgOSk7QMEmq-zjD4saihqzaa-',
           theme: themeStore.isDark ? 'dark' : 'light',
-          callback: scheduleRecaptchaReset,
-          'expired-callback': () => clearTimeout(recaptchaResetTimer),
+          callback: onRecaptchaSolved,
+          'expired-callback': onRecaptchaExpired,
         })
       } catch (e) {
         console.warn('Recaptcha error:', e)
@@ -129,13 +141,15 @@ onUnmounted(() => clearTimeout(recaptchaResetTimer))
 
 async function handleLogin() {
   error.value = ''
-  
-  let recaptchaToken = ''
-  if (recaptchaWidgetId.value !== null) {
-    recaptchaToken = window.grecaptcha.getResponse(recaptchaWidgetId.value)
+
+  // Usar el token guardado en el callback; como fallback intentar getResponse()
+  // por si el callback no se disparó en algún navegador móvil.
+  let token = recaptchaToken.value
+  if (!token && recaptchaWidgetId.value !== null && window.grecaptcha) {
+    token = window.grecaptcha.getResponse(recaptchaWidgetId.value)
   }
 
-  if (!recaptchaToken) {
+  if (!token) {
     error.value = 'Completa la verificación reCAPTCHA. Si aparece un puzzle de imágenes, resuélvelo antes de continuar.'
     return
   }
@@ -143,8 +157,9 @@ async function handleLogin() {
   loading.value = true
   try {
     // Trim both fields to prevent invisible-whitespace credential mismatches
-    const data = await auth.login(form.value.email.trim(), form.value.password.trim(), recaptchaToken)
+    const data = await auth.login(form.value.email.trim(), form.value.password.trim(), token)
     clearTimeout(recaptchaResetTimer)
+    recaptchaToken.value = ''
     if (data.user?.role === 'admin') {
       router.push('/admin')
     } else {
@@ -152,6 +167,7 @@ async function handleLogin() {
     }
   } catch (e) {
     error.value = e.response?.data?.error || 'Credenciales inválidas'
+    recaptchaToken.value = ''
     if (recaptchaWidgetId.value !== null) {
       window.grecaptcha.reset(recaptchaWidgetId.value)
     }
