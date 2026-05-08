@@ -136,7 +136,7 @@ async function handleLogin() {
   }
 
   if (!recaptchaToken) {
-    error.value = 'Por favor, verifica que no eres un robot.'
+    error.value = 'Completa la verificación reCAPTCHA. Si aparece un puzzle de imágenes, resuélvelo antes de continuar.'
     return
   }
 
