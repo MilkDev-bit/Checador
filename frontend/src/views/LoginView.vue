@@ -52,9 +52,15 @@
         </div>
 
         <Transition name="fade">
-          <div v-if="error" class="flex items-start gap-3 bg-rose-50/80 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-600 dark:text-rose-400 rounded-xl px-4 py-3 text-sm font-semibold animate-shake">
-            <ExclamationTriangleIcon class="w-5 h-5 flex-shrink-0 mt-0.5" />
-            <span class="leading-snug">{{ error }}</span>
+          <div v-if="error" class="flex flex-col gap-2 bg-rose-50/80 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-600 dark:text-rose-400 rounded-xl px-4 py-3 text-sm animate-shake">
+            <div class="flex items-start gap-3 font-semibold">
+              <ExclamationTriangleIcon class="w-5 h-5 flex-shrink-0 mt-0.5" />
+              <span class="leading-snug">{{ error }}</span>
+            </div>
+            <!-- Ayuda contextual según tipo de error -->
+            <ul v-if="errorHints.length" class="mt-1 ml-8 space-y-1 text-xs text-rose-500 dark:text-rose-400/80 list-disc list-outside">
+              <li v-for="hint in errorHints" :key="hint">{{ hint }}</li>
+            </ul>
           </div>
         </Transition>
 
@@ -79,7 +85,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
@@ -93,7 +99,35 @@ const error = ref('')
 const showPwd = ref(false)
 const form = ref({ email: '', password: '' })
 const recaptchaWidgetId = ref(null)
-const recaptchaToken = ref('') // se llena en el callback, se vacía al expirar
+const recaptchaToken = ref('')
+
+// Sugerencias contextuales basadas en el mensaje de error
+const errorHints = computed(() => {
+  const msg = error.value.toLowerCase()
+  if (msg.includes('captcha') || msg.includes('robot')) {
+    return [
+      'Asegúrate de marcar la casilla "No soy un robot" antes de presionar Iniciar Sesión.',
+      'Si aparece un puzzle de imágenes, resuélvelo completamente.',
+      'Desactiva bloqueadores de anuncios o VPN si el captcha no carga.',
+      'Si el problema persiste, recarga la página (F5) e intenta nuevamente.',
+    ]
+  }
+  if (msg.includes('contraseña incorrecta') || msg.includes('password')) {
+    return [
+      'Las contraseñas distinguen MAYÚSCULAS y minúsculas.',
+      'Verifica que no haya espacios al inicio o al final.',
+      'Si olvidaste tu contraseña, contacta al administrador para que la restablezca.',
+    ]
+  }
+  if (msg.includes('correo no registrado') || msg.includes('no registrado')) {
+    return [
+      'Verifica que el correo sea exactamente el que usaste al registrarte.',
+      'Si nunca te has registrado, usa el enlace "Regístrate aquí" de abajo.',
+      'Si crees que ya tienes cuenta, contacta al administrador.',
+    ]
+  }
+  return []
+})
 
 // reCAPTCHA tokens expire after 2 minutes. Auto-reset at 110s so the user
 // never unknowingly submits with an expired token.

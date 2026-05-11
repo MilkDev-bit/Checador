@@ -124,7 +124,7 @@ func Login(c *gin.Context) {
 	}
 
 	if !verifyRecaptcha(req.RecaptchaToken) {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Verificación reCAPTCHA fallida. Por favor, inténtalo de nuevo."})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Verificación reCAPTCHA fallida. Marca la casilla \"No soy un robot\" y completa el desafío si aparece. Si el problema persiste, recarga la página."})
 		return
 	}
 
@@ -138,11 +138,11 @@ func Login(c *gin.Context) {
 	).Scan(&user.ID, &user.FirstName, &user.LastName, &user.ProjectName, &user.Email, &user.Role, &user.PasswordHash, &avatarURL, &coverURL)
 
 	if err == sql.ErrNoRows {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Correo no registrado. Verifica que sea el mismo con el que te registraste o crea una cuenta nueva."})
 		return
 	}
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error interno. Intenta de nuevo en unos segundos."})
 		return
 	}
 
@@ -154,7 +154,7 @@ func Login(c *gin.Context) {
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Contraseña incorrecta. Las contraseñas distinguen mayúsculas y minúsculas. Si olvidaste tu contraseña, contacta al administrador."})
 		return
 	}
 
