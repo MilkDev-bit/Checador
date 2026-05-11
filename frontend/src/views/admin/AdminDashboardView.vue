@@ -896,26 +896,35 @@
                 class="mt-4 pt-3"
                 style="border-top: 1px solid var(--border-subtle)"
               >
-                <button
-                  @click="openScheduleModal(user)"
-                  class="w-full btn-secondary btn-sm flex items-center justify-center gap-1.5"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    class="w-4 h-4"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
+                <div class="flex gap-2">
+                  <button
+                    @click="openScheduleModal(user)"
+                    class="flex-1 btn-secondary btn-sm flex items-center justify-center gap-1.5"
                   >
-                    <path
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      stroke-width="2"
-                      d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                    />
-                  </svg>
-                  Horario laboral
-                </button>
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      class="w-4 h-4"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    Horario
+                  </button>
+                  <button
+                    @click="openPwdModal(user)"
+                    class="flex-1 btn-secondary btn-sm flex items-center justify-center gap-1.5"
+                  >
+                    <LockClosedIcon class="w-4 h-4" />
+                    Contraseña
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -2093,6 +2102,106 @@
         </div>
       </Transition>
 
+      <!-- Password reset modal -->
+      <Transition name="modal">
+        <div
+          v-if="pwdModal.show"
+          class="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style="background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px)"
+          @click.self="pwdModal.show = false"
+        >
+          <div
+            class="w-full max-w-sm glass-card animate-in"
+            style="background: var(--modal-bg)"
+          >
+            <div
+              class="flex items-center justify-between px-5 py-4"
+              style="border-bottom: 1px solid rgba(139, 92, 246, 0.3)"
+            >
+              <div class="flex items-center gap-2">
+                <LockClosedIcon class="w-5 h-5 text-violet-400" />
+                <div>
+                  <h3 class="font-bold text-base" style="color: var(--text)">Cambiar contraseña</h3>
+                  <p class="text-xs" style="color: var(--text-muted)">{{ pwdModal.user?.first_name }} {{ pwdModal.user?.last_name }}</p>
+                </div>
+              </div>
+              <button
+                @click="pwdModal.show = false"
+                class="w-8 h-8 rounded-lg flex items-center justify-center"
+                style="color: var(--text-muted)"
+              >
+                <XMarkIcon class="w-5 h-5" />
+              </button>
+            </div>
+            <div class="p-5 space-y-4">
+              <div>
+                <label class="block text-xs font-semibold mb-1.5" style="color: var(--text-muted)">Nueva contraseña</label>
+                <div class="relative">
+                  <input
+                    v-model="pwdModal.password"
+                    :type="pwdModal.showPwd ? 'text' : 'password'"
+                    class="input w-full pr-11"
+                    placeholder="Mínimo 8 caracteres"
+                    minlength="8"
+                    autocomplete="new-password"
+                  />
+                  <button
+                    type="button"
+                    @click="pwdModal.showPwd = !pwdModal.showPwd"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-colors"
+                    style="color: var(--text-muted)"
+                  >
+                    <EyeSlashIcon v-if="pwdModal.showPwd" class="w-4 h-4" />
+                    <EyeIcon v-else class="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold mb-1.5" style="color: var(--text-muted)">Confirmar contraseña</label>
+                <input
+                  v-model="pwdModal.confirm"
+                  type="password"
+                  class="input w-full"
+                  :class="pwdModal.confirm && pwdModal.password !== pwdModal.confirm ? 'ring-2 ring-rose-500/30 border-rose-500/40' : ''"
+                  placeholder="Repite la contraseña"
+                  autocomplete="new-password"
+                />
+                <p
+                  v-if="pwdModal.confirm && pwdModal.password !== pwdModal.confirm"
+                  class="text-xs text-rose-400 mt-1 font-semibold flex items-center gap-1"
+                >
+                  <ExclamationTriangleIcon class="w-3.5 h-3.5" /> Las contraseñas no coinciden
+                </p>
+              </div>
+              <Transition name="fade">
+                <div
+                  v-if="pwdModal.msg.text"
+                  class="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold"
+                  :class="pwdModal.msg.ok ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-500' : 'bg-rose-500/10 border border-rose-500/20 text-rose-500'"
+                >
+                  <CheckCircleIcon v-if="pwdModal.msg.ok" class="w-4 h-4 flex-shrink-0" />
+                  <ExclamationTriangleIcon v-else class="w-4 h-4 flex-shrink-0" />
+                  {{ pwdModal.msg.text }}
+                </div>
+              </Transition>
+              <div class="flex gap-3 pt-1">
+                <button @click="pwdModal.show = false" class="btn-secondary flex-1">Cancelar</button>
+                <button
+                  @click="savePwd"
+                  :disabled="pwdModal.saving || pwdModal.password.length < 8 || pwdModal.password !== pwdModal.confirm"
+                  class="flex-1 btn-md text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed rounded-xl flex items-center justify-center gap-2"
+                  style="background: linear-gradient(135deg, #7c3aed, #6366f1)"
+                >
+                  <span v-if="pwdModal.saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  <LockClosedIcon v-else class="w-4 h-4" />
+                  {{ pwdModal.saving ? 'Guardando...' : 'Cambiar contraseña' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+
       <!-- Logout confirmation modal -->
       <Transition name="modal">
         <div
@@ -2385,6 +2494,46 @@ function openCommentEditor(r) {
     record_date: date,
     text: r.day_comment || "",
   };
+}
+
+// ─── Password reset modal ────────────────────────────────────────────────────
+const pwdModal = ref({
+  show: false,
+  user: null,
+  password: "",
+  confirm: "",
+  showPwd: false,
+  saving: false,
+  msg: { text: "", ok: false },
+});
+
+function openPwdModal(user) {
+  pwdModal.value = {
+    show: true,
+    user,
+    password: "",
+    confirm: "",
+    showPwd: false,
+    saving: false,
+    msg: { text: "", ok: false },
+  };
+}
+
+async function savePwd() {
+  if (pwdModal.value.password.length < 8 || pwdModal.value.password !== pwdModal.value.confirm) return;
+  pwdModal.value.saving = true;
+  pwdModal.value.msg = { text: "", ok: false };
+  try {
+    await api.put(`/admin/users/${pwdModal.value.user.id}/password`, { password: pwdModal.value.password });
+    pwdModal.value.msg = { text: "Contraseña actualizada correctamente.", ok: true };
+    pwdModal.value.password = "";
+    pwdModal.value.confirm = "";
+    setTimeout(() => { pwdModal.value.show = false; }, 1500);
+  } catch (e) {
+    pwdModal.value.msg = { text: e.response?.data?.error || "Error al cambiar la contraseña.", ok: false };
+  } finally {
+    pwdModal.value.saving = false;
+  }
 }
 
 // ─── Work schedule modal ─────────────────────────────────────────────────────

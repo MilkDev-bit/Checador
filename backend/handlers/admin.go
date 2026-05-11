@@ -9,6 +9,7 @@ import (
 	"paselista/database"
 
 	"github.com/gin-gonic/gin"
+	"golang.org/x/crypto/bcrypt"
 )
 
 type AdminRecordRow struct {
@@ -326,4 +327,40 @@ func AdminGetRecordPhotos(c *gin.Context) {
 		"photo_site_path":   sitePath,
 		"photo_selfie_path": selfiePath,
 	})
+}
+
+// AdminResetUserPassword resets a user's password without requiring the current one.
+// PUT /admin/users/:id/password
+func AdminResetUserPassword(c *gin.Context) {
+	userID := c.Param("id")
+
+	var req struct {
+		Password string `json:"password" binding:"required,min=8"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "La contraseña debe tener al menos 8 caracteres."})
+		return
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al procesar la contraseña."})
+		return
+	}
+
+	result, err := database.DB.Exec(
+		`UPDATE users SET password_hash = $1 WHERE id = $2 AND role = 'user'`,
+		string(hash), userID,
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al actualizar la contraseña."})
+		return
+	}
+	rows, _ := result.RowsAffected()
+	if rows == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Usuario no encontrado."})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Contraseña actualizada correctamente."})
 }

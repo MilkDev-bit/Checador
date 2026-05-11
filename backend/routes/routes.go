@@ -53,5 +53,6 @@ func Register(r *gin.Engine) {
 		admin.GET("/projects", handlers.AdminGetProjects)
 		admin.GET("/users/:id/schedule", handlers.AdminGetUserSchedule)
 		admin.POST("/users/:id/schedule", handlers.AdminSetUserSchedule)
+		admin.PUT("/users/:id/password", handlers.AdminResetUserPassword)
 	}
 }
