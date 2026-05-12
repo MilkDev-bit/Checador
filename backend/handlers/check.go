@@ -140,6 +140,36 @@ func RegisterCheck(c *gin.Context) {
 		return
 	}
 
+	// Validate state transitions against today's records only.
+	// This prevents phantom "active sessions" from previous days.
+	{
+		nowUTC := time.Now().UTC()
+		todayStart := time.Date(nowUTC.Year(), nowUTC.Month(), nowUTC.Day(), 0, 0, 0, 0, time.UTC)
+		tomorrowStart := todayStart.Add(24 * time.Hour)
+
+		var lastType string
+		qErr := database.DB.QueryRow(
+			`SELECT type FROM check_records
+			 WHERE user_id = $1 AND timestamp >= $2 AND timestamp < $3
+			 ORDER BY timestamp DESC LIMIT 1`,
+			userID, todayStart, tomorrowStart,
+		).Scan(&lastType)
+
+		if qErr != nil && qErr != sql.ErrNoRows {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+			return
+		}
+
+		if req.Type == "entry" && lastType == "entry" {
+			c.JSON(http.StatusConflict, gin.H{"error": "Ya tienes una entrada activa hoy. Registra tu salida primero."})
+			return
+		}
+		if req.Type == "exit" && lastType != "entry" {
+			c.JSON(http.StatusConflict, gin.H{"error": "No tienes una entrada activa hoy. Registra tu entrada primero."})
+			return
+		}
+	}
+
 	photoSiteData := ""
 	photoSelfieData := ""
 
@@ -388,17 +418,22 @@ func encodeToDataURL(fh *multipart.FileHeader) (string, error) {
 	return "data:" + mime + ";base64," + base64.StdEncoding.EncodeToString(data), nil
 }
 
-// GetCheckStatus returns if the user currently has an active 'entry' without an 'exit'
+// GetCheckStatus returns if the user currently has an active 'entry' without an 'exit' for today.
 func GetCheckStatus(c *gin.Context) {
 	userID := c.GetString("user_id")
 
 	var r models.CheckRecord
-	// Fetch the most recent check record for this user
+	// Fetch the most recent check record for this user made today (UTC date).
+	// Using a date filter prevents entries from previous days from being treated as active.
+	now := time.Now().UTC()
+	todayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
+	tomorrowStart := todayStart.Add(24 * time.Hour)
+
 	err := database.DB.QueryRow(
 		`SELECT id, type, timestamp FROM check_records 
-		 WHERE user_id = $1 
+		 WHERE user_id = $1 AND timestamp >= $2 AND timestamp < $3
 		 ORDER BY timestamp DESC LIMIT 1`,
-		userID,
+		userID, todayStart, tomorrowStart,
 	).Scan(&r.ID, &r.Type, &r.Timestamp)
 
 	if err != nil {
@@ -411,8 +446,6 @@ func GetCheckStatus(c *gin.Context) {
 	}
 
 	if r.Type == "entry" {
-		// Only consider it "active" if it was done within the same day/session.
-		// (Optional) We are doing simple type tracking, so if it's entry, they are active.
 		c.JSON(http.StatusOK, gin.H{
 			"active":     true,
 			"record_id":  r.ID,
