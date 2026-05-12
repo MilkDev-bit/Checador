@@ -41,6 +41,12 @@
               <EyeIcon v-else class="w-5 h-5" />
             </button>
           </div>
+          <div class="flex justify-end mt-1.5">
+            <button type="button" @click="showForgotModal = true"
+              class="text-xs text-brand-600 dark:text-brand-400 hover:underline underline-offset-4 font-medium transition-colors">
+              ¿Olvidaste tu contraseña?
+            </button>
+          </div>
         </div>
 
         <!-- reCAPTCHA v2 Container -->
@@ -82,6 +88,128 @@
       </div>
     </div>
   </div>
+
+  <!-- ===== Forgot Password Modal ===== -->
+  <Teleport to="body">
+    <Transition name="fade">
+      <div v-if="showForgotModal"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 dark:bg-slate-950/80 backdrop-blur-sm"
+        @click.self="closeForgotModal">
+        <div class="relative w-full max-w-[420px] glass-panel border border-white/20 dark:border-white/5 p-8 sm:p-10 animate-slide-up">
+
+          <!-- Close -->
+          <button @click="closeForgotModal"
+            class="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:hover:text-slate-300 hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+            <XMarkIcon class="w-5 h-5" />
+          </button>
+
+          <!-- Step 1: Enter email -->
+          <template v-if="forgotStep === 1">
+            <div class="text-center mb-7">
+              <div class="inline-flex w-14 h-14 rounded-2xl items-center justify-center bg-brand-50 dark:bg-brand-900/40 text-brand-600 dark:text-brand-400 mb-4">
+                <EnvelopeIcon class="w-7 h-7" />
+              </div>
+              <h3 class="text-xl font-extrabold text-slate-900 dark:text-white">Recuperar contraseña</h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Ingresa tu correo y te enviaremos un código de 6 dígitos.</p>
+            </div>
+            <form @submit.prevent="handleForgotRequest" class="space-y-4">
+              <div>
+                <label class="label-base">Correo electrónico</label>
+                <input v-model="forgotEmail" type="email" class="input-base"
+                  placeholder="ejemplo@correo.com" required autocomplete="email" />
+              </div>
+              <Transition name="fade">
+                <div v-if="forgotError"
+                  class="flex items-start gap-3 bg-rose-50/80 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-600 dark:text-rose-400 rounded-xl px-4 py-3 text-sm font-semibold">
+                  <ExclamationTriangleIcon class="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  {{ forgotError }}
+                </div>
+              </Transition>
+              <button type="submit" :disabled="forgotLoading"
+                class="btn-primary w-full py-3.5 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                <span v-if="forgotLoading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                {{ forgotLoading ? 'Enviando...' : 'Enviar código' }}
+              </button>
+            </form>
+          </template>
+
+          <!-- Step 2: Enter code + new password -->
+          <template v-else-if="forgotStep === 2">
+            <div class="text-center mb-7">
+              <div class="inline-flex w-14 h-14 rounded-2xl items-center justify-center bg-emerald-50 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 mb-4">
+                <EnvelopeOpenIcon class="w-7 h-7" />
+              </div>
+              <h3 class="text-xl font-extrabold text-slate-900 dark:text-white">Revisa tu correo</h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                Enviamos un código a
+                <span class="font-semibold text-slate-700 dark:text-slate-300">{{ forgotEmail }}</span>
+              </p>
+            </div>
+            <form @submit.prevent="handleResetPassword" class="space-y-4">
+              <div>
+                <label class="label-base">Código de 6 dígitos</label>
+                <input v-model="forgotCode" type="text" inputmode="numeric"
+                  class="input-base text-center tracking-[0.4em] font-bold text-xl"
+                  placeholder="000000" maxlength="6" pattern="[0-9]{6}" required autocomplete="one-time-code" />
+              </div>
+              <div>
+                <label class="label-base">Nueva contraseña</label>
+                <div class="relative">
+                  <input v-model="forgotNewPwd" :type="showForgotPwd ? 'text' : 'password'"
+                    class="input-base pr-12" placeholder="Mínimo 8 caracteres" required minlength="8" />
+                  <button type="button" @click="showForgotPwd = !showForgotPwd"
+                    class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-slate-400 hover:text-slate-700 dark:text-slate-500 dark:hover:text-slate-300 transition-colors">
+                    <EyeSlashIcon v-if="showForgotPwd" class="w-5 h-5" />
+                    <EyeIcon v-else class="w-5 h-5" />
+                  </button>
+                </div>
+              </div>
+              <div>
+                <label class="label-base">Confirmar contraseña</label>
+                <input v-model="forgotConfirmPwd" type="password" class="input-base"
+                  :class="forgotConfirmPwd && forgotPwdMismatch ? 'ring-2 ring-rose-500/30 border-rose-500/40' : ''"
+                  placeholder="••••••••" required />
+                <p v-if="forgotConfirmPwd && forgotPwdMismatch"
+                  class="text-xs text-rose-400 mt-1 font-semibold">Las contraseñas no coinciden</p>
+              </div>
+              <Transition name="fade">
+                <div v-if="forgotError"
+                  class="flex items-start gap-3 bg-rose-50/80 dark:bg-rose-500/10 border border-rose-200 dark:border-rose-500/20 text-rose-600 dark:text-rose-400 rounded-xl px-4 py-3 text-sm font-semibold">
+                  <ExclamationTriangleIcon class="w-5 h-5 flex-shrink-0 mt-0.5" />
+                  {{ forgotError }}
+                </div>
+              </Transition>
+              <button type="submit" :disabled="forgotLoading || forgotPwdMismatch"
+                class="btn-primary w-full py-3.5 rounded-xl font-bold disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2">
+                <span v-if="forgotLoading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                {{ forgotLoading ? 'Cambiando...' : 'Cambiar contraseña' }}
+              </button>
+              <button type="button" @click="forgotStep = 1"
+                class="w-full text-sm text-brand-600 dark:text-brand-400 hover:underline font-medium transition-colors">
+                ← Usar otro correo
+              </button>
+            </form>
+          </template>
+
+          <!-- Step 3: Success -->
+          <template v-else-if="forgotStep === 3">
+            <div class="text-center py-4">
+              <div class="inline-flex w-16 h-16 rounded-full items-center justify-center bg-emerald-50 dark:bg-emerald-900/30 text-emerald-500 mb-5">
+                <CheckCircleIcon class="w-8 h-8" />
+              </div>
+              <h3 class="text-xl font-extrabold text-slate-900 dark:text-white mb-2">¡Contraseña actualizada!</h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400 mb-7">Ya puedes iniciar sesión con tu nueva contraseña.</p>
+              <button @click="closeForgotModal"
+                class="btn-primary w-full py-3.5 rounded-xl font-bold">
+                Iniciar sesión
+              </button>
+            </div>
+          </template>
+
+        </div>
+      </div>
+    </Transition>
+  </Teleport>
 </template>
 
 <script setup>
@@ -89,7 +217,8 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import { useThemeStore } from '@/stores/theme'
-import { EyeIcon, EyeSlashIcon, ExclamationTriangleIcon } from '@heroicons/vue/24/outline'
+import { EyeIcon, EyeSlashIcon, ExclamationTriangleIcon, EnvelopeIcon, EnvelopeOpenIcon, CheckCircleIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import api from '@/api'
 
 const auth = useAuthStore()
 const themeStore = useThemeStore()
@@ -100,6 +229,62 @@ const showPwd = ref(false)
 const form = ref({ email: '', password: '' })
 const recaptchaWidgetId = ref(null)
 const recaptchaToken = ref('')
+
+// ── Forgot Password ──────────────────────────────────────────────────────────
+const showForgotModal = ref(false)
+const forgotStep = ref(1)         // 1=email, 2=code+newpwd, 3=success
+const forgotEmail = ref('')
+const forgotCode = ref('')
+const forgotNewPwd = ref('')
+const forgotConfirmPwd = ref('')
+const showForgotPwd = ref(false)
+const forgotLoading = ref(false)
+const forgotError = ref('')
+const forgotPwdMismatch = computed(() =>
+  forgotNewPwd.value && forgotConfirmPwd.value && forgotNewPwd.value !== forgotConfirmPwd.value
+)
+
+function closeForgotModal() {
+  showForgotModal.value = false
+  forgotStep.value = 1
+  forgotEmail.value = ''
+  forgotCode.value = ''
+  forgotNewPwd.value = ''
+  forgotConfirmPwd.value = ''
+  showForgotPwd.value = false
+  forgotError.value = ''
+}
+
+async function handleForgotRequest() {
+  forgotError.value = ''
+  forgotLoading.value = true
+  try {
+    await api.post('/auth/forgot-password', { email: forgotEmail.value.trim() })
+    forgotStep.value = 2
+  } catch (e) {
+    forgotError.value = e.response?.data?.error || 'Error al enviar el código. Intenta de nuevo.'
+  } finally {
+    forgotLoading.value = false
+  }
+}
+
+async function handleResetPassword() {
+  forgotError.value = ''
+  if (forgotPwdMismatch.value) return
+  forgotLoading.value = true
+  try {
+    await api.post('/auth/reset-password', {
+      email: forgotEmail.value.trim(),
+      code: forgotCode.value.trim(),
+      password: forgotNewPwd.value,
+    })
+    forgotStep.value = 3
+  } catch (e) {
+    forgotError.value = e.response?.data?.error || 'Código incorrecto o expirado. Intenta de nuevo.'
+  } finally {
+    forgotLoading.value = false
+  }
+}
 
 // Sugerencias contextuales basadas en el mensaje de error
 const errorHints = computed(() => {
@@ -116,7 +301,7 @@ const errorHints = computed(() => {
     return [
       'Las contraseñas distinguen MAYÚSCULAS y minúsculas.',
       'Verifica que no haya espacios al inicio o al final.',
-      'Si olvidaste tu contraseña, contacta al administrador para que la restablezca.',
+      'Si olvidaste tu contraseña, usa el botón "¿Olvidaste tu contraseña?" que aparece debajo del campo de contraseña.',
     ]
   }
   if (msg.includes('correo no registrado') || msg.includes('no registrado')) {

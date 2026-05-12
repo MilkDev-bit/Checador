@@ -125,6 +125,14 @@ func Migrate() {
 			updated_at  TIMESTAMP DEFAULT NOW(),
 			UNIQUE(user_id, record_date)
 		)`,
+		// Password reset tokens — short-lived 6-digit codes for forgot-password flow
+		`CREATE TABLE IF NOT EXISTS password_reset_tokens (
+			id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			user_id    UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+			code       VARCHAR(6) NOT NULL,
+			expires_at TIMESTAMP NOT NULL,
+			created_at TIMESTAMP DEFAULT NOW()
+		)`,
 	}
 	for _, q := range alterQueries {
 		if _, err := DB.Exec(q); err != nil {

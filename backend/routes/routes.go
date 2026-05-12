@@ -19,6 +19,8 @@ func Register(r *gin.Engine) {
 	api.POST("/auth/register", handlers.Register)
 	api.POST("/auth/login", handlers.Login)
 	api.POST("/auth/logout", handlers.Logout)
+	api.POST("/auth/forgot-password", handlers.ForgotPassword)
+	api.POST("/auth/reset-password", handlers.ResetPassword)
 	api.GET("/qr", handlers.GenerateQR)
 	api.GET("/checkin-url", handlers.GetCheckinURL)
 

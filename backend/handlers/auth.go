@@ -1,11 +1,15 @@
 package handlers
 
 import (
+	crand "crypto/rand"
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"log"
+	"math/big"
 	"net/http"
+	"net/smtp"
 	"net/url"
 	"os"
 	"strings"
@@ -255,4 +259,147 @@ func verifyRecaptcha(token string) bool {
 		log.Printf("reCAPTCHA rejected token, error-codes: %v", result.Errors)
 	}
 	return result.Success
+}
+
+// ─── Forgot / Reset Password ─────────────────────────────────────────────────
+
+// ForgotPassword accepts an email and, if registered, sends a 6-digit reset code.
+// Always returns 200 to prevent email enumeration.
+func ForgotPassword(c *gin.Context) {
+	var req struct {
+		Email string `json:"email" binding:"required,email"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Correo inválido."})
+		return
+	}
+	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
+
+	// Process in background so response time is identical regardless of whether
+	// the email is registered (prevents enumeration).
+	go processForgotPassword(req.Email)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Si el correo está registrado recibirás un código en los próximos minutos."})
+}
+
+func processForgotPassword(email string) {
+	var userID string
+	if err := database.DB.QueryRow(`SELECT id FROM users WHERE email = $1`, email).Scan(&userID); err != nil {
+		return // user not found — silently ignore
+	}
+
+	code, err := generateResetCode()
+	if err != nil {
+		log.Printf("Error generating reset code: %v", err)
+		return
+	}
+
+	// Remove any previous tokens for this user before inserting the new one.
+	database.DB.Exec(`DELETE FROM password_reset_tokens WHERE user_id = $1`, userID)
+
+	expiresAt := time.Now().Add(15 * time.Minute)
+	if _, err = database.DB.Exec(
+		`INSERT INTO password_reset_tokens (user_id, code, expires_at) VALUES ($1, $2, $3)`,
+		userID, code, expiresAt,
+	); err != nil {
+		log.Printf("Error storing reset token: %v", err)
+		return
+	}
+
+	sendResetEmail(email, code)
+}
+
+// ResetPassword validates the 6-digit code and updates the password.
+func ResetPassword(c *gin.Context) {
+	var req struct {
+		Email    string `json:"email"    binding:"required,email"`
+		Code     string `json:"code"     binding:"required"`
+		Password string `json:"password" binding:"required,min=8"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos. La contraseña debe tener al menos 8 caracteres."})
+		return
+	}
+	req.Email = strings.ToLower(strings.TrimSpace(req.Email))
+	req.Code = strings.TrimSpace(req.Code)
+
+	var userID string
+	if err := database.DB.QueryRow(`SELECT id FROM users WHERE email = $1`, req.Email).Scan(&userID); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Código incorrecto o expirado."})
+		return
+	}
+
+	var storedCode string
+	var expiresAt time.Time
+	err := database.DB.QueryRow(
+		`SELECT code, expires_at FROM password_reset_tokens WHERE user_id = $1 ORDER BY created_at DESC LIMIT 1`,
+		userID,
+	).Scan(&storedCode, &expiresAt)
+
+	if err != nil || storedCode != req.Code || time.Now().After(expiresAt) {
+		// Delete expired/wrong token to force re-request
+		if err == nil {
+			database.DB.Exec(`DELETE FROM password_reset_tokens WHERE user_id = $1`, userID)
+		}
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Código incorrecto o expirado. Solicita uno nuevo."})
+		return
+	}
+
+	hash, err := bcrypt.GenerateFromPassword([]byte(req.Password), bcrypt.DefaultCost)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error procesando contraseña."})
+		return
+	}
+	if _, err = database.DB.Exec(`UPDATE users SET password_hash = $1 WHERE id = $2`, string(hash), userID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error actualizando contraseña."})
+		return
+	}
+
+	database.DB.Exec(`DELETE FROM password_reset_tokens WHERE user_id = $1`, userID)
+	c.JSON(http.StatusOK, gin.H{"message": "Contraseña actualizada correctamente."})
+}
+
+// generateResetCode returns a cryptographically random 6-digit string.
+func generateResetCode() (string, error) {
+	n, err := crand.Int(crand.Reader, big.NewInt(1_000_000))
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%06d", n.Int64()), nil
+}
+
+// sendResetEmail sends the reset code via SMTP.
+// Requires SMTP_HOST, SMTP_USER, SMTP_PASS env vars.
+// Optional: SMTP_PORT (default 587), SMTP_FROM.
+func sendResetEmail(toEmail, code string) {
+	host := os.Getenv("SMTP_HOST")
+	port := os.Getenv("SMTP_PORT")
+	user := os.Getenv("SMTP_USER")
+	pass := os.Getenv("SMTP_PASS")
+	from := os.Getenv("SMTP_FROM")
+
+	if host == "" || user == "" || pass == "" {
+		log.Printf("WARNING: SMTP not configured — reset code for %s is: %s", toEmail, code)
+		return
+	}
+	if port == "" {
+		port = "587"
+	}
+	if from == "" {
+		from = user
+	}
+
+	body := fmt.Sprintf(
+		"Hola,\n\nTu código de recuperación de contraseña es:\n\n    %s\n\nEste código expira en 15 minutos.\n\nSi no solicitaste este cambio, ignora este correo.\n\n— PaseLista",
+		code,
+	)
+	msg := []byte(fmt.Sprintf(
+		"From: PaseLista <%s>\r\nTo: %s\r\nSubject: Código de recuperación - PaseLista\r\nContent-Type: text/plain; charset=UTF-8\r\n\r\n%s",
+		from, toEmail, body,
+	))
+
+	smtpAuth := smtp.PlainAuth("", user, pass, host)
+	if err := smtp.SendMail(host+":"+port, smtpAuth, from, []string{toEmail}, msg); err != nil {
+		log.Printf("Error sending reset email to %s: %v", toEmail, err)
+	}
 }
