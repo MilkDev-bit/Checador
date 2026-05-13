@@ -56,7 +56,6 @@ func getClientIP(c *gin.Context) string {
 	return c.ClientIP()
 }
 
-// haversineKm returns the distance in km between two lat/lon points.
 func haversineKm(lat1, lon1, lat2, lon2 float64) float64 {
 	const R = 6371.0
 	dLat := (lat2 - lat1) * math.Pi / 180
@@ -67,10 +66,7 @@ func haversineKm(lat1, lon1, lat2, lon2 float64) float64 {
 	return R * 2 * math.Atan2(math.Sqrt(a), math.Sqrt(1-a))
 }
 
-// runFraudCheck queries ip-api.com and updates the DB record if suspicious.
-// Runs in a goroutine — does NOT block the HTTP response.
 func runFraudCheck(recordID string, clientIP string, gpsLat, gpsLon float64) {
-	// ip-api.com free endpoint (45 req/min, no key required)
 	url := fmt.Sprintf(
 		"http://ip-api.com/json/%s?fields=status,country,city,lat,lon,proxy,hosting,mobile",
 		clientIP,
@@ -140,19 +136,18 @@ func RegisterCheck(c *gin.Context) {
 		return
 	}
 
-	// Validate state transitions against today's records only.
-	// This prevents phantom "active sessions" from previous days.
+	// Validate state transitions using a 24-hour rolling window.
+	// This avoids timezone bugs: entries made early morning remain
+	// visible until midnight on the server, regardless of local clock.
 	{
-		nowUTC := time.Now().UTC()
-		todayStart := time.Date(nowUTC.Year(), nowUTC.Month(), nowUTC.Day(), 0, 0, 0, 0, time.UTC)
-		tomorrowStart := todayStart.Add(24 * time.Hour)
+		windowStart := time.Now().UTC().Add(-24 * time.Hour)
 
 		var lastType string
 		qErr := database.DB.QueryRow(
 			`SELECT type FROM check_records
-			 WHERE user_id = $1 AND timestamp >= $2 AND timestamp < $3
+			 WHERE user_id = $1 AND timestamp >= $2
 			 ORDER BY timestamp DESC LIMIT 1`,
-			userID, todayStart, tomorrowStart,
+			userID, windowStart,
 		).Scan(&lastType)
 
 		if qErr != nil && qErr != sql.ErrNoRows {
@@ -423,17 +418,16 @@ func GetCheckStatus(c *gin.Context) {
 	userID := c.GetString("user_id")
 
 	var r models.CheckRecord
-	// Fetch the most recent check record for this user made today (UTC date).
-	// Using a date filter prevents entries from previous days from being treated as active.
-	now := time.Now().UTC()
-	todayStart := time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, time.UTC)
-	tomorrowStart := todayStart.Add(24 * time.Hour)
+	// Use a 24-hour rolling window instead of UTC day boundaries.
+	// This avoids timezone bugs: users in UTC-5/UTC-6 can work past midnight UTC
+	// without the system losing track of their open entry.
+	windowStart := time.Now().UTC().Add(-24 * time.Hour)
 
 	err := database.DB.QueryRow(
-		`SELECT id, type, timestamp FROM check_records 
-		 WHERE user_id = $1 AND timestamp >= $2 AND timestamp < $3
+		`SELECT id, type, timestamp FROM check_records
+		 WHERE user_id = $1 AND timestamp >= $2
 		 ORDER BY timestamp DESC LIMIT 1`,
-		userID, todayStart, tomorrowStart,
+		userID, windowStart,
 	).Scan(&r.ID, &r.Type, &r.Timestamp)
 
 	if err != nil {
