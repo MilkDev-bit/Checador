@@ -133,6 +133,9 @@ func Migrate() {
 			expires_at TIMESTAMP NOT NULL,
 			created_at TIMESTAMP DEFAULT NOW()
 		)`,
+		// Manual session close — admin can mark an open entry as closed by admin
+		// so the user can register a new entry without waiting for auto-expiry
+		`ALTER TABLE check_records ADD COLUMN IF NOT EXISTS closed_by_admin BOOLEAN DEFAULT FALSE`,
 	}
 	for _, q := range alterQueries {
 		if _, err := DB.Exec(q); err != nil {

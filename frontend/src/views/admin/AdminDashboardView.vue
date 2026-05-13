@@ -793,6 +793,146 @@
           </div>
         </div>
 
+        <!-- ===== OPEN SESSIONS TAB ===== -->
+        <div v-if="activeTab === 'sessions'" class="space-y-5 animate-in">
+          <div class="glass-card overflow-hidden">
+            <div
+              class="px-5 py-4 flex items-center justify-between"
+              style="border-bottom: 1px solid var(--border-subtle)"
+            >
+              <div>
+                <h3 class="font-semibold" style="color: var(--text)">
+                  Sesiones sin cerrar
+                </h3>
+                <p class="text-xs mt-0.5" style="color: var(--text-muted)">
+                  Entradas de las últimas 24 h sin salida correspondiente
+                </p>
+              </div>
+              <button
+                @click="loadOpenSessions"
+                class="btn-secondary btn-sm flex items-center gap-1.5"
+                :disabled="loadingOpenSessions"
+              >
+                <span
+                  v-if="loadingOpenSessions"
+                  class="w-3 h-3 border border-brand-500/40 border-t-brand-500 rounded-full animate-spin"
+                ></span>
+                Actualizar
+              </button>
+            </div>
+
+            <div
+              v-if="openSessions.length === 0 && !loadingOpenSessions"
+              class="text-center py-14"
+            >
+              <CheckCircleIcon
+                class="w-12 h-12 mx-auto mb-3 opacity-60"
+                style="color: #10b981"
+              />
+              <p class="font-medium" style="color: #10b981">Todo en orden</p>
+              <p class="text-sm mt-1" style="color: var(--text-dim)">
+                No hay sesiones abiertas en este momento
+              </p>
+            </div>
+
+            <div v-else class="overflow-x-auto custom-scroll">
+              <table class="data-table w-full">
+                <thead>
+                  <tr>
+                    <th>Usuario</th>
+                    <th class="hidden sm:table-cell">Proyecto</th>
+                    <th>Hora de entrada</th>
+                    <th>Duración</th>
+                    <th>Estado</th>
+                    <th>Acción</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr v-for="s in openSessions" :key="s.record_id">
+                    <td>
+                      <p class="font-medium text-sm" style="color: var(--text)">
+                        {{ s.first_name }} {{ s.last_name }}
+                      </p>
+                      <p class="text-xs" style="color: var(--text-muted)">
+                        {{ s.email }}
+                      </p>
+                    </td>
+                    <td class="hidden sm:table-cell">
+                      <span class="text-xs" style="color: var(--text-muted)">{{
+                        s.project_name
+                      }}</span>
+                    </td>
+                    <td>
+                      <p
+                        class="text-xs whitespace-nowrap"
+                        style="color: var(--text-muted)"
+                      >
+                        {{ formatDate(s.entry_time) }}
+                      </p>
+                    </td>
+                    <td>
+                      <span class="badge badge-gray text-xs whitespace-nowrap">
+                        {{ formatDuration(s.duration_min) }}
+                      </span>
+                    </td>
+                    <td>
+                      <span
+                        v-if="s.auto_expired"
+                        class="badge badge-gray text-xs"
+                        >Expirada (auto)</span
+                      >
+                      <span
+                        v-else
+                        class="badge text-xs"
+                        style="
+                          background: rgba(245, 158, 11, 0.12);
+                          border-color: rgba(245, 158, 11, 0.35);
+                          color: #d97706;
+                        "
+                        >Activa — bloquea al usuario</span
+                      >
+                    </td>
+                    <td>
+                      <button
+                        @click="closeConfirm = { show: true, session: s }"
+                        class="text-xs px-2 py-1 rounded-lg font-semibold transition-all bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-500/15 dark:text-rose-400"
+                      >
+                        Cerrar sesión
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Info note -->
+          <div
+            class="glass-card p-4 flex items-start gap-3"
+            style="border-color: rgba(99, 102, 241, 0.2)"
+          >
+            <InformationCircleIcon
+              class="w-5 h-5 text-brand-400 flex-shrink-0 mt-0.5"
+            />
+            <p class="text-sm" style="color: var(--text-muted)">
+              <span class="font-semibold" style="color: var(--text)"
+                >¿Cuándo aparece una sesión aquí?</span
+              >
+              Cuando un usuario registró su entrada pero olvidó registrar la
+              salida. Las sesiones con más de
+              <strong>20 horas</strong> se marcan como
+              <span style="color: var(--text-muted); font-weight: 600"
+                >Expiradas</span
+              >
+              y el sistema ya les permite volver a registrar entrada
+              automáticamente. Las sesiones
+              <span style="color: #d97706; font-weight: 600">Activas</span>
+              aún bloquean al usuario — usa el botón &ldquo;Cerrar sesión&rdquo;
+              para desbloquearlo.
+            </p>
+          </div>
+        </div>
+
         <!-- ===== USERS TAB ===== -->
         <div v-if="activeTab === 'users'" class="space-y-5 animate-in">
           <!-- Filter -->
@@ -2121,8 +2261,13 @@
               <div class="flex items-center gap-2">
                 <LockClosedIcon class="w-5 h-5 text-violet-400" />
                 <div>
-                  <h3 class="font-bold text-base" style="color: var(--text)">Cambiar contraseña</h3>
-                  <p class="text-xs" style="color: var(--text-muted)">{{ pwdModal.user?.first_name }} {{ pwdModal.user?.last_name }}</p>
+                  <h3 class="font-bold text-base" style="color: var(--text)">
+                    Cambiar contraseña
+                  </h3>
+                  <p class="text-xs" style="color: var(--text-muted)">
+                    {{ pwdModal.user?.first_name }}
+                    {{ pwdModal.user?.last_name }}
+                  </p>
                 </div>
               </div>
               <button
@@ -2135,7 +2280,11 @@
             </div>
             <div class="p-5 space-y-4">
               <div>
-                <label class="block text-xs font-semibold mb-1.5" style="color: var(--text-muted)">Nueva contraseña</label>
+                <label
+                  class="block text-xs font-semibold mb-1.5"
+                  style="color: var(--text-muted)"
+                  >Nueva contraseña</label
+                >
                 <div class="relative">
                   <input
                     v-model="pwdModal.password"
@@ -2157,46 +2306,123 @@
                 </div>
               </div>
               <div>
-                <label class="block text-xs font-semibold mb-1.5" style="color: var(--text-muted)">Confirmar contraseña</label>
+                <label
+                  class="block text-xs font-semibold mb-1.5"
+                  style="color: var(--text-muted)"
+                  >Confirmar contraseña</label
+                >
                 <input
                   v-model="pwdModal.confirm"
                   type="password"
                   class="input w-full"
-                  :class="pwdModal.confirm && pwdModal.password !== pwdModal.confirm ? 'ring-2 ring-rose-500/30 border-rose-500/40' : ''"
+                  :class="
+                    pwdModal.confirm && pwdModal.password !== pwdModal.confirm
+                      ? 'ring-2 ring-rose-500/30 border-rose-500/40'
+                      : ''
+                  "
                   placeholder="Repite la contraseña"
                   autocomplete="new-password"
                 />
                 <p
-                  v-if="pwdModal.confirm && pwdModal.password !== pwdModal.confirm"
+                  v-if="
+                    pwdModal.confirm && pwdModal.password !== pwdModal.confirm
+                  "
                   class="text-xs text-rose-400 mt-1 font-semibold flex items-center gap-1"
                 >
-                  <ExclamationTriangleIcon class="w-3.5 h-3.5" /> Las contraseñas no coinciden
+                  <ExclamationTriangleIcon class="w-3.5 h-3.5" /> Las
+                  contraseñas no coinciden
                 </p>
               </div>
               <Transition name="fade">
                 <div
                   v-if="pwdModal.msg.text"
                   class="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold"
-                  :class="pwdModal.msg.ok ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-500' : 'bg-rose-500/10 border border-rose-500/20 text-rose-500'"
+                  :class="
+                    pwdModal.msg.ok
+                      ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-500'
+                      : 'bg-rose-500/10 border border-rose-500/20 text-rose-500'
+                  "
                 >
-                  <CheckCircleIcon v-if="pwdModal.msg.ok" class="w-4 h-4 flex-shrink-0" />
-                  <ExclamationTriangleIcon v-else class="w-4 h-4 flex-shrink-0" />
+                  <CheckCircleIcon
+                    v-if="pwdModal.msg.ok"
+                    class="w-4 h-4 flex-shrink-0"
+                  />
+                  <ExclamationTriangleIcon
+                    v-else
+                    class="w-4 h-4 flex-shrink-0"
+                  />
                   {{ pwdModal.msg.text }}
                 </div>
               </Transition>
               <div class="flex gap-3 pt-1">
-                <button @click="pwdModal.show = false" class="btn-secondary flex-1">Cancelar</button>
+                <button
+                  @click="pwdModal.show = false"
+                  class="btn-secondary flex-1"
+                >
+                  Cancelar
+                </button>
                 <button
                   @click="savePwd"
-                  :disabled="pwdModal.saving || pwdModal.password.length < 8 || pwdModal.password !== pwdModal.confirm"
+                  :disabled="
+                    pwdModal.saving ||
+                    pwdModal.password.length < 8 ||
+                    pwdModal.password !== pwdModal.confirm
+                  "
                   class="flex-1 btn-md text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed rounded-xl flex items-center justify-center gap-2"
                   style="background: linear-gradient(135deg, #7c3aed, #6366f1)"
                 >
-                  <span v-if="pwdModal.saving" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
+                  <span
+                    v-if="pwdModal.saving"
+                    class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
+                  ></span>
                   <LockClosedIcon v-else class="w-4 h-4" />
-                  {{ pwdModal.saving ? 'Guardando...' : 'Cambiar contraseña' }}
+                  {{ pwdModal.saving ? "Guardando..." : "Cambiar contraseña" }}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      </Transition>
+
+      <!-- Close session confirmation modal -->
+      <Transition name="modal">
+        <div
+          v-if="closeConfirm.show"
+          class="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style="background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px)"
+          @click.self="closeConfirm = { show: false, session: null }"
+        >
+          <div
+            class="w-full max-w-sm glass-card p-6 animate-in text-center"
+            style="background: var(--modal-bg)"
+          >
+            <div
+              class="w-14 h-14 mx-auto mb-4 rounded-full flex items-center justify-center"
+              style="background: rgba(239, 68, 68, 0.1)"
+            >
+              <ClockIcon class="w-7 h-7 text-rose-500" />
+            </div>
+            <h3 class="font-bold text-lg mb-1" style="color: var(--text)">
+              Cerrar sesión manualmente
+            </h3>
+            <p class="text-sm font-semibold mb-1" style="color: var(--text)">
+              {{ closeConfirm.session?.first_name }}
+              {{ closeConfirm.session?.last_name }}
+            </p>
+            <p class="text-sm mb-5" style="color: var(--text-muted)">
+              La entrada se marcará como cerrada. El usuario podrá registrar una
+              nueva entrada de inmediato.
+            </p>
+            <div class="flex gap-3">
+              <button
+                @click="closeConfirm = { show: false, session: null }"
+                class="btn-secondary flex-1"
+              >
+                Cancelar
+              </button>
+              <button @click="handleCloseSession" class="btn-danger flex-1">
+                Cerrar sesión
+              </button>
             </div>
           </div>
         </div>
@@ -2273,6 +2499,7 @@ import {
   EyeSlashIcon,
   InformationCircleIcon,
   SunIcon,
+  ClockIcon,
 } from "@heroicons/vue/24/outline";
 import { useThemeStore } from "@/stores/theme";
 import * as XLSX from "xlsx";
@@ -2302,6 +2529,12 @@ const navItems = [
     description: "Personas registradas en el sistema",
   },
   {
+    id: "sessions",
+    icon: ClockIcon,
+    label: "Sesiones",
+    description: "Entradas sin salida registrada",
+  },
+  {
     id: "profile",
     icon: UserCircleIcon,
     label: "Mi Perfil",
@@ -2324,6 +2557,9 @@ const records = ref([]);
 const users = ref([]);
 const projects = ref([]);
 const loadingRecords = ref(false);
+const openSessions = ref([]);
+const loadingOpenSessions = ref(false);
+const closeConfirm = ref({ show: false, session: null });
 
 const filters = ref({
   date_from: todayISO(),
@@ -2370,7 +2606,13 @@ function debouncedLoad() {
 }
 
 async function loadAll() {
-  await Promise.all([loadStats(), loadRecords(), loadUsers(), loadProjects()]);
+  await Promise.all([
+    loadStats(),
+    loadRecords(),
+    loadUsers(),
+    loadProjects(),
+    loadOpenSessions(),
+  ]);
 }
 
 async function loadStats() {
@@ -2380,6 +2622,39 @@ async function loadStats() {
     const { data } = await api.get("/admin/stats", { params });
     stats.value = data;
   } catch {}
+}
+
+async function loadOpenSessions() {
+  loadingOpenSessions.value = true;
+  try {
+    const { data } = await api.get("/admin/open-sessions");
+    openSessions.value = data;
+  } catch {
+  } finally {
+    loadingOpenSessions.value = false;
+  }
+}
+
+async function handleCloseSession() {
+  const session = closeConfirm.value.session;
+  if (!session) return;
+  try {
+    await api.post(`/admin/open-sessions/${session.record_id}/close`);
+    openSessions.value = openSessions.value.filter(
+      (s) => s.record_id !== session.record_id,
+    );
+  } catch {
+  } finally {
+    closeConfirm.value = { show: false, session: null };
+  }
+}
+
+function formatDuration(minutes) {
+  if (minutes <= 0) return "0m";
+  if (minutes < 60) return `${minutes}m`;
+  const h = Math.floor(minutes / 60);
+  const m = minutes % 60;
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
 }
 
 async function loadRecords() {
@@ -2520,17 +2795,31 @@ function openPwdModal(user) {
 }
 
 async function savePwd() {
-  if (pwdModal.value.password.length < 8 || pwdModal.value.password !== pwdModal.value.confirm) return;
+  if (
+    pwdModal.value.password.length < 8 ||
+    pwdModal.value.password !== pwdModal.value.confirm
+  )
+    return;
   pwdModal.value.saving = true;
   pwdModal.value.msg = { text: "", ok: false };
   try {
-    await api.put(`/admin/users/${pwdModal.value.user.id}/password`, { password: pwdModal.value.password });
-    pwdModal.value.msg = { text: "Contraseña actualizada correctamente.", ok: true };
+    await api.put(`/admin/users/${pwdModal.value.user.id}/password`, {
+      password: pwdModal.value.password,
+    });
+    pwdModal.value.msg = {
+      text: "Contraseña actualizada correctamente.",
+      ok: true,
+    };
     pwdModal.value.password = "";
     pwdModal.value.confirm = "";
-    setTimeout(() => { pwdModal.value.show = false; }, 1500);
+    setTimeout(() => {
+      pwdModal.value.show = false;
+    }, 1500);
   } catch (e) {
-    pwdModal.value.msg = { text: e.response?.data?.error || "Error al cambiar la contraseña.", ok: false };
+    pwdModal.value.msg = {
+      text: e.response?.data?.error || "Error al cambiar la contraseña.",
+      ok: false,
+    };
   } finally {
     pwdModal.value.saving = false;
   }

@@ -34,6 +34,12 @@ type LocationPointRequest struct {
 	RecordedAt    string  `json:"recorded_at"     binding:"required"`
 }
 
+// sessionTTL is the maximum duration an open check-in session is considered
+// active. After this threshold the session auto-expires: the user is allowed
+// to register a new entry without admin intervention. Admin can also close
+// sessions manually before this threshold via the admin panel.
+const sessionTTL = 20 * time.Hour
+
 // ipAPIResponse maps the fields we use from ip-api.com (free, no key needed).
 type ipAPIResponse struct {
 	Status  string  `json:"status"`
@@ -136,31 +142,36 @@ func RegisterCheck(c *gin.Context) {
 		return
 	}
 
-	// Validate state transitions using a 24-hour rolling window.
-	// This avoids timezone bugs: entries made early morning remain
-	// visible until midnight on the server, regardless of local clock.
+	// Validate state transitions.
+	// Uses a 24-hour rolling window (timezone-safe) and sessionTTL (20h) so
+	// users can re-enter after forgetting to check out from a previous shift.
 	{
 		windowStart := time.Now().UTC().Add(-24 * time.Hour)
 
 		var lastType string
+		var lastTimestamp time.Time
+		var lastClosed bool
 		qErr := database.DB.QueryRow(
-			`SELECT type FROM check_records
+			`SELECT type, timestamp, COALESCE(closed_by_admin, false) FROM check_records
 			 WHERE user_id = $1 AND timestamp >= $2
 			 ORDER BY timestamp DESC LIMIT 1`,
 			userID, windowStart,
-		).Scan(&lastType)
+		).Scan(&lastType, &lastTimestamp, &lastClosed)
 
 		if qErr != nil && qErr != sql.ErrNoRows {
 			c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 			return
 		}
 
-		if req.Type == "entry" && lastType == "entry" {
-			c.JSON(http.StatusConflict, gin.H{"error": "Ya tienes una entrada activa hoy. Registra tu salida primero."})
+		// Session is active if the last record is an open, non-expired, non-closed entry
+		sessionActive := lastType == "entry" && !lastClosed && time.Since(lastTimestamp) < sessionTTL
+
+		if req.Type == "entry" && sessionActive {
+			c.JSON(http.StatusConflict, gin.H{"error": "Ya tienes una entrada activa. Registra tu salida primero."})
 			return
 		}
-		if req.Type == "exit" && lastType != "entry" {
-			c.JSON(http.StatusConflict, gin.H{"error": "No tienes una entrada activa hoy. Registra tu entrada primero."})
+		if req.Type == "exit" && !sessionActive {
+			c.JSON(http.StatusConflict, gin.H{"error": "No tienes una entrada activa. Registra tu entrada primero."})
 			return
 		}
 	}
@@ -418,17 +429,18 @@ func GetCheckStatus(c *gin.Context) {
 	userID := c.GetString("user_id")
 
 	var r models.CheckRecord
+	var closedByAdmin bool
 	// Use a 24-hour rolling window instead of UTC day boundaries.
 	// This avoids timezone bugs: users in UTC-5/UTC-6 can work past midnight UTC
 	// without the system losing track of their open entry.
 	windowStart := time.Now().UTC().Add(-24 * time.Hour)
 
 	err := database.DB.QueryRow(
-		`SELECT id, type, timestamp FROM check_records
+		`SELECT id, type, timestamp, COALESCE(closed_by_admin, false) FROM check_records
 		 WHERE user_id = $1 AND timestamp >= $2
 		 ORDER BY timestamp DESC LIMIT 1`,
 		userID, windowStart,
-	).Scan(&r.ID, &r.Type, &r.Timestamp)
+	).Scan(&r.ID, &r.Type, &r.Timestamp, &closedByAdmin)
 
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -439,7 +451,9 @@ func GetCheckStatus(c *gin.Context) {
 		return
 	}
 
-	if r.Type == "entry" {
+	// Session is active only when: last record is an "entry", not closed by admin,
+	// and within the sessionTTL window (auto-expires after 20 hours).
+	if r.Type == "entry" && !closedByAdmin && time.Since(r.Timestamp) < sessionTTL {
 		c.JSON(http.StatusOK, gin.H{
 			"active":     true,
 			"record_id":  r.ID,

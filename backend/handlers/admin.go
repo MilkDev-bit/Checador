@@ -81,6 +81,7 @@ func AdminGetStats(c *gin.Context) {
 	database.DB.QueryRow(`
 		SELECT COUNT(DISTINCT user_id) FROM check_records
 		WHERE type='entry' AND timestamp >= $1 AND timestamp < $2
+		AND COALESCE(closed_by_admin, false) = false
 		AND user_id NOT IN (
 			SELECT user_id FROM check_records WHERE type='exit' AND timestamp >= $1 AND timestamp < $2
 		)`, dateStart, dateEnd).Scan(&stats.ActiveNow)
@@ -363,4 +364,82 @@ func AdminResetUserPassword(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "Contraseña actualizada correctamente."})
+}
+
+// AdminGetOpenSessions returns all users with an open entry (no matching exit,
+// not closed by admin) from the last 24 hours.
+// GET /admin/open-sessions
+func AdminGetOpenSessions(c *gin.Context) {
+	const sessionTTL = 20 * time.Hour
+	windowStart := time.Now().UTC().Add(-24 * time.Hour)
+
+	type OpenSession struct {
+		RecordID    string    `json:"record_id"`
+		UserID      string    `json:"user_id"`
+		FirstName   string    `json:"first_name"`
+		LastName    string    `json:"last_name"`
+		Email       string    `json:"email"`
+		ProjectName string    `json:"project_name"`
+		EntryTime   time.Time `json:"entry_time"`
+		DurationMin int       `json:"duration_min"`
+		AutoExpired bool      `json:"auto_expired"`
+	}
+
+	rows, err := database.DB.Query(
+		`SELECT cr.id, u.id, u.first_name, u.last_name, u.email, u.project_name, cr.timestamp
+		 FROM check_records cr
+		 JOIN users u ON cr.user_id = u.id
+		 WHERE cr.type = 'entry'
+		   AND COALESCE(cr.closed_by_admin, false) = false
+		   AND cr.timestamp >= $1
+		   AND u.role = 'user'
+		   AND NOT EXISTS (
+		       SELECT 1 FROM check_records cr2
+		       WHERE cr2.user_id = cr.user_id
+		         AND cr2.type = 'exit'
+		         AND cr2.timestamp > cr.timestamp
+		   )
+		 ORDER BY cr.timestamp ASC`,
+		windowStart,
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		return
+	}
+	defer rows.Close()
+
+	now := time.Now()
+	sessions := []OpenSession{}
+	for rows.Next() {
+		var s OpenSession
+		rows.Scan(&s.RecordID, &s.UserID, &s.FirstName, &s.LastName, &s.Email, &s.ProjectName, &s.EntryTime)
+		dur := now.Sub(s.EntryTime)
+		s.DurationMin = int(dur.Minutes())
+		s.AutoExpired = dur >= sessionTTL
+		sessions = append(sessions, s)
+	}
+
+	c.JSON(http.StatusOK, sessions)
+}
+
+// AdminCloseSession manually marks an open entry as closed so the user can
+// register a new entry without waiting for the auto-expiry (sessionTTL).
+// POST /admin/open-sessions/:id/close
+func AdminCloseSession(c *gin.Context) {
+	recordID := c.Param("id")
+
+	result, err := database.DB.Exec(
+		`UPDATE check_records SET closed_by_admin = true WHERE id = $1 AND type = 'entry'`,
+		recordID,
+	)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		return
+	}
+	affected, _ := result.RowsAffected()
+	if affected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Registro no encontrado"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Sesión cerrada correctamente"})
 }
