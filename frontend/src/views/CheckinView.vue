@@ -571,7 +571,7 @@ const registeredAt = ref('')
 const isPWA = ref(false)
 const showMobileMenu = ref(false)
 
-onMounted(() => {
+onMounted(async () => {
   // Check if PWA (standalone mode)
   if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
     isPWA.value = true
@@ -579,6 +579,26 @@ onMounted(() => {
   window.matchMedia('(display-mode: standalone)').addEventListener('change', (e) => {
     isPWA.value = e.matches
   })
+
+  // Sync session state with the server — localStorage can be stale (different
+  // device, cache cleared, private browsing, etc.). Always trust the backend.
+  try {
+    const { data } = await api.get('/checks/status')
+    if (data.active) {
+      activeRecordId.value = data.record_id
+      const formatted = new Date(data.entry_time).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+      entryTime.value = formatted
+      localStorage.setItem('activeRecordId', data.record_id)
+      localStorage.setItem('entryTime', formatted)
+    } else {
+      activeRecordId.value = null
+      entryTime.value = null
+      localStorage.removeItem('activeRecordId')
+      localStorage.removeItem('entryTime')
+    }
+  } catch {
+    // Network error — keep localStorage values as fallback
+  }
 })
 
 // Location
