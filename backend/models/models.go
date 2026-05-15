@@ -26,6 +26,7 @@ type CheckRecord struct {
 	SuspiciousReason string          `json:"suspicious_reason,omitempty"`
 	IPCountry        string          `json:"ip_country,omitempty"`
 	IPCity           string          `json:"ip_city,omitempty"`
+	GpsAddress       string          `json:"gps_address,omitempty"`
 	LocationPoints   []LocationPoint `json:"location_points,omitempty"`
 	CreatedAt        time.Time       `json:"created_at"`
 }

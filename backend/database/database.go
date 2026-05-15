@@ -136,6 +136,8 @@ func Migrate() {
 		// Manual session close — admin can mark an open entry as closed by admin
 		// so the user can register a new entry without waiting for auto-expiry
 		`ALTER TABLE check_records ADD COLUMN IF NOT EXISTS closed_by_admin BOOLEAN DEFAULT FALSE`,
+		// GPS reverse-geocoded address (populated async after check-in via Google Maps Geocoding API)
+		`ALTER TABLE check_records ADD COLUMN IF NOT EXISTS gps_address TEXT`,
 	}
 	for _, q := range alterQueries {
 		if _, err := DB.Exec(q); err != nil {

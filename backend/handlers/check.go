@@ -6,9 +6,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"log"
 	"math"
 	"mime/multipart"
 	"net/http"
+	"os"
 	"path/filepath"
 	"strings"
 	"time"
@@ -217,14 +219,63 @@ func RegisterCheck(c *gin.Context) {
 		return
 	}
 
-	// Launch fraud check asynchronously — doesn't delay the user response
+	// Launch fraud check and geocoding asynchronously — don't delay the user response
 	clientIP := getClientIP(c)
 	go runFraudCheck(record.ID, clientIP, req.Latitude, req.Longitude)
+	go runGeocoding(record.ID, req.Latitude, req.Longitude)
 
 	c.JSON(http.StatusCreated, gin.H{
 		"message": fmt.Sprintf("Check %s registered successfully", req.Type),
 		"record":  record,
 	})
+}
+
+// runGeocoding calls Google Maps Geocoding API (reverse) to resolve the GPS
+// coordinates into a human-readable address and stores it on the check record.
+// Requires GOOGLE_MAPS_API_KEY env var; silently skips if not configured or
+// if coordinates are zero (not provided by the device).
+func runGeocoding(recordID string, lat, lon float64) {
+	if lat == 0 && lon == 0 {
+		return
+	}
+	apiKey := os.Getenv("GOOGLE_MAPS_API_KEY")
+	if apiKey == "" {
+		return
+	}
+
+	url := fmt.Sprintf(
+		"https://maps.googleapis.com/maps/api/geocode/json?latlng=%f,%f&key=%s&language=es",
+		lat, lon, apiKey,
+	)
+
+	client := &http.Client{Timeout: 10 * time.Second}
+	resp, err := client.Get(url)
+	if err != nil {
+		log.Printf("WARNING: geocoding request failed for record %s: %v", recordID, err)
+		return
+	}
+	defer resp.Body.Close()
+
+	var result struct {
+		Status  string `json:"status"`
+		Results []struct {
+			FormattedAddress string `json:"formatted_address"`
+		} `json:"results"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		log.Printf("WARNING: geocoding decode error for record %s: %v", recordID, err)
+		return
+	}
+	if result.Status != "OK" || len(result.Results) == 0 {
+		log.Printf("WARNING: geocoding returned status %s for record %s", result.Status, recordID)
+		return
+	}
+
+	address := result.Results[0].FormattedAddress
+	database.DB.Exec(
+		`UPDATE check_records SET gps_address = $1 WHERE id = $2`,
+		address, recordID,
+	)
 }
 
 func AddLocationPoint(c *gin.Context) {
