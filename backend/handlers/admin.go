@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"fmt"
+	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -11,6 +12,17 @@ import (
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
+
+// appTZ is the timezone used for all date-boundary calculations.
+// Defaults to America/Mexico_City; override with TZ env var on Railway.
+var appTZ = func() *time.Location {
+	loc, err := time.LoadLocation("America/Mexico_City")
+	if err != nil {
+		log.Printf("WARNING: could not load America/Mexico_City timezone, falling back to UTC: %v", err)
+		return time.UTC
+	}
+	return loc
+}()
 
 type AdminRecordRow struct {
 	RecordID         string    `json:"record_id"`
@@ -71,8 +83,7 @@ func AdminGetStats(c *gin.Context) {
 		date = time.Now()
 	}
 
-	loc := time.Local
-	dateStart := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, loc)
+	dateStart := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, appTZ)
 	dateEnd := dateStart.Add(24 * time.Hour)
 
 	var stats AdminStats
@@ -110,7 +121,7 @@ func AdminGetRecords(c *gin.Context) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date"})
 			return
 		}
-		dateStart := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, time.Local)
+		dateStart := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, appTZ)
 		dateEnd := dateStart.Add(24 * time.Hour)
 		where = append(where, fmt.Sprintf("cr.timestamp >= $%d AND cr.timestamp < $%d", argIdx, argIdx+1))
 		args = append(args, dateStart, dateEnd)
@@ -123,7 +134,7 @@ func AdminGetRecords(c *gin.Context) {
 				return
 			}
 			where = append(where, fmt.Sprintf("cr.timestamp >= $%d", argIdx))
-			args = append(args, time.Date(df.Year(), df.Month(), df.Day(), 0, 0, 0, 0, time.Local))
+			args = append(args, time.Date(df.Year(), df.Month(), df.Day(), 0, 0, 0, 0, appTZ))
 			argIdx++
 		}
 		if dateTo != "" {
@@ -133,7 +144,7 @@ func AdminGetRecords(c *gin.Context) {
 				return
 			}
 			where = append(where, fmt.Sprintf("cr.timestamp < $%d", argIdx))
-			args = append(args, time.Date(dt.Year(), dt.Month(), dt.Day(), 0, 0, 0, 0, time.Local).Add(24*time.Hour))
+			args = append(args, time.Date(dt.Year(), dt.Month(), dt.Day(), 0, 0, 0, 0, appTZ).Add(24*time.Hour))
 			argIdx++
 		}
 	}
