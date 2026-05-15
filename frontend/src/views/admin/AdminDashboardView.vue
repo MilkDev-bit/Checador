@@ -2586,6 +2586,19 @@ function todayISO() {
   return new Date().toISOString().split("T")[0];
 }
 
+// Convert a YYYY-MM-DD string to a UTC ISO timestamp representing midnight in
+// the browser's local timezone. The backend receives an unambiguous UTC value
+// regardless of where the admin is (Mexico, Guatemala, USA, etc.).
+function localDateToUTCStart(dateStr) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d).toISOString();
+}
+// Exclusive end: midnight of the *next* day in local timezone → UTC.
+function localDateToUTCEnd(dateStr) {
+  const [y, m, d] = dateStr.split("-").map(Number);
+  return new Date(y, m - 1, d + 1).toISOString();
+}
+
 function setToday() {
   filters.value.date_from = todayISO();
   filters.value.date_to = todayISO();
@@ -2631,7 +2644,8 @@ async function loadAll() {
 async function loadStats() {
   try {
     const params = {};
-    if (filters.value.date_from) params.date = filters.value.date_from;
+    if (filters.value.date_from)
+      params.date = localDateToUTCStart(filters.value.date_from);
     const { data } = await api.get("/admin/stats", { params });
     stats.value = data;
   } catch {}
@@ -2674,8 +2688,10 @@ async function loadRecords() {
   loadingRecords.value = true;
   try {
     const params = {};
-    if (filters.value.date_from) params.date_from = filters.value.date_from;
-    if (filters.value.date_to) params.date_to = filters.value.date_to;
+    if (filters.value.date_from)
+      params.date_from = localDateToUTCStart(filters.value.date_from);
+    if (filters.value.date_to)
+      params.date_to = localDateToUTCEnd(filters.value.date_to);
     if (filters.value.project) params.project = filters.value.project;
     if (filters.value.type) params.type = filters.value.type;
     if (filters.value.search) params.search = filters.value.search;

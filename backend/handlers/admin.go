@@ -69,22 +69,36 @@ type AdminUserRow struct {
 	AvatarURL   string    `json:"avatar_url"`
 }
 
+// parseDateParam parses a date query parameter that can be either:
+//   - A full RFC3339 timestamp (e.g. "2026-05-15T06:00:00.000Z") sent by the
+//     browser — already converted to UTC from the admin's local timezone.
+//   - A plain YYYY-MM-DD string — interpreted as midnight in appTZ for
+//     backwards compatibility with direct API calls.
+func parseDateParam(s string) (time.Time, error) {
+	if strings.ContainsRune(s, 'T') {
+		return time.Parse(time.RFC3339, s)
+	}
+	d, err := time.Parse("2006-01-02", s)
+	if err != nil {
+		return time.Time{}, err
+	}
+	return time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, appTZ), nil
+}
+
 func AdminGetStats(c *gin.Context) {
 	dateStr := c.Query("date")
-	var date time.Time
+	var dateStart, dateEnd time.Time
 	if dateStr != "" {
 		var err error
-		date, err = time.Parse("2006-01-02", dateStr)
+		dateStart, err = parseDateParam(dateStr)
 		if err != nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date format, use YYYY-MM-DD"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date format"})
 			return
 		}
 	} else {
-		date = time.Now()
+		dateStart = time.Date(time.Now().In(appTZ).Year(), time.Now().In(appTZ).Month(), time.Now().In(appTZ).Day(), 0, 0, 0, 0, appTZ)
 	}
-
-	dateStart := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, appTZ)
-	dateEnd := dateStart.Add(24 * time.Hour)
+	dateEnd = dateStart.Add(24 * time.Hour)
 
 	var stats AdminStats
 	database.DB.QueryRow(`SELECT COUNT(*) FROM users WHERE role = 'user'`).Scan(&stats.TotalUsers)
@@ -116,32 +130,36 @@ func AdminGetRecords(c *gin.Context) {
 
 	// Single date (legacy) takes priority over range
 	if dateStr != "" {
-		date, err := time.Parse("2006-01-02", dateStr)
+		dateStart, err := parseDateParam(dateStr)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date"})
 			return
 		}
-		dateStart := time.Date(date.Year(), date.Month(), date.Day(), 0, 0, 0, 0, appTZ)
 		dateEnd := dateStart.Add(24 * time.Hour)
 		where = append(where, fmt.Sprintf("cr.timestamp >= $%d AND cr.timestamp < $%d", argIdx, argIdx+1))
 		args = append(args, dateStart, dateEnd)
 		argIdx += 2
 	} else {
 		if dateFrom != "" {
-			df, err := time.Parse("2006-01-02", dateFrom)
+			df, err := parseDateParam(dateFrom)
 			if err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date_from"})
 				return
 			}
 			where = append(where, fmt.Sprintf("cr.timestamp >= $%d", argIdx))
-			args = append(args, time.Date(df.Year(), df.Month(), df.Day(), 0, 0, 0, 0, appTZ))
+			args = append(args, df)
 			argIdx++
 		}
 		if dateTo != "" {
-			dt, err := time.Parse("2006-01-02", dateTo)
+			dt, err := parseDateParam(dateTo)
 			if err != nil {
 				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date_to"})
 				return
+			}
+			// Plain date strings (legacy): add 24h to make the boundary exclusive.
+			// RFC3339 strings from the browser already carry the exclusive end.
+			if !strings.ContainsRune(dateTo, 'T') {
+				dt = dt.Add(24 * time.Hour)
 			}
 			where = append(where, fmt.Sprintf("cr.timestamp < $%d", argIdx))
 			args = append(args, time.Date(dt.Year(), dt.Month(), dt.Day(), 0, 0, 0, 0, appTZ).Add(24*time.Hour))
