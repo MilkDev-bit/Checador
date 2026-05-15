@@ -685,14 +685,27 @@
                       >
                     </td>
                     <td class="hidden md:table-cell">
-                      <span
-                        :class="
-                          r.location_count > 0 ? 'badge-blue' : 'badge-gray'
-                        "
-                        class="badge"
-                      >
-                        {{ r.location_count }} pts
-                      </span>
+                      <div class="flex flex-col gap-1">
+                        <span
+                          :class="
+                            r.location_count > 0 ? 'badge-blue' : 'badge-gray'
+                          "
+                          class="badge"
+                        >
+                          {{ r.location_count }} pts
+                        </span>
+                        <span
+                          v-if="r.gps_address"
+                          class="text-xs truncate max-w-[180px] flex items-center gap-1"
+                          style="color: var(--text-muted)"
+                          :title="r.gps_address"
+                        >
+                          <MapPinIcon
+                            class="w-3 h-3 flex-shrink-0 text-emerald-500"
+                          />
+                          {{ r.gps_address }}
+                        </span>
+                      </div>
                     </td>
                     <!-- Comentario del día -->
                     <td class="hidden xl:table-cell max-w-[200px]">
