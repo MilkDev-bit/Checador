@@ -1162,6 +1162,14 @@
               <button @click="setMissingWeek" class="btn-secondary btn-sm">
                 Esta semana
               </button>
+              <button
+                @click="downloadMissingExcel"
+                class="btn-secondary btn-sm flex items-center gap-1.5 ml-auto"
+                title="Descargar Excel"
+              >
+                <ArrowDownTrayIcon class="w-4 h-4" />
+                Excel
+              </button>
             </div>
           </div>
 
@@ -2920,6 +2928,7 @@ import {
   PlusIcon,
   ExclamationCircleIcon,
   FolderPlusIcon,
+  ArrowDownTrayIcon,
 } from "@heroicons/vue/24/outline";
 import { useThemeStore } from "@/stores/theme";
 import * as XLSX from "xlsx";
@@ -3469,6 +3478,41 @@ function setMissingWeek() {
   missingFilters.value.date_from = monday.toISOString().split("T")[0];
   missingFilters.value.date_to = todayISO();
   loadMissingRecords();
+}
+
+// ─── Missing records Excel download ──────────────────────────────────────────
+function downloadMissingExcel() {
+  const { date_from, date_to, missing_type } = missingFilters.value;
+  const label = date_from === date_to ? date_from : `${date_from}_${date_to}`;
+  const wb = XLSX.utils.book_new();
+
+  const toRow = (u) => ({
+    Nombre: `${toTitleCase(u.first_name)} ${toTitleCase(u.last_name)}`,
+    Proyecto: (u.project_name || "").toUpperCase(),
+    Correo: u.email || "",
+  });
+
+  if (missing_type !== "exit") {
+    const wsEntry = XLSX.utils.json_to_sheet(
+      missingRecords.value.missing_entry.length
+        ? missingRecords.value.missing_entry.map(toRow)
+        : [{ Nombre: "Sin registros", Proyecto: "", Correo: "" }],
+    );
+    wsEntry["!cols"] = [{ wch: 30 }, { wch: 20 }, { wch: 30 }];
+    XLSX.utils.book_append_sheet(wb, wsEntry, "Sin Entrada");
+  }
+
+  if (missing_type !== "entry") {
+    const wsExit = XLSX.utils.json_to_sheet(
+      missingRecords.value.missing_exit.length
+        ? missingRecords.value.missing_exit.map(toRow)
+        : [{ Nombre: "Sin registros", Proyecto: "", Correo: "" }],
+    );
+    wsExit["!cols"] = [{ wch: 30 }, { wch: 20 }, { wch: 30 }];
+    XLSX.utils.book_append_sheet(wb, wsExit, "Sin Salida");
+  }
+
+  XLSX.writeFile(wb, `sin_registros_${label}.xlsx`);
 }
 
 // ─── Name display helpers ─────────────────────────────────────────────────────
