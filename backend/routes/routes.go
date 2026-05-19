@@ -23,6 +23,8 @@ func Register(r *gin.Engine) {
 	api.POST("/auth/reset-password", handlers.ResetPassword)
 	api.GET("/qr", handlers.GenerateQR)
 	api.GET("/checkin-url", handlers.GetCheckinURL)
+	// Public projects list — used by the registration form
+	api.GET("/projects", handlers.AdminGetProjects)
 
 	// User protected routes
 	auth := api.Group("/")
@@ -52,7 +54,11 @@ func Register(r *gin.Engine) {
 		admin.POST("/records/comment", handlers.AdminSetRecordComment)
 		admin.DELETE("/records/comment", handlers.AdminDeleteRecordComment)
 		admin.GET("/users", handlers.AdminGetUsers)
+		admin.PUT("/users/:id", handlers.AdminUpdateUser)
 		admin.GET("/projects", handlers.AdminGetProjects)
+		admin.POST("/projects", handlers.AdminCreateProject)
+		admin.DELETE("/projects/:name", handlers.AdminDeleteProject)
+		admin.GET("/missing-records", handlers.AdminGetMissingRecords)
 		admin.GET("/users/:id/schedule", handlers.AdminGetUserSchedule)
 		admin.POST("/users/:id/schedule", handlers.AdminSetUserSchedule)
 		admin.PUT("/users/:id/password", handlers.AdminResetUserPassword)

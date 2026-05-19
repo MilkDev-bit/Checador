@@ -138,6 +138,17 @@ func Migrate() {
 		`ALTER TABLE check_records ADD COLUMN IF NOT EXISTS closed_by_admin BOOLEAN DEFAULT FALSE`,
 		// GPS reverse-geocoded address (populated async after check-in via Google Maps Geocoding API)
 		`ALTER TABLE check_records ADD COLUMN IF NOT EXISTS gps_address TEXT`,
+		// Centralized projects catalogue — managed by admin
+		`CREATE TABLE IF NOT EXISTS projects (
+			id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			name       TEXT UNIQUE NOT NULL,
+			created_at TIMESTAMP DEFAULT NOW()
+		)`,
+		// Seed projects table from existing user data (on first run)
+		`INSERT INTO projects (name)
+		 SELECT DISTINCT project_name FROM users
+		 WHERE role = 'user' AND project_name != ''
+		 ON CONFLICT (name) DO NOTHING`,
 	}
 	for _, q := range alterQueries {
 		if _, err := DB.Exec(q); err != nil {

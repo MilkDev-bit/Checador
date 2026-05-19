@@ -6,12 +6,27 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"unicode"
 
 	"paselista/database"
 
 	"github.com/gin-gonic/gin"
 	"golang.org/x/crypto/bcrypt"
 )
+
+// titleCase converts a string to Title Case (first letter of each word uppercase, rest lowercase).
+// Example: "JUAN DE LA ROSA" → "Juan De La Rosa"
+func titleCase(s string) string {
+	words := strings.Fields(strings.ToLower(strings.TrimSpace(s)))
+	for i, w := range words {
+		runes := []rune(w)
+		if len(runes) > 0 {
+			runes[0] = unicode.ToUpper(runes[0])
+			words[i] = string(runes)
+		}
+	}
+	return strings.Join(words, " ")
+}
 
 // appTZ is the timezone used for all date-boundary calculations.
 // Defaults to America/Mexico_City; override with TZ env var on Railway.
@@ -297,7 +312,7 @@ func AdminGetUsers(c *gin.Context) {
 }
 
 func AdminGetProjects(c *gin.Context) {
-	rows, err := database.DB.Query(`SELECT DISTINCT project_name FROM users WHERE role='user' ORDER BY project_name`)
+	rows, err := database.DB.Query(`SELECT name FROM projects ORDER BY name`)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 		return
@@ -474,4 +489,231 @@ func AdminCloseSession(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"message": "Sesión cerrada correctamente"})
+}
+
+// AdminUpdateUser updates editable fields of a user (name, project, email).
+// PUT /admin/users/:id
+func AdminUpdateUser(c *gin.Context) {
+	userID := c.Param("id")
+
+	var req struct {
+		FirstName   string `json:"first_name" binding:"required"`
+		LastName    string `json:"last_name" binding:"required"`
+		ProjectName string `json:"project_name" binding:"required"`
+		Email       string `json:"email" binding:"required,email"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Datos inválidos"})
+		return
+	}
+
+	firstName := titleCase(req.FirstName)
+	lastName := titleCase(req.LastName)
+	projectName := strings.ToUpper(strings.TrimSpace(req.ProjectName))
+	email := strings.ToLower(strings.TrimSpace(req.Email))
+
+	result, err := database.DB.Exec(
+		`UPDATE users SET first_name=$1, last_name=$2, project_name=$3, email=$4
+		 WHERE id=$5 AND role='user'`,
+		firstName, lastName, projectName, email, userID,
+	)
+	if err != nil {
+		if strings.Contains(err.Error(), "unique") {
+			c.JSON(http.StatusConflict, gin.H{"error": "El correo ya está en uso."})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al actualizar usuario."})
+		return
+	}
+	affected, _ := result.RowsAffected()
+	if affected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Usuario no encontrado."})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"message":      "Usuario actualizado correctamente.",
+		"first_name":   firstName,
+		"last_name":    lastName,
+		"project_name": projectName,
+		"email":        email,
+	})
+}
+
+// AdminCreateProject adds a new project to the catalogue.
+// POST /admin/projects
+func AdminCreateProject(c *gin.Context) {
+	var req struct {
+		Name string `json:"name" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "El nombre del proyecto es requerido."})
+		return
+	}
+
+	name := strings.ToUpper(strings.TrimSpace(req.Name))
+	if name == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "El nombre no puede estar vacío."})
+		return
+	}
+
+	var id string
+	err := database.DB.QueryRow(
+		`INSERT INTO projects (name) VALUES ($1) RETURNING id`, name,
+	).Scan(&id)
+	if err != nil {
+		if strings.Contains(err.Error(), "unique") {
+			c.JSON(http.StatusConflict, gin.H{"error": "El proyecto ya existe."})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al crear proyecto."})
+		return
+	}
+	c.JSON(http.StatusCreated, gin.H{"id": id, "name": name})
+}
+
+// AdminDeleteProject removes a project from the catalogue by name.
+// DELETE /admin/projects/:name
+func AdminDeleteProject(c *gin.Context) {
+	name := strings.ToUpper(strings.TrimSpace(c.Param("name")))
+
+	result, err := database.DB.Exec(`DELETE FROM projects WHERE name=$1`, name)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al eliminar proyecto."})
+		return
+	}
+	affected, _ := result.RowsAffected()
+	if affected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Proyecto no encontrado."})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "Proyecto eliminado."})
+}
+
+// MissingRow represents a user who has not checked in/out in the given window.
+type MissingRow struct {
+	UserID      string `json:"user_id"`
+	FirstName   string `json:"first_name"`
+	LastName    string `json:"last_name"`
+	ProjectName string `json:"project_name"`
+	Email       string `json:"email"`
+}
+
+// AdminGetMissingRecords returns users who are missing an entry or exit in the
+// requested date range.  Query params:
+//
+//	date_from / date_to – same as AdminGetRecords (RFC3339 or YYYY-MM-DD)
+//	missing_type        – "entry" (default), "exit", or "both"
+//
+// GET /admin/missing-records
+func AdminGetMissingRecords(c *gin.Context) {
+	dateFrom := c.Query("date_from")
+	dateTo := c.Query("date_to")
+	missingType := c.DefaultQuery("missing_type", "entry")
+
+	// Default to current day in appTZ
+	var start, end time.Time
+	if dateFrom != "" {
+		var err error
+		start, err = parseDateParam(dateFrom)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date_from"})
+			return
+		}
+	} else {
+		now := time.Now().In(appTZ)
+		start = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, appTZ)
+	}
+
+	if dateTo != "" {
+		var err error
+		end, err = parseDateParam(dateTo)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date_to"})
+			return
+		}
+		if !strings.ContainsRune(dateTo, 'T') {
+			end = end.Add(24 * time.Hour)
+		}
+	} else {
+		end = start.Add(24 * time.Hour)
+	}
+
+	buildQuery := func(checkType string) ([]MissingRow, error) {
+		var q string
+		if checkType == "exit" {
+			// Has entry but no exit in window
+			q = `SELECT u.id, u.first_name, u.last_name, u.project_name, u.email
+			     FROM users u
+			     WHERE u.role = 'user'
+			       AND EXISTS (
+			           SELECT 1 FROM check_records cr
+			           WHERE cr.user_id = u.id AND cr.type = 'entry'
+			             AND cr.timestamp >= $1 AND cr.timestamp < $2
+			       )
+			       AND NOT EXISTS (
+			           SELECT 1 FROM check_records cr
+			           WHERE cr.user_id = u.id AND cr.type = 'exit'
+			             AND cr.timestamp >= $1 AND cr.timestamp < $2
+			       )
+			     ORDER BY u.last_name, u.first_name`
+		} else {
+			// No entry in window
+			q = `SELECT u.id, u.first_name, u.last_name, u.project_name, u.email
+			     FROM users u
+			     WHERE u.role = 'user'
+			       AND NOT EXISTS (
+			           SELECT 1 FROM check_records cr
+			           WHERE cr.user_id = u.id AND cr.type = 'entry'
+			             AND cr.timestamp >= $1 AND cr.timestamp < $2
+			       )
+			     ORDER BY u.last_name, u.first_name`
+		}
+		rows, err := database.DB.Query(q, start, end)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+		result := []MissingRow{}
+		for rows.Next() {
+			var r MissingRow
+			rows.Scan(&r.UserID, &r.FirstName, &r.LastName, &r.ProjectName, &r.Email)
+			result = append(result, r)
+		}
+		return result, nil
+	}
+
+	type Response struct {
+		MissingEntry []MissingRow `json:"missing_entry,omitempty"`
+		MissingExit  []MissingRow `json:"missing_exit,omitempty"`
+	}
+
+	var resp Response
+	var err error
+
+	switch missingType {
+	case "exit":
+		resp.MissingExit, err = buildQuery("exit")
+	case "both":
+		resp.MissingEntry, err = buildQuery("entry")
+		if err == nil {
+			resp.MissingExit, err = buildQuery("exit")
+		}
+	default: // "entry"
+		resp.MissingEntry, err = buildQuery("entry")
+	}
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		return
+	}
+
+	// Ensure nil slices are marshalled as []
+	if resp.MissingEntry == nil {
+		resp.MissingEntry = []MissingRow{}
+	}
+	if resp.MissingExit == nil {
+		resp.MissingExit = []MissingRow{}
+	}
+
+	c.JSON(http.StatusOK, resp)
 }

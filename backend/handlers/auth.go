@@ -90,6 +90,11 @@ func Register(c *gin.Context) {
 		return
 	}
 
+	// Normalize casing before saving
+	req.FirstName = titleCase(req.FirstName)
+	req.LastName = titleCase(req.LastName)
+	req.ProjectName = strings.ToUpper(strings.TrimSpace(req.ProjectName))
+
 	var user models.User
 	err = database.DB.QueryRow(
 		`INSERT INTO users (first_name, last_name, project_name, email, password_hash)

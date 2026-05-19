@@ -307,7 +307,8 @@
                             class="font-medium text-sm"
                             style="color: var(--text)"
                           >
-                            {{ r.first_name }} {{ r.last_name }}
+                            {{ toTitleCase(r.first_name) }}
+                            {{ toTitleCase(r.last_name) }}
                           </p>
                           <p class="text-xs" style="color: var(--text-muted)">
                             {{ r.email }}
@@ -576,7 +577,8 @@
                             class="font-medium text-sm"
                             style="color: var(--text)"
                           >
-                            {{ r.first_name }} {{ r.last_name }}
+                            {{ toTitleCase(r.first_name) }}
+                            {{ toTitleCase(r.last_name) }}
                           </p>
                           <p class="text-xs" style="color: var(--text-muted)">
                             {{ r.email }}
@@ -864,7 +866,8 @@
                   <tr v-for="s in openSessions" :key="s.record_id">
                     <td>
                       <p class="font-medium text-sm" style="color: var(--text)">
-                        {{ s.first_name }} {{ s.last_name }}
+                        {{ toTitleCase(s.first_name) }}
+                        {{ toTitleCase(s.last_name) }}
                       </p>
                       <p class="text-xs" style="color: var(--text-muted)">
                         {{ s.email }}
@@ -948,7 +951,7 @@
 
         <!-- ===== USERS TAB ===== -->
         <div v-if="activeTab === 'users'" class="space-y-5 animate-in">
-          <!-- Filter -->
+          <!-- Filter + actions bar -->
           <div class="glass-card p-4">
             <div class="flex flex-wrap gap-3 items-center">
               <select
@@ -961,12 +964,19 @@
                   {{ p }}
                 </option>
               </select>
+              <button
+                @click="openProjectsModal"
+                class="btn-secondary btn-sm flex items-center gap-1.5"
+              >
+                <FolderPlusIcon class="w-4 h-4" />
+                Proyectos
+              </button>
               <p class="text-slate-400 text-sm ml-auto">
                 <span style="color: var(--text); font-weight: 600">{{
                   users.length
                 }}</span>
                 <span style="color: var(--text-muted)"
-                  >usuarios registrados</span
+                  >&nbsp;usuarios registrados</span
                 >
               </p>
             </div>
@@ -1014,7 +1024,8 @@
                 </div>
                 <div class="min-w-0">
                   <p class="font-semibold truncate" style="color: var(--text)">
-                    {{ user.first_name }} {{ user.last_name }}
+                    {{ toTitleCase(user.first_name) }}
+                    {{ toTitleCase(user.last_name) }}
                   </p>
                   <p class="text-xs truncate" style="color: var(--text-muted)">
                     {{ user.email }}
@@ -1026,9 +1037,11 @@
                   <span class="text-xs w-16" style="color: var(--text-dim)"
                     >Proyecto</span
                   >
-                  <span class="text-xs truncate" style="color: var(--text)">{{
-                    user.project_name
-                  }}</span>
+                  <span
+                    class="text-xs truncate uppercase"
+                    style="color: var(--text)"
+                    >{{ user.project_name }}</span
+                  >
                 </div>
                 <div class="flex items-center gap-2">
                   <span class="text-xs w-16" style="color: var(--text-dim)"
@@ -1049,7 +1062,14 @@
                 class="mt-4 pt-3"
                 style="border-top: 1px solid var(--border-subtle)"
               >
-                <div class="flex gap-2">
+                <div class="flex gap-2 flex-wrap">
+                  <button
+                    @click="openEditUserModal(user)"
+                    class="flex-1 btn-secondary btn-sm flex items-center justify-center gap-1.5"
+                  >
+                    <PencilSquareIcon class="w-4 h-4" />
+                    Editar
+                  </button>
                   <button
                     @click="openScheduleModal(user)"
                     class="flex-1 btn-secondary btn-sm flex items-center justify-center gap-1.5"
@@ -1107,6 +1127,174 @@
               </button>
             </div>
           </div>
+        </div>
+
+        <!-- ===== MISSING RECORDS TAB ===== -->
+        <div v-if="activeTab === 'missing'" class="space-y-5 animate-in">
+          <!-- Filters -->
+          <div class="glass-card p-4">
+            <div class="flex flex-wrap gap-3 items-center">
+              <input
+                type="date"
+                v-model="missingFilters.date_from"
+                @change="loadMissingRecords"
+                class="input text-sm py-2 w-40"
+              />
+              <span style="color: var(--text-muted)" class="text-sm">a</span>
+              <input
+                type="date"
+                v-model="missingFilters.date_to"
+                @change="loadMissingRecords"
+                class="input text-sm py-2 w-40"
+              />
+              <select
+                v-model="missingFilters.missing_type"
+                @change="loadMissingRecords"
+                class="input text-sm py-2 w-44"
+              >
+                <option value="both">Sin entrada y sin salida</option>
+                <option value="entry">Sin entrada</option>
+                <option value="exit">Sin salida (tienen entrada)</option>
+              </select>
+              <button @click="setMissingToday" class="btn-secondary btn-sm">
+                Hoy
+              </button>
+              <button @click="setMissingWeek" class="btn-secondary btn-sm">
+                Esta semana
+              </button>
+            </div>
+          </div>
+
+          <!-- Spinner -->
+          <div v-if="loadingMissing" class="glass-card p-10 text-center">
+            <div
+              class="w-8 h-8 border-4 border-brand-500/30 border-t-brand-500 rounded-full animate-spin mx-auto"
+            ></div>
+          </div>
+
+          <template v-else>
+            <!-- Sin entrada -->
+            <div
+              v-if="missingFilters.missing_type !== 'exit'"
+              class="space-y-2"
+            >
+              <div class="flex items-center gap-2 px-1">
+                <ExclamationCircleIcon class="w-5 h-5 text-rose-500" />
+                <h3 class="font-semibold text-sm" style="color: var(--text)">
+                  Sin entrada
+                </h3>
+                <span class="badge-red ml-1">{{
+                  missingRecords.missing_entry.length
+                }}</span>
+              </div>
+              <div
+                v-if="missingRecords.missing_entry.length === 0"
+                class="glass-card p-6 text-center text-sm"
+                style="color: var(--text-muted)"
+              >
+                Todos los usuarios registraron entrada ✓
+              </div>
+              <div v-else class="glass-card overflow-hidden">
+                <table class="data-table w-full">
+                  <thead>
+                    <tr>
+                      <th>Nombre</th>
+                      <th class="hidden sm:table-cell">Proyecto</th>
+                      <th class="hidden md:table-cell">Correo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      v-for="u in missingRecords.missing_entry"
+                      :key="u.user_id"
+                    >
+                      <td>
+                        <span class="font-medium" style="color: var(--text)">
+                          {{ toTitleCase(u.first_name) }}
+                          {{ toTitleCase(u.last_name) }}
+                        </span>
+                      </td>
+                      <td class="hidden sm:table-cell">
+                        <span
+                          class="text-xs uppercase"
+                          style="color: var(--text-muted)"
+                          >{{ u.project_name }}</span
+                        >
+                      </td>
+                      <td class="hidden md:table-cell">
+                        <span
+                          class="text-xs"
+                          style="color: var(--text-muted)"
+                          >{{ u.email }}</span
+                        >
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Sin salida -->
+            <div
+              v-if="missingFilters.missing_type !== 'entry'"
+              class="space-y-2"
+            >
+              <div class="flex items-center gap-2 px-1">
+                <ExclamationTriangleIcon class="w-5 h-5 text-amber-500" />
+                <h3 class="font-semibold text-sm" style="color: var(--text)">
+                  Sin salida (tienen entrada)
+                </h3>
+                <span class="badge-amber ml-1">{{
+                  missingRecords.missing_exit.length
+                }}</span>
+              </div>
+              <div
+                v-if="missingRecords.missing_exit.length === 0"
+                class="glass-card p-6 text-center text-sm"
+                style="color: var(--text-muted)"
+              >
+                Todos los usuarios con entrada registraron salida ✓
+              </div>
+              <div v-else class="glass-card overflow-hidden">
+                <table class="data-table w-full">
+                  <thead>
+                    <tr>
+                      <th>Nombre</th>
+                      <th class="hidden sm:table-cell">Proyecto</th>
+                      <th class="hidden md:table-cell">Correo</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr
+                      v-for="u in missingRecords.missing_exit"
+                      :key="u.user_id"
+                    >
+                      <td>
+                        <span class="font-medium" style="color: var(--text)">
+                          {{ toTitleCase(u.first_name) }}
+                          {{ toTitleCase(u.last_name) }}
+                        </span>
+                      </td>
+                      <td class="hidden sm:table-cell">
+                        <span
+                          class="text-xs uppercase"
+                          style="color: var(--text-muted)"
+                          >{{ u.project_name }}</span
+                        >
+                      </td>
+                      <td class="hidden md:table-cell">
+                        <span
+                          class="text-xs"
+                          style="color: var(--text-muted)"
+                          >{{ u.email }}</span
+                        >
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </template>
         </div>
 
         <!-- ===== PROFILE TAB ===== -->
@@ -2478,6 +2666,220 @@
           </div>
         </div>
       </Transition>
+
+      <!-- ── Edit User Modal ──────────────────────────────────────────────── -->
+      <Transition name="modal">
+        <div
+          v-if="editUserModal.show"
+          class="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style="background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px)"
+          @click.self="editUserModal.show = false"
+        >
+          <div
+            class="w-full max-w-md glass-card animate-in"
+            style="background: var(--modal-bg)"
+          >
+            <div
+              class="flex items-center justify-between px-5 pt-5 pb-3"
+              style="border-bottom: 1px solid var(--border-subtle)"
+            >
+              <h3 class="font-bold" style="color: var(--text)">
+                Editar usuario
+              </h3>
+              <button
+                @click="editUserModal.show = false"
+                class="p-1 rounded-lg hover:bg-white/10"
+              >
+                <XMarkIcon class="w-5 h-5" style="color: var(--text-muted)" />
+              </button>
+            </div>
+            <div class="p-5 space-y-4">
+              <div class="grid grid-cols-2 gap-3">
+                <div class="space-y-1">
+                  <label class="label-base text-xs">Nombre(s)</label>
+                  <input
+                    v-model="editUserModal.first_name"
+                    type="text"
+                    class="input-base text-sm"
+                    placeholder="Nombre"
+                  />
+                </div>
+                <div class="space-y-1">
+                  <label class="label-base text-xs">Apellido(s)</label>
+                  <input
+                    v-model="editUserModal.last_name"
+                    type="text"
+                    class="input-base text-sm"
+                    placeholder="Apellido"
+                  />
+                </div>
+              </div>
+              <div class="space-y-1">
+                <label class="label-base text-xs">Proyecto</label>
+                <select
+                  v-model="editUserModal.project_name"
+                  class="input-base text-sm"
+                >
+                  <option value="" disabled>Selecciona un proyecto...</option>
+                  <option v-for="p in projects" :key="p" :value="p">
+                    {{ p }}
+                  </option>
+                </select>
+              </div>
+              <div class="space-y-1">
+                <label class="label-base text-xs">Correo electrónico</label>
+                <input
+                  v-model="editUserModal.email"
+                  type="email"
+                  class="input-base text-sm"
+                  placeholder="correo@ejemplo.com"
+                />
+              </div>
+              <Transition name="fade">
+                <p
+                  v-if="editUserModal.msg.text"
+                  :class="
+                    editUserModal.msg.ok ? 'text-emerald-500' : 'text-rose-500'
+                  "
+                  class="text-xs font-medium"
+                >
+                  {{ editUserModal.msg.text }}
+                </p>
+              </Transition>
+            </div>
+            <div class="flex gap-3 px-5 pb-5">
+              <button
+                @click="editUserModal.show = false"
+                class="btn-secondary flex-1"
+              >
+                Cancelar
+              </button>
+              <button
+                @click="saveEditUser"
+                class="btn-primary flex-1"
+                :disabled="
+                  editUserModal.saving ||
+                  !editUserModal.first_name ||
+                  !editUserModal.last_name ||
+                  !editUserModal.project_name ||
+                  !editUserModal.email
+                "
+              >
+                {{ editUserModal.saving ? "Guardando..." : "Guardar" }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+
+      <!-- ── Projects Management Modal ───────────────────────────────────── -->
+      <Transition name="modal">
+        <div
+          v-if="projectsModal.show"
+          class="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style="background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px)"
+          @click.self="projectsModal.show = false"
+        >
+          <div
+            class="w-full max-w-md glass-card animate-in"
+            style="
+              background: var(--modal-bg);
+              max-height: 85vh;
+              display: flex;
+              flex-direction: column;
+            "
+          >
+            <div
+              class="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0"
+              style="border-bottom: 1px solid var(--border-subtle)"
+            >
+              <h3 class="font-bold" style="color: var(--text)">
+                Gestionar proyectos
+              </h3>
+              <button
+                @click="projectsModal.show = false"
+                class="p-1 rounded-lg hover:bg-white/10"
+              >
+                <XMarkIcon class="w-5 h-5" style="color: var(--text-muted)" />
+              </button>
+            </div>
+
+            <!-- Add new project -->
+            <div
+              class="px-5 pt-4 pb-3 flex-shrink-0"
+              style="border-bottom: 1px solid var(--border-subtle)"
+            >
+              <label class="label-base text-xs mb-2 block"
+                >Agregar proyecto</label
+              >
+              <div class="flex gap-2">
+                <input
+                  v-model="projectsModal.newName"
+                  type="text"
+                  class="input-base text-sm flex-1 uppercase"
+                  placeholder="Nombre del proyecto"
+                  @keyup.enter="saveProject"
+                  @input="
+                    projectsModal.newName = projectsModal.newName.toUpperCase()
+                  "
+                />
+                <button
+                  @click="saveProject"
+                  class="btn-primary px-4"
+                  :disabled="
+                    projectsModal.saving || !projectsModal.newName.trim()
+                  "
+                >
+                  <PlusIcon class="w-4 h-4" />
+                </button>
+              </div>
+              <p v-if="projectsModal.error" class="text-xs text-rose-500 mt-1">
+                {{ projectsModal.error }}
+              </p>
+            </div>
+
+            <!-- Projects list -->
+            <div class="overflow-y-auto flex-1 p-3">
+              <div
+                v-if="projects.length === 0"
+                class="text-center py-6 text-sm"
+                style="color: var(--text-muted)"
+              >
+                No hay proyectos registrados
+              </div>
+              <div v-else class="space-y-1">
+                <div
+                  v-for="p in projects"
+                  :key="p"
+                  class="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/5 group"
+                >
+                  <span
+                    class="text-sm font-medium uppercase"
+                    style="color: var(--text)"
+                    >{{ p }}</span
+                  >
+                  <button
+                    @click="deleteProject(p)"
+                    class="p-1.5 rounded-lg text-rose-400 opacity-0 group-hover:opacity-100 hover:bg-rose-500/10 transition-all"
+                    title="Eliminar proyecto"
+                  >
+                    <TrashIcon class="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="px-5 pb-5 pt-3 flex-shrink-0">
+              <button
+                @click="projectsModal.show = false"
+                class="btn-secondary w-full"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
     </Teleport>
   </div>
 </template>
@@ -2513,6 +2915,11 @@ import {
   InformationCircleIcon,
   SunIcon,
   ClockIcon,
+  PencilSquareIcon,
+  TrashIcon,
+  PlusIcon,
+  ExclamationCircleIcon,
+  FolderPlusIcon,
 } from "@heroicons/vue/24/outline";
 import { useThemeStore } from "@/stores/theme";
 import * as XLSX from "xlsx";
@@ -2546,6 +2953,12 @@ const navItems = [
     icon: ClockIcon,
     label: "Sesiones",
     description: "Entradas sin salida registrada",
+  },
+  {
+    id: "missing",
+    icon: ExclamationCircleIcon,
+    label: "Sin Registros",
+    description: "Usuarios sin entrada o salida en el día",
   },
   {
     id: "profile",
@@ -2917,6 +3330,154 @@ async function loadProjects() {
     const { data } = await api.get("/admin/projects");
     projects.value = data;
   } catch {}
+}
+
+// ─── Edit user modal ─────────────────────────────────────────────────────────
+const editUserModal = ref({
+  show: false,
+  user: null,
+  first_name: "",
+  last_name: "",
+  project_name: "",
+  email: "",
+  saving: false,
+  msg: { text: "", ok: false },
+});
+
+function openEditUserModal(user) {
+  editUserModal.value = {
+    show: true,
+    user,
+    first_name: user.first_name,
+    last_name: user.last_name,
+    project_name: user.project_name,
+    email: user.email,
+    saving: false,
+    msg: { text: "", ok: false },
+  };
+}
+
+async function saveEditUser() {
+  const { user, first_name, last_name, project_name, email } =
+    editUserModal.value;
+  if (!first_name || !last_name || !project_name || !email) return;
+  editUserModal.value.saving = true;
+  editUserModal.value.msg = { text: "", ok: false };
+  try {
+    const { data } = await api.put(`/admin/users/${user.id}`, {
+      first_name,
+      last_name,
+      project_name,
+      email,
+    });
+    const u = users.value.find((u) => u.id === user.id);
+    if (u) {
+      u.first_name = data.first_name;
+      u.last_name = data.last_name;
+      u.project_name = data.project_name;
+      u.email = data.email;
+    }
+    editUserModal.value.msg = {
+      text: "Usuario actualizado correctamente.",
+      ok: true,
+    };
+    setTimeout(() => {
+      editUserModal.value.show = false;
+    }, 1500);
+  } catch (e) {
+    editUserModal.value.msg = {
+      text: e.response?.data?.error || "Error al actualizar.",
+      ok: false,
+    };
+  } finally {
+    editUserModal.value.saving = false;
+  }
+}
+
+// ─── Projects management modal ────────────────────────────────────────────────
+const projectsModal = ref({
+  show: false,
+  newName: "",
+  saving: false,
+  error: "",
+});
+
+function openProjectsModal() {
+  projectsModal.value = { show: true, newName: "", saving: false, error: "" };
+}
+
+async function saveProject() {
+  const name = projectsModal.value.newName.trim().toUpperCase();
+  if (!name) return;
+  projectsModal.value.saving = true;
+  projectsModal.value.error = "";
+  try {
+    await api.post("/admin/projects", { name });
+    projects.value = [...projects.value, name].sort();
+    projectsModal.value.newName = "";
+  } catch (e) {
+    projectsModal.value.error =
+      e.response?.data?.error || "Error al guardar proyecto.";
+  } finally {
+    projectsModal.value.saving = false;
+  }
+}
+
+async function deleteProject(name) {
+  try {
+    await api.delete(`/admin/projects/${encodeURIComponent(name)}`);
+    projects.value = projects.value.filter((p) => p !== name);
+  } catch {}
+}
+
+// ─── Missing records ──────────────────────────────────────────────────────────
+const missingFilters = ref({
+  date_from: todayISO(),
+  date_to: todayISO(),
+  missing_type: "both",
+});
+const missingRecords = ref({ missing_entry: [], missing_exit: [] });
+const loadingMissing = ref(false);
+
+async function loadMissingRecords() {
+  loadingMissing.value = true;
+  try {
+    const params = { missing_type: missingFilters.value.missing_type };
+    if (missingFilters.value.date_from)
+      params.date_from = localDateToUTCStart(missingFilters.value.date_from);
+    if (missingFilters.value.date_to)
+      params.date_to = localDateToUTCEnd(missingFilters.value.date_to);
+    const { data } = await api.get("/admin/missing-records", { params });
+    missingRecords.value = data;
+  } catch {
+  } finally {
+    loadingMissing.value = false;
+  }
+}
+
+function setMissingToday() {
+  missingFilters.value.date_from = todayISO();
+  missingFilters.value.date_to = todayISO();
+  loadMissingRecords();
+}
+
+function setMissingWeek() {
+  const today = new Date();
+  const dow = today.getDay();
+  const monday = new Date(today);
+  monday.setDate(today.getDate() - (dow === 0 ? 6 : dow - 1));
+  missingFilters.value.date_from = monday.toISOString().split("T")[0];
+  missingFilters.value.date_to = todayISO();
+  loadMissingRecords();
+}
+
+// ─── Name display helpers ─────────────────────────────────────────────────────
+function toTitleCase(str) {
+  if (!str) return "";
+  return str.replace(
+    /\S+/g,
+    (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(),
+  );
 }
 
 // Pagination logic
@@ -3362,6 +3923,10 @@ async function handleLogout() {
 }
 
 onMounted(() => loadAll());
+
+watch(activeTab, (tab) => {
+  if (tab === "missing") loadMissingRecords();
+});
 </script>
 
 <style scoped>
