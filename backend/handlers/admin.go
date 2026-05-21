@@ -418,7 +418,9 @@ func AdminResetUserPassword(c *gin.Context) {
 // GET /admin/open-sessions
 func AdminGetOpenSessions(c *gin.Context) {
 	const sessionTTL = 20 * time.Hour
-	windowStart := time.Now().UTC().Add(-24 * time.Hour)
+	// Use a 48-hour window so auto-expired sessions (>20h) still appear for the admin
+	// and sessions spanning midnight are not lost.
+	windowStart := time.Now().UTC().Add(-48 * time.Hour)
 
 	type OpenSession struct {
 		RecordID    string    `json:"record_id"`

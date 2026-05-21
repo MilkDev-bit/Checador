@@ -165,14 +165,18 @@ func RegisterCheck(c *gin.Context) {
 			return
 		}
 
-		// Session is active if the last record is an open, non-expired, non-closed entry
+		// sessionActive: blocks a NEW entry (TTL of 20h — allows re-entry after forgetting to exit).
 		sessionActive := lastType == "entry" && !lastClosed && time.Since(lastTimestamp) < sessionTTL
+
+		// hasOpenEntry: allows EXIT regardless of TTL — a user who forgot to exit
+		// should still be able to register salida even if the session auto-expired.
+		hasOpenEntry := qErr == nil && lastType == "entry" && !lastClosed
 
 		if req.Type == "entry" && sessionActive {
 			c.JSON(http.StatusConflict, gin.H{"error": "Ya tienes una entrada activa. Registra tu salida primero."})
 			return
 		}
-		if req.Type == "exit" && !sessionActive {
+		if req.Type == "exit" && !hasOpenEntry {
 			c.JSON(http.StatusConflict, gin.H{"error": "No tienes una entrada activa. Registra tu entrada primero."})
 			return
 		}
@@ -502,9 +506,10 @@ func GetCheckStatus(c *gin.Context) {
 		return
 	}
 
-	// Session is active only when: last record is an "entry", not closed by admin,
-	// and within the sessionTTL window (auto-expires after 20 hours).
-	if r.Type == "entry" && !closedByAdmin && time.Since(r.Timestamp) < sessionTTL {
+	// Session is shown as active when: last record is an "entry" and not closed by admin.
+	// We do NOT gate on sessionTTL here so users can always register exit even after
+	// auto-expiry. The 24-hour query window above already bounds how old the entry can be.
+	if r.Type == "entry" && !closedByAdmin {
 		c.JSON(http.StatusOK, gin.H{
 			"active":     true,
 			"record_id":  r.ID,
