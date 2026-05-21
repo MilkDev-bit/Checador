@@ -177,7 +177,7 @@ func AdminGetRecords(c *gin.Context) {
 				dt = dt.Add(24 * time.Hour)
 			}
 			where = append(where, fmt.Sprintf("cr.timestamp < $%d", argIdx))
-			args = append(args, time.Date(dt.Year(), dt.Month(), dt.Day(), 0, 0, 0, 0, appTZ).Add(24*time.Hour))
+			args = append(args, dt)
 			argIdx++
 		}
 	}
