@@ -2859,20 +2859,58 @@
                 <div
                   v-for="p in projects"
                   :key="p"
-                  class="flex items-center justify-between px-3 py-2 rounded-lg hover:bg-white/5 group"
+                  class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 group"
                 >
-                  <span
-                    class="text-sm font-medium uppercase"
-                    style="color: var(--text)"
-                    >{{ p }}</span
-                  >
-                  <button
-                    @click="deleteProject(p)"
-                    class="p-1.5 rounded-lg text-rose-400 opacity-0 group-hover:opacity-100 hover:bg-rose-500/10 transition-all"
-                    title="Eliminar proyecto"
-                  >
-                    <TrashIcon class="w-4 h-4" />
-                  </button>
+                  <!-- Editing mode -->
+                  <template v-if="projectsModal.editing === p">
+                    <input
+                      v-model="projectsModal.editName"
+                      type="text"
+                      class="input-base text-sm flex-1 uppercase py-1"
+                      @input="projectsModal.editName = projectsModal.editName.toUpperCase()"
+                      @keyup.enter="saveRenameProject(p)"
+                      @keyup.escape="projectsModal.editing = null"
+                      autofocus
+                    />
+                    <button
+                      @click="saveRenameProject(p)"
+                      class="p-1.5 rounded-lg text-emerald-400 hover:bg-emerald-500/10 transition-all"
+                      :disabled="projectsModal.saving"
+                      title="Guardar"
+                    >
+                      <CheckIcon class="w-4 h-4" />
+                    </button>
+                    <button
+                      @click="projectsModal.editing = null"
+                      class="p-1.5 rounded-lg text-slate-400 hover:bg-white/10 transition-all"
+                      title="Cancelar"
+                    >
+                      <XMarkIcon class="w-4 h-4" />
+                    </button>
+                  </template>
+
+                  <!-- View mode -->
+                  <template v-else>
+                    <span
+                      class="text-sm font-medium uppercase flex-1"
+                      style="color: var(--text)"
+                      >{{ p }}</span
+                    >
+                    <button
+                      @click="startEditProject(p)"
+                      class="p-1.5 rounded-lg text-brand-400 opacity-0 group-hover:opacity-100 hover:bg-brand-500/10 transition-all"
+                      title="Renombrar proyecto"
+                    >
+                      <PencilSquareIcon class="w-4 h-4" />
+                    </button>
+                    <button
+                      @click="deleteProject(p)"
+                      class="p-1.5 rounded-lg text-rose-400 opacity-0 group-hover:opacity-100 hover:bg-rose-500/10 transition-all"
+                      title="Eliminar proyecto"
+                    >
+                      <TrashIcon class="w-4 h-4" />
+                    </button>
+                  </template>
                 </div>
               </div>
             </div>
@@ -3409,10 +3447,39 @@ const projectsModal = ref({
   newName: "",
   saving: false,
   error: "",
+  editing: null,   // project name currently being renamed
+  editName: "",    // draft value while renaming
 });
 
 function openProjectsModal() {
-  projectsModal.value = { show: true, newName: "", saving: false, error: "" };
+  projectsModal.value = { show: true, newName: "", saving: false, error: "", editing: null, editName: "" };
+}
+
+function startEditProject(name) {
+  projectsModal.value.editing = name;
+  projectsModal.value.editName = name;
+  projectsModal.value.error = "";
+}
+
+async function saveRenameProject(oldName) {
+  const newName = projectsModal.value.editName.trim().toUpperCase();
+  if (!newName || newName === oldName) {
+    projectsModal.value.editing = null;
+    return;
+  }
+  projectsModal.value.saving = true;
+  projectsModal.value.error = "";
+  try {
+    await api.put(`/admin/projects/${encodeURIComponent(oldName)}`, { name: newName });
+    const idx = projects.value.indexOf(oldName);
+    if (idx !== -1) projects.value.splice(idx, 1, newName);
+    projects.value = [...projects.value].sort();
+    projectsModal.value.editing = null;
+  } catch (e) {
+    projectsModal.value.error = e.response?.data?.error || "Error al renombrar proyecto.";
+  } finally {
+    projectsModal.value.saving = false;
+  }
 }
 
 async function saveProject() {

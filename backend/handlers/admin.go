@@ -573,6 +573,63 @@ func AdminCreateProject(c *gin.Context) {
 	c.JSON(http.StatusCreated, gin.H{"id": id, "name": name})
 }
 
+// AdminUpdateProject renames a project in the catalogue and updates all users
+// that belong to it.
+// PUT /admin/projects/:name
+func AdminUpdateProject(c *gin.Context) {
+	oldName := strings.ToUpper(strings.TrimSpace(c.Param("name")))
+	var req struct {
+		Name string `json:"name" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "El nuevo nombre es requerido."})
+		return
+	}
+	newName := strings.ToUpper(strings.TrimSpace(req.Name))
+	if newName == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "El nombre no puede estar vacío."})
+		return
+	}
+	if newName == oldName {
+		c.JSON(http.StatusOK, gin.H{"name": newName})
+		return
+	}
+
+	tx, err := database.DB.Begin()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al iniciar transacción."})
+		return
+	}
+	defer tx.Rollback()
+
+	res, err := tx.Exec(`UPDATE projects SET name=$1 WHERE name=$2`, newName, oldName)
+	if err != nil {
+		if strings.Contains(err.Error(), "unique") {
+			c.JSON(http.StatusConflict, gin.H{"error": "Ya existe un proyecto con ese nombre."})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al renombrar proyecto."})
+		return
+	}
+	affected, _ := res.RowsAffected()
+	if affected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Proyecto no encontrado."})
+		return
+	}
+
+	// Propagate rename to all users that belong to the old project name.
+	if _, err := tx.Exec(`UPDATE users SET project_name=$1 WHERE project_name=$2`, newName, oldName); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al actualizar usuarios."})
+		return
+	}
+
+	if err := tx.Commit(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al confirmar cambios."})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"name": newName})
+}
+
 // AdminDeleteProject removes a project from the catalogue by name.
 // DELETE /admin/projects/:name
 func AdminDeleteProject(c *gin.Context) {

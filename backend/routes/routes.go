@@ -57,6 +57,7 @@ func Register(r *gin.Engine) {
 		admin.PUT("/users/:id", handlers.AdminUpdateUser)
 		admin.GET("/projects", handlers.AdminGetProjects)
 		admin.POST("/projects", handlers.AdminCreateProject)
+		admin.PUT("/projects/:name", handlers.AdminUpdateProject)
 		admin.DELETE("/projects/:name", handlers.AdminDeleteProject)
 		admin.GET("/missing-records", handlers.AdminGetMissingRecords)
 		admin.GET("/users/:id/schedule", handlers.AdminGetUserSchedule)
