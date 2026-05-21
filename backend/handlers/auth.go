@@ -95,6 +95,30 @@ func Register(c *gin.Context) {
 	req.LastName = titleCase(req.LastName)
 	req.ProjectName = strings.ToUpper(strings.TrimSpace(req.ProjectName))
 
+	// Resolve to the canonical project name: if an existing project in the
+	// catalogue contains (or is contained by) the submitted name, prefer the
+	// longer / more specific one — always stored in uppercase.
+	// Example: user types "cedis" but "CEDIS BAJIO" already exists → stored as "CEDIS BAJIO".
+	if rows, qErr := database.DB.Query(`SELECT name FROM projects`); qErr == nil {
+		bestLen := 0
+		bestName := ""
+		for rows.Next() {
+			var dbName string
+			rows.Scan(&dbName)
+			dbUpper := strings.ToUpper(strings.TrimSpace(dbName))
+			if strings.Contains(dbUpper, req.ProjectName) || strings.Contains(req.ProjectName, dbUpper) {
+				if len(dbUpper) > bestLen {
+					bestLen = len(dbUpper)
+					bestName = dbUpper
+				}
+			}
+		}
+		rows.Close()
+		if bestName != "" {
+			req.ProjectName = bestName
+		}
+	}
+
 	var user models.User
 	err = database.DB.QueryRow(
 		`INSERT INTO users (first_name, last_name, project_name, email, password_hash)
