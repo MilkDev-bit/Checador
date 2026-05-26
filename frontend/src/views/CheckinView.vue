@@ -672,6 +672,11 @@ const gpsPermission = ref('prompt') // 'granted' | 'denied' | 'prompt'
 const gpsAccuracy  = ref(null)   // last known accuracy in meters (null = not yet acquired)
 const gpsAcquiring = ref(false)  // true while waiting for a precise GPS fix
 
+// GPS acquisition handles — stored at module level so onUnmounted can cancel them
+// if the user navigates away while waiting for a GPS fix.
+let pendingAcquireWatchId = null
+let pendingAcquireTimeoutId = null
+
 // Wake lock
 let wakeLock = null
 const wakeLockActive = ref(false)
@@ -910,6 +915,8 @@ function requestLocation() {
     fail,
     { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 }
   )
+  // Fix 4: expose to module scope so onUnmounted can cancel if user navigates away
+  pendingAcquireWatchId   = acquireWatchId
 
   // After MAX_WAIT_MS accept whatever best reading we have
   timeoutId = setTimeout(() => {
@@ -918,6 +925,7 @@ function requestLocation() {
       else              fail({ code: 3 }) // TIMEOUT
     }
   }, MAX_WAIT_MS)
+  pendingAcquireTimeoutId = timeoutId
 
   processing.value   = true
   gpsAcquiring.value = true
@@ -952,11 +960,26 @@ let photoSelfie = null
 async function startCamera(facing = 'environment') {
   stopCamera()
   facingFront.value = facing === 'user'
-  stream = await navigator.mediaDevices.getUserMedia({
-    video: { facingMode: facing, width: { ideal: 1280 }, height: { ideal: 720 } },
-    audio: false
-  })
-  if (videoRef.value) videoRef.value.srcObject = stream
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: facing, width: { ideal: 1280 }, height: { ideal: 720 } },
+      audio: false
+    })
+    if (videoRef.value) videoRef.value.srcObject = stream
+  } catch (err) {
+    // Fix 5: camera permission denied or unavailable after GPS was already granted
+    showCameraModal.value = false
+    stopLocationTracking()
+    processing.value   = false
+    gpsAcquiring.value = false
+    if (err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError') {
+      toast.error('Permiso de cámara denegado. Habilítalo en la configuración del navegador.', 'Sin acceso a cámara')
+    } else if (err?.name === 'NotFoundError') {
+      toast.error('No se encontró una cámara en este dispositivo.', 'Sin cámara')
+    } else {
+      toast.error('No se pudo acceder a la cámara. Intenta de nuevo.', 'Error de cámara')
+    }
+  }
 }
 
 function stopCamera() {
@@ -1022,6 +1045,24 @@ function dataURLtoBlob(dataURL) {
   return new Blob([u8arr], { type: mime })
 }
 
+// Fix 3: re-encode a data URL at lower JPEG quality for IDB storage.
+// Keeps original dimensions but reduces size from ~200 KB to ~50 KB.
+function compressDataURL(dataURL, quality = 0.4) {
+  if (!dataURL) return Promise.resolve(null)
+  return new Promise(resolve => {
+    const img = new Image()
+    img.onload = () => {
+      const canvas = document.createElement('canvas')
+      canvas.width  = img.width
+      canvas.height = img.height
+      canvas.getContext('2d').drawImage(img, 0, 0)
+      resolve(canvas.toDataURL('image/jpeg', quality))
+    }
+    img.onerror = () => resolve(dataURL) // fallback: keep original on decode error
+    img.src = dataURL
+  })
+}
+
 async function submitCheck() {
   processing.value = true
   try {
@@ -1068,18 +1109,39 @@ async function submitCheck() {
     const status = err?.response?.status
     const msg = err?.response?.data?.error || ''
 
-    if (!navigator.onLine || err?.code === 'ERR_NETWORK' || err?.code === 'ECONNABORTED') {
+    // Fix 1: detect captive-portal / any no-response scenario, not just navigator.onLine
+    const isNetworkError = !navigator.onLine
+      || err?.code === 'ERR_NETWORK'
+      || err?.code === 'ECONNABORTED'
+      || (err?.request && !err?.response) // request sent, zero response bytes received
+
+    if (isNetworkError) {
       // ── Offline queue ──────────────────────────────────────────────────────
       // GPS and photos are already captured — save everything locally and
       // update the UI optimistically. Will sync automatically on reconnect.
+
+      // Fix 3: enforce max queue depth to avoid filling IDB on low-end devices
+      const MAX_PENDING = 5
+      const existing = await loadPendingChecks()
+      if (existing.length >= MAX_PENDING) {
+        toast.error(`Cola offline llena (${MAX_PENDING} registros). Conéctate para sincronizar antes de continuar.`, 'Cola llena')
+        return
+      }
+
+      // Fix 3: compress photos to ~40% quality before storing in IDB (~50 KB vs ~200 KB)
+      const [compressedSite, compressedSelfie] = await Promise.all([
+        compressDataURL(photoSite),
+        compressDataURL(photoSelfie)
+      ])
+
       const now2 = new Date().toISOString()
       await savePendingCheck({
         type:        checkType.value,
         timestamp:   now2,
         latitude:    locationPoints[0]?.latitude  ?? 0,
         longitude:   locationPoints[0]?.longitude ?? 0,
-        photoSite:   photoSite   ?? null,
-        photoSelfie: photoSelfie ?? null,
+        photoSite:   compressedSite,
+        photoSelfie: compressedSelfie,
         queued_at:   now2
       })
       pendingCount.value++
@@ -1195,11 +1257,23 @@ async function syncPendingChecks() {
     }
   }
 
+  const failed = pending.length - synced
   if (synced > 0) {
     pendingCount.value = Math.max(0, pendingCount.value - synced)
     // Re-fetch real session state from server after sync
     await syncStatus()
-    toast.success(`${synced} registro${synced > 1 ? 's' : ''} sincronizado${synced > 1 ? 's' : ''} correctamente.`, '¡Sincronizado!')
+    if (failed === 0) {
+      toast.success(`${synced} registro${synced > 1 ? 's' : ''} sincronizado${synced > 1 ? 's' : ''} correctamente.`, '¡Sincronizado!')
+    } else {
+      // Fix 2: partial failure — some records synced, some still pending
+      toast.warning(
+        `${synced} sincronizado${synced > 1 ? 's' : ''}, ${failed} no pudo${failed > 1 ? 'ron' : ''} enviarse y se reintentará${failed > 1 ? 'n' : ''} más tarde.`,
+        'Sincronización parcial'
+      )
+    }
+  } else if (failed > 0) {
+    // Fix 2: nothing synced — notify so the user knows it wasn't silent
+    toast.warning('No se pudo sincronizar ningún registro. Se reintentará cuando haya conexión.', 'Sin sincronizar')
   }
 }
 
@@ -1256,6 +1330,15 @@ onUnmounted(() => {
   document.removeEventListener('visibilitychange', handleVisibilityChange)
   window.removeEventListener('online',  handleOnline)
   window.removeEventListener('offline', handleOffline)
+  // Fix 4: cancel pending GPS acquisition if user navigated away before it resolved
+  if (pendingAcquireWatchId !== null) {
+    navigator.geolocation.clearWatch(pendingAcquireWatchId)
+    pendingAcquireWatchId = null
+  }
+  if (pendingAcquireTimeoutId !== null) {
+    clearTimeout(pendingAcquireTimeoutId)
+    pendingAcquireTimeoutId = null
+  }
   stopLocationTracking()
   stopCamera()
 })
