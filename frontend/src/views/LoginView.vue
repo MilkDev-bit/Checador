@@ -53,7 +53,19 @@
         <div class="space-y-1 animate-fade-in" style="animation-delay: 0.3s; animation-fill-mode: both;">
           <label class="label-base">Verificación</label>
           <div class="flex items-center justify-center bg-slate-50 dark:bg-surface-800 rounded-xl border border-slate-200 dark:border-white/10 p-2 min-h-[90px] overflow-hidden transition-all shadow-sm">
-            <div id="recaptcha-container" class="scale-[0.8] sm:scale-95 origin-center"></div>
+            <!-- Cargando widget -->
+            <div v-if="recaptchaLoading" class="flex flex-col items-center gap-2 py-2">
+              <div class="w-5 h-5 border-2 border-brand-500/30 border-t-brand-500 rounded-full animate-spin"></div>
+              <p class="text-xs text-slate-400 dark:text-slate-500">Cargando verificación...</p>
+            </div>
+            <!-- Error al cargar -->
+            <div v-else-if="recaptchaLoadError" class="flex flex-col items-center gap-1.5 py-2 text-center px-4">
+              <ExclamationTriangleIcon class="w-5 h-5 text-amber-500 flex-shrink-0" />
+              <p class="text-xs text-slate-500 dark:text-slate-400 leading-tight">No se pudo cargar la verificación de seguridad.</p>
+              <button type="button" @click="retryRecaptcha" class="text-xs text-brand-600 dark:text-brand-400 font-bold hover:underline mt-0.5">↺ Reintentar</button>
+            </div>
+            <!-- Widget -->
+            <div id="recaptcha-container" class="scale-[0.8] sm:scale-95 origin-center" :class="{ hidden: recaptchaLoading || recaptchaLoadError }"></div>
           </div>
         </div>
 
@@ -70,7 +82,7 @@
           </div>
         </Transition>
 
-        <button type="submit" class="btn-primary w-full py-3.5 rounded-xl font-bold tracking-wide mt-2 animate-slide-up hover:ring-4 hover:ring-brand-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed" :disabled="loading || !recaptchaToken" style="animation-delay: 0.4s; animation-fill-mode: both;">
+        <button type="submit" class="btn-primary w-full py-3.5 rounded-xl font-bold tracking-wide mt-2 animate-slide-up hover:ring-4 hover:ring-brand-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed" :disabled="loading || (!recaptchaToken && !recaptchaLoadError)" style="animation-delay: 0.4s; animation-fill-mode: both;">
           <div class="relative flex items-center justify-center gap-2">
             <span v-if="loading" class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
             <span>{{ loading ? 'Ingresando...' : 'Iniciar Sesión' }}</span>
@@ -317,6 +329,16 @@ const errorHints = computed(() => {
 // reCAPTCHA tokens expire after 2 minutes. Auto-reset at 110s so the user
 // never unknowingly submits with an expired token.
 let recaptchaResetTimer = null
+let captchaInitInterval  = null
+let captchaInitTimeout   = null
+
+const recaptchaLoading   = ref(true)  // true while widget is initializing
+const recaptchaLoadError = ref(false) // true when widget failed to load
+
+function clearCaptchaTimers() {
+  clearInterval(captchaInitInterval)
+  clearTimeout(captchaInitTimeout)
+}
 
 function scheduleRecaptchaReset() {
   clearTimeout(recaptchaResetTimer)
@@ -338,10 +360,20 @@ function onRecaptchaExpired() {
   clearTimeout(recaptchaResetTimer)
 }
 
-onMounted(() => {
-  const checkRecaptcha = setInterval(() => {
+// Shared init logic used by onMounted and retryRecaptcha.
+// Polls for grecaptcha readiness with a 15-second timeout.
+function initRecaptcha() {
+  recaptchaLoading.value   = true
+  recaptchaLoadError.value = false
+  // Clear container in case this is a retry
+  const container = document.getElementById('recaptcha-container')
+  if (container) container.innerHTML = ''
+  recaptchaWidgetId.value = null
+
+  captchaInitInterval = setInterval(() => {
     if (window.grecaptcha && window.grecaptcha.render) {
-      clearInterval(checkRecaptcha)
+      clearCaptchaTimers()
+      recaptchaLoading.value = false
       try {
         recaptchaWidgetId.value = window.grecaptcha.render('recaptcha-container', {
           sitekey: '6LdUjcgsAAAAAI0pgOSk7QMEmq-zjD4saihqzaa-',
@@ -350,13 +382,41 @@ onMounted(() => {
           'expired-callback': onRecaptchaExpired,
         })
       } catch (e) {
-        console.warn('Recaptcha error:', e)
+        recaptchaLoadError.value = true
+        console.warn('reCAPTCHA render error:', e)
       }
     }
   }, 100)
-})
 
-onUnmounted(() => clearTimeout(recaptchaResetTimer))
+  // After 15 s give up and let the user know
+  captchaInitTimeout = setTimeout(() => {
+    clearCaptchaTimers()
+    if (recaptchaLoading.value) {
+      recaptchaLoading.value   = false
+      recaptchaLoadError.value = true
+    }
+  }, 15000)
+}
+
+// Injects a fresh script tag (in case it never loaded) and re-initializes.
+function retryRecaptcha() {
+  if (!window.grecaptcha || !window.grecaptcha.render) {
+    const old = document.querySelector('script[src*="recaptcha/api.js"]')
+    if (old) old.remove()
+    const script = document.createElement('script')
+    script.src = 'https://www.google.com/recaptcha/api.js'
+    script.async = true
+    document.head.appendChild(script)
+  }
+  initRecaptcha()
+}
+
+onMounted(() => { initRecaptcha() })
+
+onUnmounted(() => {
+  clearCaptchaTimers()
+  clearTimeout(recaptchaResetTimer)
+})
 
 async function handleLogin() {
   error.value = ''
