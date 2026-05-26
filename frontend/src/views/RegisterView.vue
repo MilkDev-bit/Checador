@@ -307,7 +307,15 @@ function initRecaptcha() {
             sitekey: '6LdUjcgsAAAAAI0pgOSk7QMEmq-zjD4saihqzaa-',
             theme: themeStore.isDark ? 'dark' : 'light',
             callback: scheduleRecaptchaReset,
-            'expired-callback': () => clearTimeout(recaptchaResetTimer),
+            'expired-callback': () => {
+              clearTimeout(recaptchaResetTimer);
+              // Auto-reset to clean state so the user just re-checks the box.
+              setTimeout(() => {
+                if (recaptchaWidgetId.value !== null && window.grecaptcha) {
+                  window.grecaptcha.reset(recaptchaWidgetId.value);
+                }
+              }, 800);
+            },
           },
         );
       } catch (e) {

@@ -358,6 +358,13 @@ function onRecaptchaSolved(token) {
 function onRecaptchaExpired() {
   recaptchaToken.value = ''
   clearTimeout(recaptchaResetTimer)
+  // Auto-reset to a clean widget so the user doesn't see the confusing
+  // native red "expired" state — they just re-check the box.
+  setTimeout(() => {
+    if (recaptchaWidgetId.value !== null && window.grecaptcha) {
+      window.grecaptcha.reset(recaptchaWidgetId.value)
+    }
+  }, 800)
 }
 
 // Shared init logic used by onMounted and retryRecaptcha.
