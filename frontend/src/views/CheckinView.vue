@@ -107,13 +107,28 @@
             <div class="h-10 w-px bg-slate-200 dark:bg-white/10"></div>
             <div class="flex flex-col items-end">
               <span class="text-[10px] uppercase font-bold tracking-wider text-slate-400 dark:text-slate-500">Status GPS</span>
-              <!-- Rastreando activamente -->
-              <div v-if="isTracking" class="flex items-center gap-1.5 mt-1">
+              <!-- Adquiriendo fix preciso -->
+              <div v-if="gpsAcquiring" class="flex items-center gap-1.5 mt-1">
                 <span class="relative flex h-2.5 w-2.5">
-                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                  <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75"></span>
+                  <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-amber-500"></span>
                 </span>
-                <span class="text-sm font-semibold text-emerald-600 dark:text-emerald-400">Rastreando</span>
+                <span class="text-sm font-semibold text-amber-600 dark:text-amber-400">
+                  {{ gpsAccuracy != null ? `~${gpsAccuracy}m` : 'Buscando…' }}
+                </span>
+              </div>
+              <!-- Rastreando activamente -->
+              <div v-else-if="isTracking" class="flex items-center gap-1.5 mt-1">
+                <span class="relative flex h-2.5 w-2.5">
+                  <span class="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75"
+                    :class="gpsAccuracy != null && gpsAccuracy <= 30 ? 'bg-emerald-400' : gpsAccuracy != null && gpsAccuracy <= 100 ? 'bg-amber-400' : 'bg-rose-400'"></span>
+                  <span class="relative inline-flex rounded-full h-2.5 w-2.5"
+                    :class="gpsAccuracy != null && gpsAccuracy <= 30 ? 'bg-emerald-500' : gpsAccuracy != null && gpsAccuracy <= 100 ? 'bg-amber-500' : 'bg-rose-500'"></span>
+                </span>
+                <span class="text-sm font-semibold"
+                  :class="gpsAccuracy != null && gpsAccuracy <= 30 ? 'text-emerald-600 dark:text-emerald-400' : gpsAccuracy != null && gpsAccuracy <= 100 ? 'text-amber-600 dark:text-amber-400' : 'text-rose-500'">
+                  {{ gpsAccuracy != null ? `±${gpsAccuracy}m` : 'Rastreando' }}
+                </span>
               </div>
               <!-- Permiso concedido pero no rastreando -->
               <div v-else-if="gpsPermission === 'granted'" class="flex items-center gap-1.5 mt-1">
@@ -145,9 +160,51 @@
           </div>
         </div>
 
+        <!-- Pending offline sync notice -->
+        <div v-if="pendingCount > 0" class="glass-card p-4 border-amber-200 dark:border-amber-500/30 bg-amber-50 dark:bg-amber-900/20 flex items-center gap-4 animate-in">
+          <div class="p-2 bg-white dark:bg-amber-500/20 rounded-xl text-amber-500">
+            <CloudArrowUpIcon class="w-6 h-6 flex-shrink-0 animate-bounce" />
+          </div>
+          <div class="flex-1">
+            <h4 class="text-amber-800 dark:text-amber-300 font-bold text-sm">
+              {{ pendingCount }} registro{{ pendingCount > 1 ? 's' : '' }} pendiente{{ pendingCount > 1 ? 's' : '' }} de sincronizar
+            </h4>
+            <p class="text-amber-600/80 dark:text-amber-200/70 text-xs mt-0.5">Se enviará{{ pendingCount > 1 ? 'n' : '' }} automáticamente al recuperar la conexión.</p>
+          </div>
+          <button v-if="isOnline" @click="syncPendingChecks" class="text-xs font-bold text-amber-700 dark:text-amber-300 px-3 py-1.5 rounded-lg bg-amber-100 dark:bg-amber-500/20 hover:bg-amber-200 dark:hover:bg-amber-500/30 transition-colors">
+            Sincronizar
+          </button>
+        </div>
+
         <!-- Main Status Card -->
         <section class="glass-card overflow-hidden animate-slide-up" style="animation-delay: 0.1s;">
-          <div class="p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 md:gap-10">
+
+          <!-- Skeleton: loading state -->
+          <div v-if="statusLoading" class="p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 md:gap-10 animate-pulse">
+            <div class="w-24 h-24 sm:w-32 sm:h-32 rounded-full bg-slate-200 dark:bg-white/10 flex-shrink-0"></div>
+            <div class="flex-1 w-full space-y-3">
+              <div class="h-5 bg-slate-200 dark:bg-white/10 rounded-lg w-2/5 mx-auto md:mx-0"></div>
+              <div class="h-16 bg-slate-200 dark:bg-white/10 rounded-2xl w-full"></div>
+            </div>
+            <div class="w-full md:w-48 h-12 bg-slate-200 dark:bg-white/10 rounded-xl flex-shrink-0"></div>
+          </div>
+
+          <!-- Error: no connection -->
+          <div v-else-if="statusError" class="p-6 sm:p-8 flex flex-col items-center gap-4 text-center">
+            <div class="w-16 h-16 rounded-2xl bg-rose-50 dark:bg-rose-500/10 flex items-center justify-center text-rose-500">
+              <ExclamationTriangleIcon class="w-8 h-8" />
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-900 dark:text-white">Sin conexión al servidor</h3>
+              <p class="text-sm text-slate-500 dark:text-slate-400 mt-1">Verifica tu internet para cargar el estado de tu sesión.</p>
+            </div>
+            <button @click="retryStatus" class="btn-primary btn-lg">
+              <ArrowPathRoundedSquareIcon class="w-5 h-5" /> Reintentar
+            </button>
+          </div>
+
+          <!-- Normal content -->
+          <div v-else class="p-6 sm:p-8 flex flex-col md:flex-row items-center gap-6 md:gap-10">
             
             <!-- Status Indicator -->
             <div class="relative group">
@@ -375,7 +432,7 @@
             </template>
 
             <div class="space-y-3 sm:space-y-0 sm:grid sm:grid-cols-2 sm:gap-3">
-              <button @click="cancelProcess" class="btn-secondary btn-lg w-full order-last sm:order-first">Cancerlar</button>
+              <button @click="cancelProcess" class="btn-secondary btn-lg w-full order-last sm:order-first">Cancelar</button>
               <button v-if="locationErrorType === 'denied'" @click="reloadPage()" class="btn-primary btn-lg w-full">
                 <ArrowPathRoundedSquareIcon class="w-5 h-5" /> Recargar
               </button>
@@ -491,10 +548,25 @@
       <div v-if="processing && !showLocationErrorModal && !showCameraModal && !showSuccessModal"
         class="fixed inset-0 z-50 flex items-center justify-center"
         style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
-        <div class="glass-card p-6 text-center">
-          <div class="w-10 h-10 border-2 border-brand-500/30 border-t-brand-500 rounded-full animate-spin mx-auto mb-3"></div>
-          <p class="font-semibold" style="color: var(--text);">Procesando...</p>
-          <p class="text-xs mt-1" style="color: var(--text-muted);">Por favor espera</p>
+        <div class="glass-card p-6 text-center min-w-[200px]">
+          <!-- GPS acquiring state -->
+          <template v-if="gpsAcquiring">
+            <div class="relative w-12 h-12 mx-auto mb-3">
+              <div class="absolute inset-0 rounded-full border-2 border-amber-500/20 border-t-amber-500 animate-spin"></div>
+              <div class="absolute inset-2 rounded-full border-2 border-amber-500/10 border-t-amber-400 animate-spin" style="animation-duration:1.5s;animation-direction:reverse"></div>
+            </div>
+            <p class="font-semibold text-amber-600 dark:text-amber-400">Obteniendo ubicación…</p>
+            <p class="text-xs mt-1" style="color: var(--text-muted);">
+              {{ gpsAccuracy != null ? `Precisión actual: ~${gpsAccuracy} m` : 'Esperando señal GPS…' }}
+            </p>
+            <p class="text-[10px] mt-1 text-slate-400">Buscando fix ≤ 30 m</p>
+          </template>
+          <!-- Generic processing state -->
+          <template v-else>
+            <div class="w-10 h-10 border-2 border-brand-500/30 border-t-brand-500 rounded-full animate-spin mx-auto mb-3"></div>
+            <p class="font-semibold" style="color: var(--text);">Procesando...</p>
+            <p class="text-xs mt-1" style="color: var(--text-muted);">Por favor espera</p>
+          </template>
         </div>
       </div>
 
@@ -525,6 +597,7 @@ import { ref, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api'
+import iziToast from 'izitoast'
 import {
   CheckCircleIcon, HandRaisedIcon, MapPinIcon, ArrowRightOnRectangleIcon,
   ExclamationTriangleIcon, XMarkIcon, LockClosedIcon, CloudArrowUpIcon,
@@ -532,6 +605,14 @@ import {
   InformationCircleIcon, DevicePhoneMobileIcon, ArrowPathRoundedSquareIcon,
   QrCodeIcon, ClockIcon, Bars3BottomRightIcon
 } from '@heroicons/vue/24/outline'
+
+// ─── iziToast helpers ────────────────────────────────────────────────────────
+const toast = {
+  success: (msg, title = '¡Éxito!') => iziToast.success({ title, message: msg, position: 'topRight', timeout: 4000 }),
+  error:   (msg, title = 'Error')   => iziToast.error  ({ title, message: msg, position: 'topRight', timeout: 6000 }),
+  warning: (msg, title = 'Aviso')   => iziToast.warning({ title, message: msg, position: 'topRight', timeout: 5000 }),
+  info:    (msg, title = '')        => iziToast.info   ({ title, message: msg, position: 'topRight', timeout: 4000 }),
+}
 
 const auth = useAuthStore()
 const router = useRouter()
@@ -556,9 +637,14 @@ function updateTime() {
 }
 
 
-// State
-const activeRecordId = ref(localStorage.getItem('activeRecordId') || null)
-const entryTime = ref(localStorage.getItem('entryTime') || null)
+// State — session state is ALWAYS derived from the server, never cached locally.
+// localStorage was unreliable in PWA/iOS Safari (gets cleared after 7 days inactivity,
+// private browsing, storage limits) causing the UI to show wrong state on reload.
+const activeRecordId = ref(null)
+const entryTime = ref(null)
+const statusLoading = ref(true)
+const statusError = ref(false)
+const pendingCount = ref(0)   // offline-queued checks waiting to sync
 const processing = ref(false)
 const checkType = ref('entry')
 const showLocationErrorModal = ref(false)
@@ -569,37 +655,10 @@ const showSuccessModal = ref(false)
 const registeredAt = ref('')
 
 const isPWA = ref(false)
+const isOnline = ref(navigator.onLine)
+function handleOnline()  { isOnline.value = true;  syncPendingChecks() }
+function handleOffline() { isOnline.value = false }
 const showMobileMenu = ref(false)
-
-onMounted(async () => {
-  // Check if PWA (standalone mode)
-  if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
-    isPWA.value = true
-  }
-  window.matchMedia('(display-mode: standalone)').addEventListener('change', (e) => {
-    isPWA.value = e.matches
-  })
-
-  // Sync session state with the server — localStorage can be stale (different
-  // device, cache cleared, private browsing, etc.). Always trust the backend.
-  try {
-    const { data } = await api.get('/checks/status')
-    if (data.active) {
-      activeRecordId.value = data.record_id
-      const formatted = new Date(data.entry_time).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
-      entryTime.value = formatted
-      localStorage.setItem('activeRecordId', data.record_id)
-      localStorage.setItem('entryTime', formatted)
-    } else {
-      activeRecordId.value = null
-      entryTime.value = null
-      localStorage.removeItem('activeRecordId')
-      localStorage.removeItem('entryTime')
-    }
-  } catch {
-    // Network error — keep localStorage values as fallback
-  }
-})
 
 // Location
 let locationWatchId = null
@@ -610,6 +669,8 @@ const recoveredPoints = ref(0)
 const showHiddenWarning = ref(false)
 const isTracking = ref(false)
 const gpsPermission = ref('prompt') // 'granted' | 'denied' | 'prompt'
+const gpsAccuracy  = ref(null)   // last known accuracy in meters (null = not yet acquired)
+const gpsAcquiring = ref(false)  // true while waiting for a precise GPS fix
 
 // Wake lock
 let wakeLock = null
@@ -627,19 +688,94 @@ function releaseWakeLock() {
   if (wakeLock) { wakeLock.release(); wakeLock = null; wakeLockActive.value = false }
 }
 
-// Location buffer — persists points when app goes to background
-function saveLocationBuffer(points) {
-  try { localStorage.setItem('locationBuffer', JSON.stringify(points)) } catch {}
+// ─── IndexedDB location buffer ────────────────────────────────────────────────
+// IndexedDB is significantly more persistent than localStorage:
+// - Survives iOS Safari PWA restarts (localStorage clears after 7-day inactivity)
+// - Not affected by private-browsing storage limits
+// - Larger storage quota
+const IDB_NAME = 'paselista-db'
+const IDB_VERSION = 2          // bumped: adds pending_checks store
+const IDB_STORE   = 'location_buffer'
+const IDB_PENDING = 'pending_checks'
+
+function openIDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(IDB_NAME, IDB_VERSION)
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result
+      if (!db.objectStoreNames.contains(IDB_STORE)) {
+        db.createObjectStore(IDB_STORE, { autoIncrement: true })
+      }
+      if (!db.objectStoreNames.contains(IDB_PENDING)) {
+        db.createObjectStore(IDB_PENDING, { keyPath: 'id', autoIncrement: true })
+      }
+    }
+    req.onsuccess = (e) => resolve(e.target.result)
+    req.onerror = () => reject(req.error)
+  })
 }
-function loadLocationBuffer() {
-  try { return JSON.parse(localStorage.getItem('locationBuffer') || '[]') } catch { return [] }
+
+// ─── GPS location buffer (active session) ────────────────────────────────────
+async function saveLocationBuffer(points) {
+  try {
+    const db = await openIDB()
+    const tx = db.transaction(IDB_STORE, 'readwrite')
+    const store = tx.objectStore(IDB_STORE)
+    store.clear()
+    for (const p of points) store.add(p)
+  } catch { /* silently fall back — non-critical */ }
 }
-function clearLocationBuffer() {
-  try { localStorage.removeItem('locationBuffer') } catch {}
+
+async function loadLocationBuffer() {
+  try {
+    const db = await openIDB()
+    return await new Promise((resolve) => {
+      const req = db.transaction(IDB_STORE, 'readonly').objectStore(IDB_STORE).getAll()
+      req.onsuccess = () => resolve(req.result ?? [])
+      req.onerror  = () => resolve([])
+    })
+  } catch { return [] }
+}
+
+async function clearLocationBuffer() {
+  try {
+    const db = await openIDB()
+    db.transaction(IDB_STORE, 'readwrite').objectStore(IDB_STORE).clear()
+  } catch {}
+}
+
+// ─── Offline pending checks queue ────────────────────────────────────────────
+async function savePendingCheck(record) {
+  try {
+    const db = await openIDB()
+    return await new Promise((resolve, reject) => {
+      const req = db.transaction(IDB_PENDING, 'readwrite').objectStore(IDB_PENDING).add(record)
+      req.onsuccess = () => resolve(req.result)
+      req.onerror   = () => reject(req.error)
+    })
+  } catch { return null }
+}
+
+async function loadPendingChecks() {
+  try {
+    const db = await openIDB()
+    return await new Promise((resolve) => {
+      const req = db.transaction(IDB_PENDING, 'readonly').objectStore(IDB_PENDING).getAll()
+      req.onsuccess = () => resolve(req.result ?? [])
+      req.onerror   = () => resolve([])
+    })
+  } catch { return [] }
+}
+
+async function deletePendingCheck(id) {
+  try {
+    const db = await openIDB()
+    db.transaction(IDB_PENDING, 'readwrite').objectStore(IDB_PENDING).delete(id)
+  } catch {}
 }
 function handleVisibilityChange() {
   if (document.visibilityState === 'hidden') {
-    saveLocationBuffer(locationPoints)
+    saveLocationBuffer(locationPoints) // async fire-and-forget
   } else if (document.visibilityState === 'visible' && isTracking.value) {
     showHiddenWarning.value = true
   }
@@ -680,11 +816,10 @@ function cancelProcess() {
   processing.value = false
 }
 
-// requestLocation MUST be a plain synchronous function so that
-// navigator.geolocation.getCurrentPosition() is called as the VERY FIRST
-// instruction — before any Vue reactive state changes — to stay within the
-// iOS Safari user-gesture call stack. Even a single ref assignment before
-// the call can cause WebKit to break the gesture chain.
+// requestLocation MUST start synchronously with a geolocation call so iOS
+// Safari recognises it as originating from the user-gesture call stack.
+// Strategy: use watchPosition to seek an accurate fix (≤ GOOD_ACCURACY_M).
+// After MAX_WAIT_MS we accept the best reading obtained so far.
 function requestLocation() {
   if (!navigator.geolocation) {
     locationErrorCode.value = 0
@@ -692,46 +827,101 @@ function requestLocation() {
     showLocationErrorModal.value = true
     return
   }
-  // ← getCurrentPosition is the absolute first call. No state changes before this.
-  navigator.geolocation.getCurrentPosition(
-    async (position) => {
-      processing.value = false
-      locationPoints.push({
-        latitude: position.coords.latitude,
-        longitude: position.coords.longitude,
-        accuracy: position.coords.accuracy,
-        recorded_at: new Date().toISOString()
-      })
-      locationWatchId = navigator.geolocation.watchPosition(
-        pos => locationPoints.push({
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-          accuracy: pos.coords.accuracy,
-          recorded_at: new Date().toISOString()
-        }),
-        null,
-        { enableHighAccuracy: true, maximumAge: 5000 }
-      )
-      isTracking.value = true
-      requestWakeLock()
-      cameraStep.value = 'site'
-      showCameraModal.value = true
-      await nextTick()
-      await startCamera('environment')
+
+  const GOOD_ACCURACY_M = 30   // accept immediately when ≤ 30 m
+  const MAX_WAIT_MS     = 20000 // fall back to best after 20 s
+  const MAX_ACCURACY_M  = 200  // reject readings worse than this
+
+  let bestPosition  = null
+  let resolved      = false
+  let acquireWatchId = null
+  let timeoutId     = null
+
+  async function finalize(position) {
+    if (resolved) return
+    resolved = true
+    navigator.geolocation.clearWatch(acquireWatchId)
+    clearTimeout(timeoutId)
+
+    gpsAccuracy.value  = Math.round(position.coords.accuracy)
+    gpsAcquiring.value = false
+    processing.value   = false
+
+    locationPoints.push({
+      latitude:    position.coords.latitude,
+      longitude:   position.coords.longitude,
+      accuracy:    position.coords.accuracy,
+      recorded_at: new Date().toISOString()
+    })
+
+    // Start continuous background tracking, only store points ≤ MAX_ACCURACY_M
+    locationWatchId = navigator.geolocation.watchPosition(
+      pos => {
+        gpsAccuracy.value = Math.round(pos.coords.accuracy)
+        if (pos.coords.accuracy <= MAX_ACCURACY_M) {
+          locationPoints.push({
+            latitude:    pos.coords.latitude,
+            longitude:   pos.coords.longitude,
+            accuracy:    pos.coords.accuracy,
+            recorded_at: new Date().toISOString()
+          })
+        }
+      },
+      null,
+      { enableHighAccuracy: true, maximumAge: 0 }
+    )
+    isTracking.value = true
+    requestWakeLock()
+
+    cameraStep.value   = 'site'
+    showCameraModal.value = true
+    await nextTick()
+    await startCamera('environment')
+  }
+
+  function fail(err) {
+    if (resolved) return
+    resolved = true
+    navigator.geolocation.clearWatch(acquireWatchId)
+    clearTimeout(timeoutId)
+    gpsAcquiring.value = false
+    processing.value   = false
+    const code = err?.code ?? -1
+    locationErrorCode.value = code
+    if (code === 1)      locationErrorType.value = 'denied'
+    else if (code === 2) locationErrorType.value = 'unavailable'
+    else                 locationErrorType.value = 'timeout'
+    showLocationErrorModal.value = true
+  }
+
+  // ← watchPosition is the absolute first call — iOS Safari gesture chain preserved
+  acquireWatchId = navigator.geolocation.watchPosition(
+    (pos) => {
+      gpsAccuracy.value = Math.round(pos.coords.accuracy)
+      // Track best position seen so far
+      if (!bestPosition || pos.coords.accuracy < bestPosition.coords.accuracy) {
+        bestPosition = pos
+      }
+      // Good enough fix — proceed immediately
+      if (pos.coords.accuracy <= GOOD_ACCURACY_M) {
+        finalize(pos)
+      }
     },
-    (err) => {
-      processing.value = false
-      const code = err?.code ?? -1
-      locationErrorCode.value = code
-      if (code === 1) locationErrorType.value = 'denied'           // PERMISSION_DENIED
-      else if (code === 2) locationErrorType.value = 'unavailable'  // POSITION_UNAVAILABLE
-      else locationErrorType.value = 'timeout'                      // TIMEOUT or unknown
-      showLocationErrorModal.value = true
-    },
-    { enableHighAccuracy: true, timeout: 30000, maximumAge: 0 }
+    fail,
+    { enableHighAccuracy: true, maximumAge: 0, timeout: 30000 }
   )
-  // Show processing spinner after registering the geolocation listener
-  processing.value = true
+
+  // After MAX_WAIT_MS accept whatever best reading we have
+  timeoutId = setTimeout(() => {
+    if (!resolved) {
+      if (bestPosition) finalize(bestPosition)
+      else              fail({ code: 3 }) // TIMEOUT
+    }
+  }, MAX_WAIT_MS)
+
+  processing.value   = true
+  gpsAcquiring.value = true
+  gpsAccuracy.value  = null
 }
 
 function stopLocationTracking() {
@@ -785,7 +975,7 @@ function toggleFlash() {
     flashOn.value = !flashOn.value
     track.applyConstraints({ advanced: [{ torch: flashOn.value }] })
   } else {
-    alert('Tu dispositivo no soporta flash desde el navegador')
+    toast.warning('Tu dispositivo no soporta flash desde el navegador.', 'Flash no disponible')
   }
 }
 
@@ -859,28 +1049,64 @@ async function submitCheck() {
       } catch { /* Points failed — non-critical */ }
     }
     locationPoints.length = 0
-    clearLocationBuffer()
+    await clearLocationBuffer()
     stopLocationTracking()
     recoveredPoints.value = 0
 
     if (checkType.value === 'entry') {
       activeRecordId.value = recordId
       entryTime.value = new Date(now).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
-      localStorage.setItem('activeRecordId', recordId)
-      localStorage.setItem('entryTime', entryTime.value)
     } else {
       activeRecordId.value = null
       entryTime.value = null
-      localStorage.removeItem('activeRecordId')
-      localStorage.removeItem('entryTime')
     }
 
     registeredAt.value = new Date(now).toLocaleString('es-MX')
     showSuccessModal.value = true
   } catch (err) {
+    stopLocationTracking()
     const status = err?.response?.status
     const msg = err?.response?.data?.error || ''
-    alert(`Error al registrar. Intenta de nuevo.${status ? ` (${status}${msg ? ': ' + msg : ''})` : ''}`)
+
+    if (!navigator.onLine || err?.code === 'ERR_NETWORK' || err?.code === 'ECONNABORTED') {
+      // ── Offline queue ──────────────────────────────────────────────────────
+      // GPS and photos are already captured — save everything locally and
+      // update the UI optimistically. Will sync automatically on reconnect.
+      const now2 = new Date().toISOString()
+      await savePendingCheck({
+        type:        checkType.value,
+        timestamp:   now2,
+        latitude:    locationPoints[0]?.latitude  ?? 0,
+        longitude:   locationPoints[0]?.longitude ?? 0,
+        photoSite:   photoSite   ?? null,
+        photoSelfie: photoSelfie ?? null,
+        queued_at:   now2
+      })
+      pendingCount.value++
+
+      // Update UI optimistically
+      if (checkType.value === 'entry') {
+        activeRecordId.value = 'pending'
+        entryTime.value = new Date(now2).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+      } else {
+        activeRecordId.value = null
+        entryTime.value = null
+      }
+      registeredAt.value = new Date(now2).toLocaleString('es-MX')
+      showSuccessModal.value = true   // show success modal — will sync later
+      toast.warning(
+        'Sin internet. El registro se guardó en tu dispositivo y se enviará automáticamente cuando haya conexión.',
+        'Guardado offline'
+      )
+    } else if (status === 409) {
+      // Conflict: active session mismatch — re-sync UI with server
+      toast.warning(msg || 'Conflicto de sesión. La pantalla se ha actualizado.', 'Sesión actualizada')
+      await syncStatus()
+    } else if (status === 401) {
+      // Handled by axios interceptor (redirect to login)
+    } else {
+      toast.error(msg || 'No se pudo registrar. Intenta de nuevo.', 'Error al registrar')
+    }
   } finally {
     processing.value = false
     photoSite = null
@@ -891,10 +1117,104 @@ async function submitCheck() {
 function closeSuccess() { showSuccessModal.value = false }
 
 // ─── Lifecycle ────────────────────────────────────────────────────────────────
+// Fetch active session status from server (single source of truth).
+// On network failure: derives optimistic state from the IndexedDB pending queue
+// so the user always sees the correct button (Entrada/Salida) even offline.
+async function syncStatus() {
+  statusLoading.value = true
+  statusError.value = false
+  try {
+    const { data } = await api.get('/checks/status')
+    if (data && data.active) {
+      activeRecordId.value = data.record_id
+      entryTime.value = new Date(data.entry_time).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+    } else {
+      activeRecordId.value = null
+      entryTime.value = null
+    }
+  } catch {
+    // No server response — derive state from pending offline queue
+    const pending = await loadPendingChecks()
+    if (pending.length > 0) {
+      // The last pending check determines the current optimistic state
+      const last = pending[pending.length - 1]
+      if (last.type === 'entry') {
+        activeRecordId.value = 'pending'
+        entryTime.value = new Date(last.timestamp).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
+      } else {
+        activeRecordId.value = null
+        entryTime.value = null
+      }
+      // Show normal UI — pending banner already communicates the offline state
+    } else {
+      // No pending records and no server — truly unknown state
+      statusError.value = true
+    }
+    if (!navigator.onLine) {
+      toast.warning('Sin conexión. Mostrando estado guardado localmente.', 'Sin conexión')
+    } else {
+      toast.error('No se pudo conectar al servidor.', 'Error de conexión')
+    }
+  } finally {
+    statusLoading.value = false
+  }
+}
+
+function retryStatus() { syncStatus() }
+
+// Attempt to submit all offline-queued checks to the server.
+// Called automatically when the browser comes back online, and on mount.
+async function syncPendingChecks() {
+  const pending = await loadPendingChecks()
+  if (pending.length === 0) return
+
+  toast.info('Sincronizando registros guardados offline…', 'Conexión restaurada')
+  let synced = 0
+
+  for (const p of pending) {
+    try {
+      const formData = new FormData()
+      formData.append('type', p.type)
+      formData.append('timestamp', p.timestamp)
+      if (p.latitude)  formData.append('latitude',  String(p.latitude))
+      if (p.longitude) formData.append('longitude', String(p.longitude))
+      if (p.photoSite)   formData.append('photo_site',   dataURLtoBlob(p.photoSite),   'site.jpg')
+      if (p.photoSelfie) formData.append('photo_selfie', dataURLtoBlob(p.photoSelfie), 'selfie.jpg')
+
+      await api.post('/checks', formData)
+      await deletePendingCheck(p.id)
+      synced++
+    } catch (err) {
+      const status = err?.response?.status
+      if (status === 409) {
+        // Already registered (e.g. synced from another device) — discard silently
+        await deletePendingCheck(p.id)
+        synced++
+      }
+      // Other errors: keep for next retry
+    }
+  }
+
+  if (synced > 0) {
+    pendingCount.value = Math.max(0, pendingCount.value - synced)
+    // Re-fetch real session state from server after sync
+    await syncStatus()
+    toast.success(`${synced} registro${synced > 1 ? 's' : ''} sincronizado${synced > 1 ? 's' : ''} correctamente.`, '¡Sincronizado!')
+  }
+}
+
 onMounted(async () => {
   updateTime()
   timeInterval = setInterval(updateTime, 1000)
   document.addEventListener('visibilitychange', handleVisibilityChange)
+
+  // PWA standalone detection
+  if (window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone) {
+    isPWA.value = true
+  }
+  window.matchMedia('(display-mode: standalone)').addEventListener('change', (e) => {
+    isPWA.value = e.matches
+  })
 
   // Check GPS permission state (shows indicator even when not actively tracking)
   if (navigator.permissions) {
@@ -905,35 +1225,37 @@ onMounted(async () => {
     } catch {}
   }
 
-  // Sync state with backend so it survives cache clearing
-  try {
-    const { data } = await api.get('/checks/status')
-    if (data && data.active) {
-      activeRecordId.value = data.record_id
-      entryTime.value = new Date(data.entry_time).toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' })
-      localStorage.setItem('activeRecordId', data.record_id)
-      localStorage.setItem('entryTime', entryTime.value)
-    } else {
-      activeRecordId.value = null
-      entryTime.value = null
-      localStorage.removeItem('activeRecordId')
-      localStorage.removeItem('entryTime')
+  // Fetch session state from server — only source of truth
+  await syncStatus()
+
+  // Load pending offline count from IndexedDB
+  const pending = await loadPendingChecks()
+  pendingCount.value = pending.length
+
+  // Recover buffered GPS points from IndexedDB if app was closed mid-session
+  if (activeRecordId.value) {
+    const buffered = await loadLocationBuffer()
+    if (buffered.length > 0) {
+      recoveredPoints.value = buffered.length
+      locationPoints.push(...buffered)
     }
-  } catch (error) {
-    console.error('Failed to sync session status', error)
   }
 
-  // Recover buffered points if app was closed during an active session
-  const buffered = loadLocationBuffer()
-  if (buffered.length > 0 && activeRecordId.value) {
-    recoveredPoints.value = buffered.length
-    locationPoints.push(...buffered)
+  // Auto-sync pending offline checks when connection is restored
+  window.addEventListener('online',  handleOnline)
+  window.addEventListener('offline', handleOffline)
+
+  // If we're already online on mount and there are pending checks, sync now
+  if (navigator.onLine && pending.length > 0) {
+    await syncPendingChecks()
   }
 })
 
 onUnmounted(() => {
   clearInterval(timeInterval)
   document.removeEventListener('visibilitychange', handleVisibilityChange)
+  window.removeEventListener('online',  handleOnline)
+  window.removeEventListener('offline', handleOffline)
   stopLocationTracking()
   stopCamera()
 })
