@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	"paselista/database"
@@ -41,6 +42,12 @@ type LocationPointRequest struct {
 // to register a new entry without admin intervention. Admin can also close
 // sessions manually before this threshold via the admin panel.
 const sessionTTL = 20 * time.Hour
+
+// checkRateLimiter prevents duplicate submissions from rapid taps or network
+// retries. One successful call per user per minCheckInterval is allowed.
+// In-memory only — resets on server restart (acceptable for a rate-limit).
+var checkRateLimiter sync.Map // key: userID (string) → value: time.Time
+const minCheckInterval = 10 * time.Second
 
 // ipAPIResponse maps the fields we use from ip-api.com (free, no key needed).
 type ipAPIResponse struct {
@@ -126,6 +133,16 @@ func runFraudCheck(recordID string, clientIP string, gpsLat, gpsLon float64) {
 
 func RegisterCheck(c *gin.Context) {
 	userID := c.GetString("user_id")
+
+	// Fix 5: per-user rate-limit to prevent double-submissions from rapid taps
+	// or network retries. One request per minCheckInterval is allowed.
+	if last, ok := checkRateLimiter.Load(userID); ok {
+		if time.Since(last.(time.Time)) < minCheckInterval {
+			c.JSON(http.StatusTooManyRequests, gin.H{"error": "Espera unos segundos antes de registrar de nuevo."})
+			return
+		}
+	}
+	checkRateLimiter.Store(userID, time.Now())
 
 	var req CheckInRequest
 	if err := c.ShouldBind(&req); err != nil {

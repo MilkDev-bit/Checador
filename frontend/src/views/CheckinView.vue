@@ -870,6 +870,11 @@ function requestLocation() {
             accuracy:    pos.coords.accuracy,
             recorded_at: new Date().toISOString()
           })
+          // Fix 3: cap array to avoid unbounded growth on long shifts (10h+ = thousands of pts)
+          // Keep index 0 (entry point used by submitCheck) + most recent (MAX-1) points
+          if (locationPoints.length > MAX_LOCATION_POINTS) {
+            locationPoints.splice(1, locationPoints.length - MAX_LOCATION_POINTS)
+          }
         }
       },
       null,
@@ -946,6 +951,9 @@ function retryLocation() {
   requestLocation()
 }
 
+// Fix 3: cap in-memory GPS points to avoid unbounded growth on long shifts
+const MAX_LOCATION_POINTS = 500
+
 // Camera
 const videoRef = ref(null)
 const canvasRef = ref(null)
@@ -957,7 +965,7 @@ let stream = null
 let photoSite = null
 let photoSelfie = null
 
-async function startCamera(facing = 'environment') {
+async function startCamera(facing = 'environment', { isSwitching = false } = {}) {
   stopCamera()
   facingFront.value = facing === 'user'
   try {
@@ -967,15 +975,19 @@ async function startCamera(facing = 'environment') {
     })
     if (videoRef.value) videoRef.value.srcObject = stream
   } catch (err) {
-    // Fix 5: camera permission denied or unavailable after GPS was already granted
-    showCameraModal.value = false
-    stopLocationTracking()
-    processing.value   = false
-    gpsAcquiring.value = false
+    // Fix 2: when switching cameras keep modal open; when opening fresh, close it.
+    if (!isSwitching) {
+      showCameraModal.value = false
+      stopLocationTracking()
+      processing.value   = false
+      gpsAcquiring.value = false
+    }
     if (err?.name === 'NotAllowedError' || err?.name === 'PermissionDeniedError') {
       toast.error('Permiso de cámara denegado. Habilítalo en la configuración del navegador.', 'Sin acceso a cámara')
     } else if (err?.name === 'NotFoundError') {
       toast.error('No se encontró una cámara en este dispositivo.', 'Sin cámara')
+    } else if (isSwitching) {
+      toast.warning('No se pudo cambiar de cámara.', 'Error de cámara')
     } else {
       toast.error('No se pudo acceder a la cámara. Intenta de nuevo.', 'Error de cámara')
     }
@@ -987,7 +999,8 @@ function stopCamera() {
 }
 
 async function switchCamera() {
-  await startCamera(facingFront.value ? 'environment' : 'user')
+  // Fix 2: pass isSwitching so modal stays open on failure
+  await startCamera(facingFront.value ? 'environment' : 'user', { isSwitching: true })
 }
 
 function toggleFlash() {
@@ -1252,8 +1265,15 @@ async function syncPendingChecks() {
         // Already registered (e.g. synced from another device) — discard silently
         await deletePendingCheck(p.id)
         synced++
+      } else if (status === 401) {
+        // Fix 1: JWT expired — stop immediately, records stay in IDB, user must re-login
+        toast.warning(
+          'Tu sesión expiró. Los registros pendientes se sincronizarán cuando vuelvas a iniciar sesión.',
+          'Sesión expirada'
+        )
+        break // no point trying remaining records with same expired token
       }
-      // Other errors: keep for next retry
+      // Other errors (5xx, network): keep for next retry
     }
   }
 

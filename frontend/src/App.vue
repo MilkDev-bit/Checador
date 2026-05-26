@@ -1,7 +1,23 @@
 <template>
   <router-view />
 
-  <!-- Android / Chrome PWA Install Banner -->
+  <!-- Fix 4: SW update banner — shown when a new version takes control -->
+  <Transition name="slide-up">
+    <div v-if="showUpdateBanner"
+      class="fixed bottom-4 left-4 right-4 z-50 glass-card p-4 border border-brand-500/30 shadow-2xl flex items-center gap-4">
+      <div class="bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 p-2 rounded-xl flex-shrink-0">
+        <ArrowPathRoundedSquareIcon class="w-6 h-6" />
+      </div>
+      <div class="flex-1">
+        <h4 class="font-bold text-slate-900 dark:text-white text-sm">Nueva versión disponible</h4>
+        <p class="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Recarga para aplicar la actualización.</p>
+      </div>
+      <button @click="reloadForUpdate"
+        class="text-xs font-bold px-3 py-1.5 rounded-lg bg-brand-500 text-white hover:bg-brand-600 transition-colors flex-shrink-0">
+        Actualizar
+      </button>
+    </div>
+  </Transition>
   <Transition name="slide-up">
     <div v-if="showAndroidPrompt" class="fixed bottom-4 left-4 right-4 z-50 glass-card p-4 border border-brand-500/20 shadow-2xl flex items-start gap-4">
       <div class="bg-brand-50 dark:bg-brand-500/10 text-brand-600 dark:text-brand-400 p-2 rounded-xl flex-shrink-0">
@@ -47,9 +63,14 @@
 <script setup>
 import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useThemeStore } from '@/stores/theme'
-import { ArrowUpOnSquareIcon, ArrowDownOnSquareIcon, XMarkIcon } from '@heroicons/vue/24/outline'
+import { ArrowUpOnSquareIcon, ArrowDownOnSquareIcon, XMarkIcon, ArrowPathRoundedSquareIcon } from '@heroicons/vue/24/outline'
 
 useThemeStore()
+
+// Fix 4: SW update — when a new service worker takes control, prompt reload
+const showUpdateBanner = ref(false)
+function reloadForUpdate() { window.location.reload() }
+function handleControllerChange() { showUpdateBanner.value = true }
 
 // ── Android / Chrome install prompt ──────────────────────────────────────────
 const showAndroidPrompt = ref(false)
@@ -95,6 +116,11 @@ onMounted(() => {
 
   if (isStandalone) return // already installed
 
+  // Fix 4: listen for SW controller change (new version took over)
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.addEventListener('controllerchange', handleControllerChange)
+  }
+
   if (isAndroidChrome) {
     window.addEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
   } else if (isIos) {
@@ -107,6 +133,9 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
   window.removeEventListener('beforeinstallprompt', handleBeforeInstallPrompt)
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.removeEventListener('controllerchange', handleControllerChange)
+  }
 })
 </script>
 
