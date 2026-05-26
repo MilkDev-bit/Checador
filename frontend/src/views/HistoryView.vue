@@ -93,47 +93,38 @@
       </div>
     </div>
 
-    <!-- Route modal -->
-    <Teleport to="body">
-      <Transition name="modal">
-        <div v-if="showRouteModal" class="fixed inset-0 z-50 flex items-end sm:items-center justify-center px-4 pb-4 sm:pb-0"
-          style="background: rgba(0,0,0,0.75); backdrop-filter: blur(6px);">
-          <div class="w-full max-w-md glass-card max-h-[75vh] flex flex-col animate-in"
-            style="background: var(--modal-bg);">
-            <div class="flex items-center justify-between px-5 py-4 flex-shrink-0"
-              style="border-bottom: 1px solid var(--border-subtle);">
-              <div>
-                <h3 class="font-bold" style="color: var(--text);">Puntos de Recorrido</h3>
-                <p class="text-xs mt-0.5" style="color: var(--text-muted);">{{ routePoints.length }} puntos registrados</p>
-              </div>
-              <button @click="showRouteModal = false"
-                class="w-8 h-8 rounded-lg flex items-center justify-center transition-all"
-                style="color: var(--text-muted);">
-                <XMarkIcon class="w-5 h-5" />
-              </button>
-            </div>
-
-            <div class="overflow-y-auto flex-1 custom-scroll">
-              <div v-if="routePoints.length === 0" class="text-center py-8 text-sm" style="color: var(--text-muted);">
-                Sin puntos registrados
-              </div>
-              <div v-for="(point, i) in routePoints" :key="point.id"
-                class="flex items-start gap-3 px-5 py-3 last:border-0"
-                style="border-bottom: 1px solid var(--border-subtle);">
-                <div class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5 text-white"
-                  style="background: linear-gradient(135deg, #6366f1, #8b5cf6);">
-                  {{ i + 1 }}
-                </div>
-                <div>
-                  <p class="text-sm font-mono" style="color: var(--text);">{{ point.latitude.toFixed(6) }}, {{ point.longitude.toFixed(6) }}</p>
-                  <p class="text-xs mt-0.5" style="color: var(--text-muted);">{{ formatDate(point.recorded_at) }} · ±{{ Math.round(point.accuracy) }}m</p>
-                </div>
-              </div>
-            </div>
+    <!-- Route modal — iziModal-inspired AppModal (self-contained Teleport) -->
+    <AppModal
+      v-model="showRouteModal"
+      title="Puntos de Recorrido"
+      :subtitle="`${routePoints.length} punto${routePoints.length !== 1 ? 's' : ''} registrado${routePoints.length !== 1 ? 's' : ''}`"
+      :icon="MapPinIcon"
+      size="md"
+      color="brand"
+    >
+      <div class="overflow-y-auto custom-scroll -mx-5 px-5" style="max-height: 55vh;">
+        <div v-if="routePoints.length === 0" class="text-center py-8 text-sm" style="color: var(--text-muted);">
+          Sin puntos registrados
+        </div>
+        <div
+          v-for="(point, i) in routePoints" :key="point.id"
+          class="flex items-start gap-3 py-3"
+          :class="i < routePoints.length - 1 ? 'border-b' : ''"
+          style="border-color: var(--border-subtle);"
+        >
+          <div
+            class="w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold flex-shrink-0 mt-0.5 text-white"
+            style="background: linear-gradient(135deg, #6366f1, #8b5cf6);"
+          >
+            {{ i + 1 }}
+          </div>
+          <div>
+            <p class="text-sm font-mono" style="color: var(--text);">{{ point.latitude.toFixed(6) }}, {{ point.longitude.toFixed(6) }}</p>
+            <p class="text-xs mt-0.5" style="color: var(--text-muted);">{{ formatDate(point.recorded_at) }} · ±{{ Math.round(point.accuracy) }}m</p>
           </div>
         </div>
-      </Transition>
-    </Teleport>
+      </div>
+    </AppModal>
   </div>
 </template>
 
@@ -141,12 +132,15 @@
 import { ref, computed, onMounted } from 'vue'
 import api from '@/api'
 import { useAuthStore } from '@/stores/auth'
+import { useToast } from '@/composables/useToast'
+import AppModal from '@/components/AppModal.vue'
 import {
   ArrowLeftIcon, MapPinIcon, ArrowRightOnRectangleIcon,
-  ClipboardDocumentListIcon, BuildingOffice2Icon, UserCircleIcon, XMarkIcon
+  ClipboardDocumentListIcon, BuildingOffice2Icon, UserCircleIcon
 } from '@heroicons/vue/24/outline'
 
 const auth = useAuthStore()
+const toast = useToast()
 const records = ref([])
 const loading = ref(true)
 const showRouteModal = ref(false)
@@ -170,10 +164,14 @@ onMounted(async () => {
   }
 })
 
-async function viewRoute(id) {
-  const { data } = await api.get(`/checks/${id}/route`)
-  routePoints.value = data
-  showRouteModal.value = true
+async function viewRoute (id) {
+  try {
+    const { data } = await api.get(`/checks/${id}/route`)
+    routePoints.value = data
+    showRouteModal.value = true
+  } catch {
+    toast.error('No se pudo cargar la ruta. Intenta de nuevo.')
+  }
 }
 
 function formatDate(iso) {
@@ -184,7 +182,4 @@ function formatDate(iso) {
 }
 </script>
 
-<style scoped>
-.modal-enter-active, .modal-leave-active { transition: opacity 0.25s ease; }
-.modal-enter-from, .modal-leave-to { opacity: 0; }
-</style>
+

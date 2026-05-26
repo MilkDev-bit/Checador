@@ -304,6 +304,42 @@
       <div v-if="isPWA" class="h-24 md:h-0"></div>
     </main>
 
+    <!-- ===== AppModal instances (self-contained — each has its own Teleport) ===== -->
+
+    <!-- Success modal -->
+    <AppModal
+      v-model="showSuccessModal"
+      :title="checkType === 'entry' ? '¡Entrada Registrada!' : '¡Salida Registrada!'"
+      :color="checkType === 'entry' ? 'success' : 'danger'"
+      :icon="checkType === 'entry' ? CheckCircleIcon : HandRaisedIcon"
+      :closable="false"
+      :closeOnBackdrop="false"
+    >
+      <div class="text-center space-y-1 py-1">
+        <p class="text-sm font-medium" style="color: var(--text-muted);">{{ registeredAt }}</p>
+        <p class="text-xs" style="color: var(--text-muted);">Ubicación y fotografías guardadas exitosamente</p>
+      </div>
+      <template #footer>
+        <button @click="closeSuccess" class="btn-primary btn-lg w-full">Aceptar</button>
+      </template>
+    </AppModal>
+
+    <!-- Logout confirmation modal -->
+    <AppModal
+      v-model="showLogoutModal"
+      title="¿Cerrar sesión?"
+      :icon="ArrowRightOnRectangleIcon"
+      color="danger"
+    >
+      <p class="text-sm text-center" style="color: var(--text-muted);">
+        Tendrás que volver a ingresar tus credenciales para registrar asistencia.
+      </p>
+      <template #footer>
+        <button @click="showLogoutModal = false" class="btn-secondary flex-1">Cancelar</button>
+        <button @click="confirmLogout" class="btn-danger flex-1">Salir</button>
+      </template>
+    </AppModal>
+
     <!-- ===== Modals ===== -->
     <Teleport to="body">
 
@@ -522,27 +558,7 @@
         </div>
       </div>
 
-      <!-- Success modal -->
-      <Transition name="modal">
-        <div v-if="showSuccessModal" class="fixed inset-0 z-50 flex items-center justify-center px-4"
-          style="background: rgba(0,0,0,0.75); backdrop-filter: blur(8px);">
-          <div class="w-full max-w-sm glass-card p-8 text-center animate-in">
-            <div class="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-4"
-              :style="checkType === 'entry'
-                ? 'background: linear-gradient(135deg, rgba(5,150,105,0.3), rgba(16,185,129,0.3)); border: 1px solid rgba(16,185,129,0.4);'
-                : 'background: linear-gradient(135deg, rgba(220,38,38,0.3), rgba(244,63,94,0.3)); border: 1px solid rgba(244,63,94,0.4);'">
-              <CheckCircleIcon v-if="checkType === 'entry'" class="w-10 h-10 text-emerald-400" />
-              <HandRaisedIcon v-else class="w-10 h-10 text-rose-400" />
-            </div>
-            <h3 class="text-2xl font-bold mb-1" style="color: var(--text);">
-              {{ checkType === 'entry' ? '¡Entrada Registrada!' : '¡Salida Registrada!' }}
-            </h3>
-            <p style="color: var(--text-muted);" class="text-sm mb-1">{{ registeredAt }}</p>
-            <p class="text-xs mb-6" style="color: var(--text-muted);">Ubicación y fotografías guardadas exitosamente</p>
-            <button @click="closeSuccess" class="btn-primary btn-lg w-full">Aceptar</button>
-          </div>
-        </div>
-      </Transition>
+      <!-- Success modal → moved outside Teleport as AppModal (has its own Teleport) -->
 
       <!-- Processing spinner -->
       <div v-if="processing && !showLocationErrorModal && !showCameraModal && !showSuccessModal"
@@ -570,23 +586,7 @@
         </div>
       </div>
 
-      <!-- Logout confirmation modal -->
-      <Transition name="modal">
-        <div v-if="showLogoutModal" class="fixed inset-0 z-50 flex items-center justify-center px-4"
-          style="background: rgba(0,0,0,0.85); backdrop-filter: blur(8px);">
-          <div class="w-full max-w-sm glass-card p-6 animate-in text-center" style="background: var(--modal-bg);">
-            <div class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-rose-500/10 text-rose-500">
-              <ArrowRightOnRectangleIcon class="w-8 h-8" />
-            </div>
-            <h3 class="font-bold text-lg mb-2" style="color: var(--text);">¿Cerrar sesión?</h3>
-            <p class="text-sm mb-6" style="color: var(--text-muted);">Tendrás que volver a ingresar tus credenciales para registrar asistencia.</p>
-            <div class="flex gap-3">
-              <button @click="showLogoutModal = false" class="btn-secondary flex-1">Cancelar</button>
-              <button @click="confirmLogout" class="btn-danger flex-1">Salir</button>
-            </div>
-          </div>
-        </div>
-      </Transition>
+      <!-- Logout confirmation modal → moved outside Teleport as AppModal (has its own Teleport) -->
 
     </Teleport>
   </div>
@@ -597,7 +597,8 @@ import { ref, nextTick, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import api from '@/api'
-import iziToast from 'izitoast'
+import { useToast } from '@/composables/useToast'
+import AppModal from '@/components/AppModal.vue'
 import {
   CheckCircleIcon, HandRaisedIcon, MapPinIcon, ArrowRightOnRectangleIcon,
   ExclamationTriangleIcon, XMarkIcon, LockClosedIcon, CloudArrowUpIcon,
@@ -607,12 +608,7 @@ import {
 } from '@heroicons/vue/24/outline'
 
 // ─── iziToast helpers ────────────────────────────────────────────────────────
-const toast = {
-  success: (msg, title = '¡Éxito!') => iziToast.success({ title, message: msg, position: 'topRight', timeout: 4000 }),
-  error:   (msg, title = 'Error')   => iziToast.error  ({ title, message: msg, position: 'topRight', timeout: 6000 }),
-  warning: (msg, title = 'Aviso')   => iziToast.warning({ title, message: msg, position: 'topRight', timeout: 5000 }),
-  info:    (msg, title = '')        => iziToast.info   ({ title, message: msg, position: 'topRight', timeout: 4000 }),
-}
+const toast = useToast()
 
 const auth = useAuthStore()
 const router = useRouter()
