@@ -250,23 +250,27 @@
   line-height: 1.4;
 }
 
-/* ─── AppModal (iziModal-inspired) transitions ────────────────────────────────
-   These must be global (not scoped) because AppModal uses <Teleport to="body">  */
+/* ─── AppModal overlay fade (backdrop) ───────────────────────────────────────
+   Uses iziModal's comingIn/comingOut keyframes for the panel (from iziModal CSS).
+   Only the backdrop needs a Vue Transition name.                               */
 
-/* Backdrop fade */
 .izi-overlay-enter-active,
-.izi-overlay-leave-active { transition: opacity 0.2s ease; }
+.izi-overlay-leave-active { transition: opacity 0.25s ease; }
 .izi-overlay-enter-from,
 .izi-overlay-leave-to     { opacity: 0; }
 
-/* Centre modal: spring scale + fade */
-.izi-modal-enter-active { transition: opacity 0.22s ease, transform 0.22s cubic-bezier(0.34, 1.56, 0.64, 1); }
-.izi-modal-leave-active  { transition: opacity 0.16s ease, transform 0.16s ease; }
-.izi-modal-enter-from,
-.izi-modal-leave-to      { opacity: 0; transform: scale(0.93) translateY(8px); }
+/* ─── iziModal CSS overrides for dark mode ────────────────────────────────────
+   iziModal's CSS uses its own background/color vars. We adapt them to the
+   project's CSS variable system so panels look correct in dark mode.           */
 
-/* Bottom sheet: slide up + fade */
-.izi-sheet-enter-active { transition: opacity 0.25s ease, transform 0.3s cubic-bezier(0.34, 1.3, 0.64, 1); }
-.izi-sheet-leave-active  { transition: opacity 0.2s ease, transform 0.2s ease; }
-.izi-sheet-enter-from,
-.izi-sheet-leave-to      { opacity: 0; transform: translateY(32px); }
+/* iziModal wrap (body) dark mode */
+.dark .iziModal,
+.dark .iziModal .iziModal-wrap {
+  background: var(--modal-bg) !important;
+  color: var(--text) !important;
+}
+.dark .iziModal .iziModal-content p,
+.dark .iziModal .iziModal-content span,
+.dark .iziModal .iziModal-content li {
+  color: var(--text-muted);
+}

@@ -1,159 +1,145 @@
 <template>
   <Teleport to="body">
-    <!-- Backdrop -->
+    <!-- Overlay backdrop — fade in/out -->
     <Transition name="izi-overlay">
       <div
         v-if="modelValue"
-        class="fixed inset-0 z-50 flex justify-center"
-        :class="bottomSheet ? 'items-end' : 'items-center px-4'"
-        style="background: rgba(0,0,0,0.8); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);"
-        @click.self="handleBackdrop"
-      >
-        <!-- Panel -->
-        <Transition :name="bottomSheet ? 'izi-sheet' : 'izi-modal'">
-          <div
-            v-if="modelValue"
-            class="glass-card w-full overflow-hidden"
-            :class="[
-              sizeClass,
-              bottomSheet && 'rounded-t-3xl rounded-b-none sm:rounded-3xl mb-0 sm:mb-4',
-            ]"
-            style="background: var(--modal-bg);"
-            role="dialog"
-            aria-modal="true"
-          >
-            <!-- Header: shown only when there is title, icon, or closable button -->
-            <div
-              v-if="title || icon || closable"
-              class="flex items-center justify-between px-5 py-4 flex-shrink-0"
-              :style="headerBorderStyle"
-            >
-              <div class="flex items-center gap-3 min-w-0 flex-1">
-                <!-- Icon badge -->
-                <div
-                  v-if="icon"
-                  class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                  :class="iconBgClass"
-                >
-                  <component :is="icon" class="w-5 h-5" :class="iconColorClass" />
-                </div>
-                <!-- Title / subtitle -->
-                <div v-if="title || subtitle" class="min-w-0 flex-1">
-                  <h3 class="font-bold text-base leading-tight" style="color: var(--text);">{{ title }}</h3>
-                  <p v-if="subtitle" class="text-xs mt-0.5 truncate" style="color: var(--text-muted);">{{ subtitle }}</p>
-                </div>
-              </div>
-              <!-- Close button -->
-              <button
-                v-if="closable"
-                class="w-8 h-8 rounded-lg flex items-center justify-center transition-colors ml-3 flex-shrink-0 hover:bg-black/10 dark:hover:bg-white/10"
-                style="color: var(--text-muted);"
-                aria-label="Cerrar"
-                @click="close"
-              >
-                <XMarkIcon class="w-5 h-5" />
-              </button>
-            </div>
+        class="fixed inset-0 z-[999]"
+        style="background: rgba(0,0,0,0.8);"
+        @click="handleBackdrop"
+      />
+    </Transition>
 
-            <!-- Body slot -->
+    <!-- Centering wrapper + panel — iziModal comingIn/comingOut keyframe animation -->
+    <Transition @enter="onEnter" @leave="onLeave" :css="false">
+      <div
+        v-if="modelValue"
+        class="fixed inset-0 z-[1000] flex items-center justify-center px-4 pointer-events-none"
+      >
+        <div
+          ref="panelEl"
+          class="flex flex-col overflow-hidden shadow-2xl pointer-events-auto w-full"
+          :style="panelStyle"
+          role="dialog"
+          aria-modal="true"
+        >
+          <!-- Header — iziModal colored bar style -->
+          <div
+            v-if="title || subtitle || closable"
+            class="flex items-center justify-between flex-shrink-0"
+            style="padding: 14px 18px; box-shadow: inset 0 -10px 15px -12px rgba(0,0,0,0.3);"
+            :style="{ background: headerColor }"
+          >
+            <div class="flex-1 min-w-0">
+              <span
+                v-if="title"
+                class="block font-semibold truncate"
+                style="color: #fff; font-size: 18px; line-height: 1.3; font-family: 'Lato', Arial, sans-serif;"
+              >{{ title }}</span>
+              <p
+                v-if="subtitle"
+                class="block truncate mt-0.5"
+                style="color: rgba(255,255,255,0.6); font-size: 12px; line-height: 1.45; font-family: 'Lato', Arial, sans-serif;"
+              >{{ subtitle }}</p>
+            </div>
+            <button
+              v-if="closable"
+              class="flex-shrink-0 ml-3 w-8 h-8 flex items-center justify-center rounded transition-opacity"
+              style="opacity: 0.7;"
+              aria-label="Cerrar"
+              @click="close"
+              @mouseenter="$event.target.style.opacity = '1'"
+              @mouseleave="$event.target.style.opacity = '0.7'"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2.5">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Body (scrollable) -->
+          <div class="flex-1 overflow-y-auto custom-scroll" style="overscroll-behavior: contain;">
             <div class="px-5 py-4">
               <slot />
             </div>
-
-            <!-- Footer slot -->
-            <div v-if="$slots.footer" class="px-5 pb-5 pt-0 flex gap-3">
-              <slot name="footer" />
-            </div>
           </div>
-        </Transition>
+
+          <!-- Footer -->
+          <div
+            v-if="$slots.footer"
+            class="px-5 pb-5 pt-3 flex gap-3 flex-shrink-0 border-t"
+            style="border-color: var(--border-subtle);"
+          >
+            <slot name="footer" />
+          </div>
+        </div>
       </div>
     </Transition>
   </Teleport>
 </template>
 
 <script setup>
-import { computed, onMounted, onUnmounted } from 'vue'
-import { XMarkIcon } from '@heroicons/vue/24/outline'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 
 const props = defineProps({
-  /** v-model: controls visibility */
   modelValue:      { type: Boolean, default: false },
-  /** Header title text (omit to hide header) */
   title:           { type: String,  default: '' },
-  /** Small subtitle below title */
   subtitle:        { type: String,  default: '' },
-  /** Heroicon component passed as prop, e.g. :icon="CheckCircleIcon" */
-  icon:            { type: Object,  default: null },
-  /**
-   * Accent color for header border + icon badge.
-   * 'default' | 'brand' | 'success' | 'danger' | 'warning' | 'info'
-   */
   color:           { type: String,  default: 'default' },
-  /** Panel width: 'sm' | 'md' | 'lg' | 'xl' */
   size:            { type: String,  default: 'sm' },
-  /** Show the × close button in the header */
   closable:        { type: Boolean, default: true },
-  /** Close when clicking the dark backdrop */
   closeOnBackdrop: { type: Boolean, default: true },
-  /**
-   * On mobile: slide up from bottom (sheet style).
-   * On desktop it centres regardless.
-   */
-  bottomSheet:     { type: Boolean, default: false },
 })
 
 const emit = defineEmits(['update:modelValue', 'close'])
+const panelEl = ref(null)
 
-// ─── Computed ─────────────────────────────────────────────────────────────────
-const sizeClass = computed(() => ({
-  sm: 'max-w-sm',
-  md: 'max-w-md',
-  lg: 'max-w-lg',
-  xl: 'max-w-2xl',
-}[props.size] ?? 'max-w-sm'))
+const headerColors = {
+  default: '#64748b',
+  brand:   '#6366f1',
+  success: '#10b981',
+  danger:  '#ef4444',
+  warning: '#f59e0b',
+  info:    '#3b82f6',
+}
 
-const headerBorderStyle = computed(() => {
-  const borders = {
-    default: 'var(--border-subtle)',
-    brand:   'rgba(99,102,241,0.3)',
-    success: 'rgba(16,185,129,0.3)',
-    danger:  'rgba(239,68,68,0.3)',
-    warning: 'rgba(245,158,11,0.3)',
-    info:    'rgba(59,130,246,0.3)',
-  }
-  return `border-bottom: 1px solid ${borders[props.color] ?? borders.default}`
-})
+const widthMap = { sm: 400, md: 520, lg: 640, xl: 780 }
 
-const iconBgClass = computed(() => ({
-  default: 'bg-slate-100 dark:bg-white/10',
-  brand:   'bg-indigo-100 dark:bg-indigo-500/15',
-  success: 'bg-emerald-100 dark:bg-emerald-500/15',
-  danger:  'bg-rose-100 dark:bg-rose-500/15',
-  warning: 'bg-amber-100 dark:bg-amber-500/15',
-  info:    'bg-blue-100 dark:bg-blue-500/15',
-}[props.color] ?? 'bg-slate-100 dark:bg-white/10'))
+const headerColor = computed(() => headerColors[props.color] ?? headerColors.default)
 
-const iconColorClass = computed(() => ({
-  default: 'text-slate-500 dark:text-slate-400',
-  brand:   'text-indigo-600 dark:text-indigo-400',
-  success: 'text-emerald-600 dark:text-emerald-400',
-  danger:  'text-rose-500 dark:text-rose-400',
-  warning: 'text-amber-600 dark:text-amber-400',
-  info:    'text-blue-600 dark:text-blue-400',
-}[props.color] ?? 'text-slate-500 dark:text-slate-400'))
+const panelStyle = computed(() => ({
+  maxWidth: (widthMap[props.size] ?? 400) + 'px',
+  maxHeight: 'calc(100vh - 4rem)',
+  borderRadius: '16px',
+  background: 'var(--modal-bg)',
+}))
 
-// ─── Actions ──────────────────────────────────────────────────────────────────
-function close () {
+function close() {
   emit('update:modelValue', false)
   emit('close')
 }
 
-function handleBackdrop () {
+function handleBackdrop() {
   if (props.closeOnBackdrop) close()
 }
 
-function handleKeydown (e) {
+function handleKeydown(e) {
   if (e.key === 'Escape' && props.modelValue && props.closable) close()
+}
+
+// iziModal CSS keyframe animations — loaded via izimodal/css/iziModal.min.css in main.js
+function onEnter(el, done) {
+  const panel = panelEl.value
+  if (!panel) return done()
+  panel.style.animation = 'iziM-comingIn 0.5s ease forwards'
+  panel.addEventListener('animationend', done, { once: true })
+}
+
+function onLeave(el, done) {
+  const panel = panelEl.value
+  if (!panel) return done()
+  panel.style.animation = 'iziM-comingOut 0.5s cubic-bezier(.16,.81,.32,1) forwards'
+  panel.addEventListener('animationend', done, { once: true })
 }
 
 onMounted  (() => document.addEventListener('keydown', handleKeydown))

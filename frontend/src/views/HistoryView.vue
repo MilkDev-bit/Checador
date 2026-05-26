@@ -93,12 +93,11 @@
       </div>
     </div>
 
-    <!-- Route modal — iziModal-inspired AppModal (self-contained Teleport) -->
+    <!-- Route modal — iziModal AppModal -->
     <AppModal
       v-model="showRouteModal"
       title="Puntos de Recorrido"
       :subtitle="`${routePoints.length} punto${routePoints.length !== 1 ? 's' : ''} registrado${routePoints.length !== 1 ? 's' : ''}`"
-      :icon="MapPinIcon"
       size="md"
       color="brand"
     >

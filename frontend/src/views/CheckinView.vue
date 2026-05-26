@@ -311,13 +311,21 @@
       v-model="showSuccessModal"
       :title="checkType === 'entry' ? '¡Entrada Registrada!' : '¡Salida Registrada!'"
       :color="checkType === 'entry' ? 'success' : 'danger'"
-      :icon="checkType === 'entry' ? CheckCircleIcon : HandRaisedIcon"
       :closable="false"
       :closeOnBackdrop="false"
     >
-      <div class="text-center space-y-1 py-1">
-        <p class="text-sm font-medium" style="color: var(--text-muted);">{{ registeredAt }}</p>
-        <p class="text-xs" style="color: var(--text-muted);">Ubicación y fotografías guardadas exitosamente</p>
+      <div class="flex flex-col items-center gap-3 py-2">
+        <div
+          class="w-14 h-14 rounded-2xl flex items-center justify-center"
+          :class="checkType === 'entry' ? 'bg-emerald-100 dark:bg-emerald-500/15' : 'bg-rose-100 dark:bg-rose-500/15'"
+        >
+          <CheckCircleIcon v-if="checkType === 'entry'" class="w-8 h-8 text-emerald-600 dark:text-emerald-400" />
+          <HandRaisedIcon  v-else                       class="w-8 h-8 text-rose-500  dark:text-rose-400" />
+        </div>
+        <div class="text-center">
+          <p class="text-sm font-medium" style="color: var(--text-muted);">{{ registeredAt }}</p>
+          <p class="text-xs mt-0.5"     style="color: var(--text-muted);">Ubicación y fotografías guardadas exitosamente</p>
+        </div>
       </div>
       <template #footer>
         <button @click="closeSuccess" class="btn-primary btn-lg w-full">Aceptar</button>
@@ -328,12 +336,16 @@
     <AppModal
       v-model="showLogoutModal"
       title="¿Cerrar sesión?"
-      :icon="ArrowRightOnRectangleIcon"
       color="danger"
     >
-      <p class="text-sm text-center" style="color: var(--text-muted);">
-        Tendrás que volver a ingresar tus credenciales para registrar asistencia.
-      </p>
+      <div class="flex flex-col items-center gap-4 py-2">
+        <div class="w-12 h-12 rounded-full bg-rose-500/10 flex items-center justify-center">
+          <ArrowRightOnRectangleIcon class="w-6 h-6 text-rose-500" />
+        </div>
+        <p class="text-sm text-center" style="color: var(--text-muted);">
+          Tendrás que volver a ingresar tus credenciales para registrar asistencia.
+        </p>
+      </div>
       <template #footer>
         <button @click="showLogoutModal = false" class="btn-secondary flex-1">Cancelar</button>
         <button @click="confirmLogout" class="btn-danger flex-1">Salir</button>
