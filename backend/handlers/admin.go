@@ -137,6 +137,7 @@ func AdminGetRecords(c *gin.Context) {
 	dateTo := c.Query("date_to")
 	projectFilter := strings.TrimSpace(c.Query("project"))
 	typeFilter := c.Query("type")
+	nameFilter := strings.TrimSpace(c.Query("name"))
 	search := strings.TrimSpace(c.Query("search"))
 
 	args := []interface{}{}
@@ -191,6 +192,14 @@ func AdminGetRecords(c *gin.Context) {
 	if typeFilter == "entry" || typeFilter == "exit" {
 		where = append(where, fmt.Sprintf("cr.type = $%d", argIdx))
 		args = append(args, typeFilter)
+		argIdx++
+	}
+
+	if nameFilter != "" {
+		where = append(where, fmt.Sprintf(
+			"(LOWER(u.first_name) LIKE LOWER($%d) OR LOWER(u.last_name) LIKE LOWER($%d))",
+			argIdx, argIdx))
+		args = append(args, "%"+nameFilter+"%")
 		argIdx++
 	}
 

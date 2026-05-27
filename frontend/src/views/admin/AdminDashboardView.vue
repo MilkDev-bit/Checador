@@ -465,6 +465,19 @@
                   <option value="exit">Solo salidas</option>
                 </select>
               </div>
+              <div class="flex items-center gap-2 flex-1 min-w-[150px]">
+                <UserCircleIcon
+                  class="w-4 h-4 flex-shrink-0"
+                  style="color: var(--text-muted)"
+                />
+                <input
+                  v-model="filters.name"
+                  @input="debouncedLoad"
+                  type="text"
+                  class="input text-sm py-2 flex-1"
+                  placeholder="Buscar por nombre..."
+                />
+              </div>
               <div class="flex items-center gap-2 flex-1 min-w-[180px]">
                 <MagnifyingGlassIcon
                   class="w-4 h-4 flex-shrink-0"
@@ -475,7 +488,7 @@
                   @input="debouncedLoad"
                   type="text"
                   class="input text-sm py-2 flex-1"
-                  placeholder="Buscar por nombre o email..."
+                  placeholder="Buscar por email..."
                 />
               </div>
               <button @click="clearFilters" class="btn-secondary btn-sm">
@@ -3039,6 +3052,7 @@ const filters = ref({
   date_to: todayISO(),
   project: "",
   type: "",
+  name: "",
   search: "",
 });
 
@@ -3077,6 +3091,7 @@ function clearFilters() {
     date_to: todayISO(),
     project: "",
     type: "",
+    name: "",
     search: "",
   };
   recordsPage.value = 1;
@@ -3155,6 +3170,7 @@ async function loadRecords() {
       params.date_to = localDateToUTCEnd(filters.value.date_to);
     if (filters.value.project) params.project = filters.value.project;
     if (filters.value.type) params.type = filters.value.type;
+    if (filters.value.name) params.name = filters.value.name;
     if (filters.value.search) params.search = filters.value.search;
     const { data } = await api.get("/admin/records", { params });
     records.value = data;
