@@ -977,6 +977,19 @@
                   {{ p }}
                 </option>
               </select>
+              <div class="flex items-center gap-2 flex-1 min-w-[220px]">
+                <UserCircleIcon
+                  class="w-4 h-4 flex-shrink-0"
+                  style="color: var(--text-muted)"
+                />
+                <input
+                  v-model="usersNameFilter"
+                  @input="debouncedLoadUsers"
+                  type="text"
+                  class="input text-sm py-2 flex-1"
+                  placeholder="Filtrar por nombre..."
+                />
+              </div>
               <button
                 @click="openProjectsModal"
                 class="btn-secondary btn-sm flex items-center gap-1.5"
@@ -3046,6 +3059,7 @@ const loadingRecords = ref(false);
 const openSessions = ref([]);
 const loadingOpenSessions = ref(false);
 const closeConfirm = ref({ show: false, session: null });
+const usersNameFilter = ref("");
 
 const filters = ref({
   date_from: todayISO(),
@@ -3105,6 +3119,15 @@ function debouncedLoad() {
     recordsPage.value = 1;
     loadRecords();
   }, 400);
+}
+
+let usersSearchTimer = null;
+function debouncedLoadUsers() {
+  clearTimeout(usersSearchTimer);
+  usersSearchTimer = setTimeout(() => {
+    usersPage.value = 1;
+    loadUsers();
+  }, 300);
 }
 
 async function loadAll() {
@@ -3380,9 +3403,9 @@ async function saveSchedule() {
 
 async function loadUsers() {
   try {
-    const params = filters.value.project
-      ? { project: filters.value.project }
-      : {};
+    const params = {};
+    if (filters.value.project) params.project = filters.value.project;
+    if (usersNameFilter.value.trim()) params.name = usersNameFilter.value.trim();
     const { data } = await api.get("/admin/users", { params });
     users.value = data;
     usersPage.value = 1;

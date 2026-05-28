@@ -289,15 +289,27 @@ func calcDeviation(ts time.Time, checkType, entrySchedule, exitSchedule string) 
 
 func AdminGetUsers(c *gin.Context) {
 	projectFilter := strings.TrimSpace(c.Query("project"))
+	nameFilter := strings.TrimSpace(c.Query("name"))
 
 	args := []interface{}{}
+	where := []string{"u.role = 'user'"}
+	argIdx := 1
+
+	if projectFilter != "" {
+		where = append(where, fmt.Sprintf("LOWER(u.project_name) LIKE LOWER($%d)", argIdx))
+		args = append(args, "%"+projectFilter+"%")
+		argIdx++
+	}
+
+	if nameFilter != "" {
+		where = append(where, fmt.Sprintf("(LOWER(u.first_name) LIKE LOWER($%d) OR LOWER(u.last_name) LIKE LOWER($%d))", argIdx, argIdx))
+		args = append(args, "%"+nameFilter+"%")
+		argIdx++
+	}
+
 	query := `SELECT u.id, u.first_name, u.last_name, u.project_name, u.email, u.created_at, COALESCE(u.avatar_url, ''),
 	           (SELECT COUNT(*) FROM check_records cr WHERE cr.user_id = u.id) as total_checks
-	           FROM users u WHERE u.role = 'user'`
-	if projectFilter != "" {
-		query += " AND LOWER(u.project_name) LIKE LOWER($1)"
-		args = append(args, "%"+projectFilter+"%")
-	}
+	           FROM users u WHERE ` + strings.Join(where, " AND ")
 	query += " ORDER BY u.created_at DESC"
 
 	rows, err := database.DB.Query(query, args...)
