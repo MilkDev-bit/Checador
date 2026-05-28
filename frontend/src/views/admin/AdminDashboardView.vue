@@ -1123,6 +1123,13 @@
                     <LockClosedIcon class="w-4 h-4" />
                     Contraseña
                   </button>
+                  <button
+                    @click="deleteUserConfirm = { show: true, user }"
+                    class="flex-1 btn-danger btn-sm flex items-center justify-center gap-1.5"
+                  >
+                    <TrashIcon class="w-4 h-4" />
+                    Eliminar
+                  </button>
                 </div>
               </div>
             </div>
@@ -2701,6 +2708,54 @@
         </div>
       </Transition>
 
+      <!-- Delete user confirmation modal -->
+      <Transition name="modal">
+        <div
+          v-if="deleteUserConfirm.show"
+          class="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style="background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px)"
+          @click.self="deleteUserConfirm = { show: false, user: null, saving: false }"
+        >
+          <div
+            class="w-full max-w-sm glass-card p-6 animate-in text-center"
+            style="background: var(--modal-bg)"
+          >
+            <div
+              class="w-14 h-14 mx-auto mb-4 rounded-full flex items-center justify-center"
+              style="background: rgba(239, 68, 68, 0.1)"
+            >
+              <TrashIcon class="w-7 h-7 text-rose-500" />
+            </div>
+            <h3 class="font-bold text-lg mb-1" style="color: var(--text)">
+              Eliminar usuario
+            </h3>
+            <p class="text-sm font-semibold mb-1" style="color: var(--text)">
+              {{ deleteUserConfirm.user?.first_name }}
+              {{ deleteUserConfirm.user?.last_name }}
+            </p>
+            <p class="text-sm mb-5" style="color: var(--text-muted)">
+              Esta acción es permanente y eliminará su historial de registros.
+            </p>
+            <div class="flex gap-3">
+              <button
+                @click="deleteUserConfirm = { show: false, user: null, saving: false }"
+                class="btn-secondary flex-1"
+                :disabled="deleteUserConfirm.saving"
+              >
+                Cancelar
+              </button>
+              <button
+                @click="handleDeleteUser"
+                class="btn-danger flex-1"
+                :disabled="deleteUserConfirm.saving"
+              >
+                {{ deleteUserConfirm.saving ? "Eliminando..." : "Eliminar" }}
+              </button>
+            </div>
+          </div>
+        </div>
+      </Transition>
+
       <!-- ── Edit User Modal ──────────────────────────────────────────────── -->
       <Transition name="modal">
         <div
@@ -3060,6 +3115,7 @@ const openSessions = ref([]);
 const loadingOpenSessions = ref(false);
 const closeConfirm = ref({ show: false, session: null });
 const usersNameFilter = ref("");
+const deleteUserConfirm = ref({ show: false, user: null, saving: false });
 
 const filters = ref({
   date_from: todayISO(),
@@ -3172,6 +3228,20 @@ async function handleCloseSession() {
   } catch {
   } finally {
     closeConfirm.value = { show: false, session: null };
+  }
+}
+
+async function handleDeleteUser() {
+  const user = deleteUserConfirm.value.user;
+  if (!user?.id || deleteUserConfirm.value.saving) return;
+
+  deleteUserConfirm.value.saving = true;
+  try {
+    await api.delete(`/admin/users/${user.id}`);
+    users.value = users.value.filter((u) => u.id !== user.id);
+    deleteUserConfirm.value = { show: false, user: null, saving: false };
+  } catch {
+    deleteUserConfirm.value.saving = false;
   }
 }
 

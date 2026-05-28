@@ -562,6 +562,53 @@ func AdminUpdateUser(c *gin.Context) {
 	})
 }
 
+// AdminDeleteUser removes a user and related records.
+// DELETE /admin/users/:id
+func AdminDeleteUser(c *gin.Context) {
+	userID := c.Param("id")
+
+	tx, err := database.DB.Begin()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error iniciando transacción."})
+		return
+	}
+	defer tx.Rollback()
+
+	// Remove GPS points first because check_records has no ON DELETE CASCADE.
+	if _, err := tx.Exec(
+		`DELETE FROM location_points
+		 WHERE check_record_id IN (SELECT id FROM check_records WHERE user_id = $1)`,
+		userID,
+	); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al eliminar ubicaciones."})
+		return
+	}
+
+	if _, err := tx.Exec(`DELETE FROM check_records WHERE user_id = $1`, userID); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al eliminar registros."})
+		return
+	}
+
+	result, err := tx.Exec(`DELETE FROM users WHERE id = $1 AND role = 'user'`, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al eliminar usuario."})
+		return
+	}
+
+	affected, _ := result.RowsAffected()
+	if affected == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Usuario no encontrado."})
+		return
+	}
+
+	if err := tx.Commit(); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al confirmar eliminación."})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Usuario eliminado correctamente."})
+}
+
 // AdminCreateProject adds a new project to the catalogue.
 // POST /admin/projects
 func AdminCreateProject(c *gin.Context) {
