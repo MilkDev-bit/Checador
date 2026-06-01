@@ -1044,9 +1044,7 @@
                     loading="lazy"
                     class="w-full h-full object-cover"
                   />
-                  <span v-else
-                    >{{ user.first_name[0] }}{{ user.last_name[0] }}</span
-                  >
+                  <span v-else>{{ userInitials(user) }}</span>
                 </div>
                 <div class="min-w-0">
                   <p class="font-semibold truncate" style="color: var(--text)">
@@ -3699,6 +3697,13 @@ function toTitleCase(str) {
     /\S+/g,
     (w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase(),
   );
+}
+
+function userInitials(user) {
+  const first = user?.first_name?.[0] ?? "";
+  const last = user?.last_name?.[0] ?? "";
+  const initials = `${first}${last}`.trim().toUpperCase();
+  return initials || "?";
 }
 
 // Pagination logic
