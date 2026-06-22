@@ -306,6 +306,23 @@
 
     <!-- ===== AppModal instances (self-contained — each has its own Teleport) ===== -->
 
+    <!-- Shift selection modal -->
+    <AppModal
+      v-model="showShiftModal"
+      title="¿Qué turno laboras hoy?"
+      color="brand"
+      :closable="true"
+    >
+      <div class="flex flex-col gap-3 py-2">
+        <button @click="confirmShift('DIURNO')" class="btn-primary btn-lg w-full" style="background-color: #f59e0b; border-color: #f59e0b; color: white;">
+          DIURNO
+        </button>
+        <button @click="confirmShift('NOCTURNO')" class="btn-primary btn-lg w-full" style="background-color: #312e81; border-color: #312e81; color: white;">
+          NOCTURNO
+        </button>
+      </div>
+    </AppModal>
+
     <!-- Success modal -->
     <AppModal
       v-model="showSuccessModal"
@@ -660,6 +677,8 @@ const locationErrorType = ref('denied')
 const locationErrorCode = ref(0)
 const showCameraModal = ref(false)
 const showSuccessModal = ref(false)
+const showShiftModal = ref(false)
+const selectedShift = ref('')
 const registeredAt = ref('')
 
 const isPWA = ref(false)
@@ -819,8 +838,12 @@ function startCheckProcess(type) {
     showLocationErrorModal.value = true
     return
   }
-  // Call requestLocation directly — iOS Safari requires getCurrentPosition
-  // to be called in the same synchronous call stack as the user tap.
+  showShiftModal.value = true
+}
+
+function confirmShift(shift) {
+  selectedShift.value = shift
+  showShiftModal.value = false
   requestLocation()
 }
 
@@ -1090,6 +1113,9 @@ async function submitCheck() {
     const now = new Date().toISOString()
     const formData = new FormData()
     formData.append('type', checkType.value)
+    if (selectedShift.value) {
+      formData.append('shift', selectedShift.value)
+    }
     formData.append('timestamp', now)
     // Send GPS coords so backend can cross-check against IP geolocation
     if (locationPoints.length > 0) {
@@ -1158,6 +1184,7 @@ async function submitCheck() {
       const now2 = new Date().toISOString()
       await savePendingCheck({
         type:        checkType.value,
+        shift:       selectedShift.value,
         timestamp:   now2,
         latitude:    locationPoints[0]?.latitude  ?? 0,
         longitude:   locationPoints[0]?.longitude ?? 0,
@@ -1258,6 +1285,7 @@ async function syncPendingChecks() {
     try {
       const formData = new FormData()
       formData.append('type', p.type)
+      if (p.shift) formData.append('shift', p.shift)
       formData.append('timestamp', p.timestamp)
       if (p.latitude)  formData.append('latitude',  String(p.latitude))
       if (p.longitude) formData.append('longitude', String(p.longitude))

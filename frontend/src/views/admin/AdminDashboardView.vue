@@ -276,6 +276,7 @@
                     <th>Usuario</th>
                     <th class="hidden sm:table-cell">Proyecto</th>
                     <th>Tipo</th>
+                    <th>Turno</th>
                     <th>Fecha / Hora</th>
                     <th class="hidden md:table-cell">GPS</th>
                     <th>Acciones</th>
@@ -337,6 +338,18 @@
                       >
                         {{ r.type === "entry" ? "Entrada" : "Salida" }}
                       </span>
+                    </td>
+                    <td>
+                      <span
+                        v-if="r.shift"
+                        :class="
+                          r.shift === 'DIURNO' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-400'
+                        "
+                        class="badge whitespace-nowrap"
+                      >
+                        {{ r.shift }}
+                      </span>
+                      <span v-else class="text-xs" style="color: var(--text-dim)">-</span>
                     </td>
                     <td>
                       <p
@@ -565,6 +578,7 @@
                     <th>Usuario</th>
                     <th class="hidden sm:table-cell">Proyecto</th>
                     <th>Tipo</th>
+                    <th>Turno</th>
                     <th>Fecha / Hora</th>
                     <th class="hidden lg:table-cell">Horario</th>
                     <th class="hidden lg:table-cell">Retraso / Adelanto</th>
@@ -626,6 +640,18 @@
                       >
                         {{ r.type === "entry" ? "Entrada" : "Salida" }}
                       </span>
+                    </td>
+                    <td>
+                      <span
+                        v-if="r.shift"
+                        :class="
+                          r.shift === 'DIURNO' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-400'
+                        "
+                        class="badge whitespace-nowrap"
+                      >
+                        {{ r.shift }}
+                      </span>
+                      <span v-else class="text-xs" style="color: var(--text-dim)">-</span>
                     </td>
                     <td>
                       <p

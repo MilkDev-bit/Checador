@@ -19,6 +19,7 @@ type CheckRecord struct {
 	ID               string          `json:"id"`
 	UserID           string          `json:"user_id"`
 	Type             string          `json:"type"`
+	Shift            string          `json:"shift,omitempty"`
 	Timestamp        time.Time       `json:"timestamp"`
 	PhotoSitePath    string          `json:"photo_site_path,omitempty"`
 	PhotoSelfiePath  string          `json:"photo_selfie_path,omitempty"`

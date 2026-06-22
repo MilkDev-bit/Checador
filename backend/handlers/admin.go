@@ -63,6 +63,8 @@ type AdminRecordRow struct {
 	DayComment string `json:"day_comment,omitempty"`
 	// GPS reverse-geocoded address
 	GpsAddress string `json:"gps_address,omitempty"`
+	// Turno
+	Shift string `json:"shift,omitempty"`
 }
 
 type AdminStats struct {
@@ -227,7 +229,8 @@ func AdminGetRecords(c *gin.Context) {
 	                ELSE COALESCE(ws.exit_time,'') END,
 	           COALESCE((SELECT rc.comment FROM record_comments rc
 	                     WHERE rc.user_id = u.id AND rc.record_date = cr.timestamp::date),''),
-	           COALESCE(cr.gps_address,'')
+	           COALESCE(cr.gps_address,''),
+	           COALESCE(cr.shift,'')
 	           FROM check_records cr
 	           JOIN users u ON cr.user_id = u.id
 	           LEFT JOIN work_schedules ws ON ws.user_id = u.id`
@@ -249,7 +252,7 @@ func AdminGetRecords(c *gin.Context) {
 		rows.Scan(&r.RecordID, &r.UserID, &r.FirstName, &r.LastName, &r.ProjectName, &r.Email,
 			&r.Type, &r.Timestamp, &r.HasSitePhoto, &r.HasSelfiePhoto, &r.LocationCount,
 			&r.IsSuspicious, &r.SuspiciousReason, &r.IPCountry, &r.IPCity,
-			&r.EntrySchedule, &r.ExitSchedule, &r.DayComment, &r.GpsAddress)
+			&r.EntrySchedule, &r.ExitSchedule, &r.DayComment, &r.GpsAddress, &r.Shift)
 
 		// Calculate deviation in minutes
 		r.DeviationMin = calcDeviation(r.Timestamp, r.Type, r.EntrySchedule, r.ExitSchedule)

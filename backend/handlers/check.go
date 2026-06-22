@@ -24,6 +24,7 @@ import (
 
 type CheckInRequest struct {
 	Type      string  `form:"type"      binding:"required"`
+	Shift     string  `form:"shift"`
 	Timestamp string  `form:"timestamp" binding:"required"`
 	Latitude  float64 `form:"latitude"`
 	Longitude float64 `form:"longitude"`
@@ -222,15 +223,15 @@ func RegisterCheck(c *gin.Context) {
 
 	var record models.CheckRecord
 	err = database.DB.QueryRow(
-		`INSERT INTO check_records (user_id, type, timestamp, photo_site_path, photo_selfie_path)
- VALUES ($1, $2, $3, $4, $5)
- RETURNING id, user_id, type, timestamp,
+		`INSERT INTO check_records (user_id, type, shift, timestamp, photo_site_path, photo_selfie_path)
+ VALUES ($1, $2, $3, $4, $5, $6)
+ RETURNING id, user_id, type, shift, timestamp,
            COALESCE(photo_site_path, ''), COALESCE(photo_selfie_path, ''),
            is_suspicious,
            COALESCE(suspicious_reason, ''), COALESCE(ip_country, ''), COALESCE(ip_city, ''),
            created_at`,
-		userID, req.Type, ts, photoSiteData, photoSelfieData,
-	).Scan(&record.ID, &record.UserID, &record.Type, &record.Timestamp,
+		userID, req.Type, req.Shift, ts, photoSiteData, photoSelfieData,
+	).Scan(&record.ID, &record.UserID, &record.Type, &record.Shift, &record.Timestamp,
 		&record.PhotoSitePath, &record.PhotoSelfiePath,
 		&record.IsSuspicious, &record.SuspiciousReason, &record.IPCountry, &record.IPCity,
 		&record.CreatedAt)
@@ -412,7 +413,7 @@ func GetMyRecords(c *gin.Context) {
 	userID := c.GetString("user_id")
 
 	rows, err := database.DB.Query(
-		`SELECT id, user_id, type, timestamp, photo_site_path, photo_selfie_path, created_at
+		`SELECT id, user_id, type, shift, timestamp, photo_site_path, photo_selfie_path, created_at
  FROM check_records WHERE user_id = $1 ORDER BY timestamp DESC LIMIT 200`,
 		userID,
 	)
@@ -425,7 +426,7 @@ func GetMyRecords(c *gin.Context) {
 	records := []models.CheckRecord{}
 	for rows.Next() {
 		var r models.CheckRecord
-		rows.Scan(&r.ID, &r.UserID, &r.Type, &r.Timestamp,
+		rows.Scan(&r.ID, &r.UserID, &r.Type, &r.Shift, &r.Timestamp,
 			&r.PhotoSitePath, &r.PhotoSelfiePath, &r.CreatedAt)
 		records = append(records, r)
 	}

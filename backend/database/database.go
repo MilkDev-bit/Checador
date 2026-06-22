@@ -138,6 +138,8 @@ func Migrate() {
 		`ALTER TABLE check_records ADD COLUMN IF NOT EXISTS closed_by_admin BOOLEAN DEFAULT FALSE`,
 		// GPS reverse-geocoded address (populated async after check-in via Google Maps Geocoding API)
 		`ALTER TABLE check_records ADD COLUMN IF NOT EXISTS gps_address TEXT`,
+		// Shift of the user
+		`ALTER TABLE check_records ADD COLUMN IF NOT EXISTS shift VARCHAR(20) DEFAULT ''`,
 		// Centralized projects catalogue — managed by admin
 		`CREATE TABLE IF NOT EXISTS projects (
 			id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),
