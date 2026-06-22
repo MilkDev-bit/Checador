@@ -246,7 +246,15 @@
             <!-- CTAs inside card on Desktop -->
             <div class="w-full md:w-auto flex-shrink-0">
               <button
-                v-if="!activeRecordId"
+                v-if="isSyncing"
+                disabled
+                class="btn-success btn-xl w-full md:min-w-[200px] opacity-70 cursor-not-allowed"
+              >
+                <ArrowPathIcon class="w-6 h-6 animate-spin" />
+                <span>Sincronizando...</span>
+              </button>
+              <button
+                v-else-if="!activeRecordId"
                 @click="startCheckProcess('entry')"
                 :disabled="processing"
                 class="btn-success btn-xl w-full md:min-w-[200px]"
@@ -643,6 +651,7 @@ const auth = useAuthStore()
 const router = useRouter()
 
 const showLogoutModal = ref(false)
+const isSyncing = ref(false)
 
 async function confirmLogout() {
   showLogoutModal.value = false
@@ -1278,6 +1287,7 @@ async function syncPendingChecks() {
   const pending = await loadPendingChecks()
   if (pending.length === 0) return
 
+  isSyncing.value = true
   toast.info('Sincronizando registros guardados offline…', 'Conexión restaurada')
   let synced = 0
 
@@ -1331,6 +1341,8 @@ async function syncPendingChecks() {
     // Fix 2: nothing synced — notify so the user knows it wasn't silent
     toast.warning('No se pudo sincronizar ningún registro. Se reintentará cuando haya conexión.', 'Sin sincronizar')
   }
+
+  isSyncing.value = false
 }
 
 onMounted(async () => {
