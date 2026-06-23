@@ -19,7 +19,7 @@
       class="relative z-10 w-full max-w-[600px] glass-panel border border-white/20 dark:border-white/5 p-8 lg:p-12 animate-slide-up">
       <div class="text-center mb-10">
         <div
-          class="inline-flex w-16 h-16 rounded-2xl overflow-hidden bg-brand-50 text-brand-600 dark:bg-brand-900/40 dark:text-brand-400 mb-4 shadow-inner-light ring-1 ring-brand-500/10 animate-bounce-subtle">
+          class="inline-flex h-16 md:h-20 max-w-[240px] w-auto overflow-hidden text-brand-600 dark:text-brand-400 mb-4 animate-bounce-subtle">
           <img src="/LOGOC.png" alt="PaseLista Logo" class="w-full h-full object-contain" />
         </div>
         <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">

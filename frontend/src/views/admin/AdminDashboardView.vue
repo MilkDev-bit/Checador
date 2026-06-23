@@ -8,7 +8,7 @@
       <!-- Logo -->
       <div class="px-6 py-6" style="border-bottom: 1px solid var(--border-subtle)">
         <div class="flex items-center gap-3">
-          <div class="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center text-xl">
+          <div class="h-10 md:h-12 w-auto max-w-[160px] flex items-center justify-center text-xl">
             <img src="/LOGOC.png" alt="PaseLista Logo" class="w-full h-full object-contain" />
           </div>
           <div></div>
@@ -67,7 +67,7 @@
         border-bottom: 1px solid var(--border-subtle);
       ">
       <div class="flex items-center gap-2">
-        <div class="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center">
+        <div class="h-8 md:h-10 w-auto max-w-[120px] flex items-center justify-center">
           <img src="/LOGOC.png" alt="Logo" class="w-full h-full object-contain" />
         </div>
         <span class="text-white font-bold text-sm">Admin · PaseLista</span>
@@ -308,6 +308,13 @@
                   <option value="">Entradas y salidas</option>
                   <option value="entry">Solo entradas</option>
                   <option value="exit">Solo salidas</option>
+                </select>
+              </div>
+              <div class="flex items-center gap-2">
+                <select v-model="filters.shift" @change="loadRecords" class="input text-sm py-2 w-44">
+                  <option value="">Todos los turnos</option>
+                  <option value="DIURNO">Diurno</option>
+                  <option value="NOCTURNO">Nocturno</option>
                 </select>
               </div>
               <div class="flex items-center gap-2 flex-1 min-w-[150px]">
@@ -2048,6 +2055,7 @@ const filters = ref({
   date_to: todayISO(),
   project: "",
   type: "",
+  shift: "",
   name: "",
   search: "",
 });
@@ -2189,6 +2197,7 @@ async function loadRecords() {
       params.date_to = localDateToUTCEnd(filters.value.date_to);
     if (filters.value.project) params.project = filters.value.project;
     if (filters.value.type) params.type = filters.value.type;
+    if (filters.value.shift) params.shift = filters.value.shift;
     if (filters.value.name) params.name = filters.value.name;
     if (filters.value.search) params.search = filters.value.search;
     const { data } = await api.get("/admin/records", { params });

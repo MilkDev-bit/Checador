@@ -10,10 +10,10 @@
         class="px-4 md:px-6 py-3 min-h-[4rem] safe-top flex items-center justify-between border-b border-slate-200 dark:border-white/5">
         <div class="flex items-center gap-3">
           <div
-            class="w-9 h-9 rounded-xl overflow-hidden flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-brand-500 to-violet-600 shadow-glow-brand ring-2 ring-white/20 dark:ring-white/5">
+            class="h-9 md:h-10 w-auto max-w-[140px] flex items-center justify-center flex-shrink-0">
             <img src="/LOGOC.png" alt="Logo" class="w-full h-full object-contain" />
           </div>
-          <div class="flex flex-col justify-center">
+          <div class="flex flex-col justify-center hidden sm:flex">
             <h1 class="font-bold text-base leading-tight tracking-tight text-slate-900 dark:text-white">PaseLista</h1>
             <p class="text-[11px] font-medium text-slate-500 dark:text-slate-400 truncate max-w-[120px]">{{
               auth.user?.project_name || 'Mi Proyecto' }}</p>

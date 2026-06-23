@@ -139,6 +139,7 @@ func AdminGetRecords(c *gin.Context) {
 	dateTo := c.Query("date_to")
 	projectFilter := strings.TrimSpace(c.Query("project"))
 	typeFilter := c.Query("type")
+	shiftFilter := strings.TrimSpace(strings.ToUpper(c.Query("shift")))
 	nameFilter := strings.TrimSpace(c.Query("name"))
 	search := strings.TrimSpace(c.Query("search"))
 
@@ -197,6 +198,12 @@ func AdminGetRecords(c *gin.Context) {
 		argIdx++
 	}
 
+	if shiftFilter == "DIURNO" || shiftFilter == "NOCTURNO" {
+		where = append(where, fmt.Sprintf("cr.shift = $%d", argIdx))
+		args = append(args, shiftFilter)
+		argIdx++
+	}
+
 	if nameFilter != "" {
 		where = append(where, fmt.Sprintf(
 			"(LOWER(u.first_name) LIKE LOWER($%d) OR LOWER(u.last_name) LIKE LOWER($%d))",
@@ -215,7 +222,7 @@ func AdminGetRecords(c *gin.Context) {
 
 	_ = argIdx // suppress unused warning
 
-	query := `SELECT cr.id, u.id, u.first_name, u.last_name, u.project_name, u.email,
+	query := `SELECT cr.id, u.id, u.first_name, u.last_name, COALESCE(NULLIF(cr.project_name, ''), u.project_name), u.email,
 	           cr.type, cr.timestamp,
 	           (cr.photo_site_path IS NOT NULL AND cr.photo_site_path != '') AS has_site_photo,
 	           (cr.photo_selfie_path IS NOT NULL AND cr.photo_selfie_path != '') AS has_selfie_photo,

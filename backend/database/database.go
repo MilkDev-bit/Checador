@@ -140,6 +140,8 @@ func Migrate() {
 		`ALTER TABLE check_records ADD COLUMN IF NOT EXISTS gps_address TEXT`,
 		// Shift of the user
 		`ALTER TABLE check_records ADD COLUMN IF NOT EXISTS shift VARCHAR(20) DEFAULT ''`,
+		// Project of the user at the time of check-in
+		`ALTER TABLE check_records ADD COLUMN IF NOT EXISTS project_name VARCHAR(100) DEFAULT ''`,
 		// Centralized projects catalogue — managed by admin
 		`CREATE TABLE IF NOT EXISTS projects (
 			id         UUID PRIMARY KEY DEFAULT gen_random_uuid(),

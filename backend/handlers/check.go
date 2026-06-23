@@ -221,16 +221,23 @@ func RegisterCheck(c *gin.Context) {
 		}
 	}
 
+	var projectName string
+	err = database.DB.QueryRow("SELECT project_name FROM users WHERE id = $1", userID).Scan(&projectName)
+	if err != nil && err != sql.ErrNoRows {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error fetching user project"})
+		return
+	}
+
 	var record models.CheckRecord
 	err = database.DB.QueryRow(
-		`INSERT INTO check_records (user_id, type, shift, timestamp, photo_site_path, photo_selfie_path)
- VALUES ($1, $2, $3, $4, $5, $6)
+		`INSERT INTO check_records (user_id, type, shift, project_name, timestamp, photo_site_path, photo_selfie_path)
+ VALUES ($1, $2, $3, $4, $5, $6, $7)
  RETURNING id, user_id, type, shift, timestamp,
            COALESCE(photo_site_path, ''), COALESCE(photo_selfie_path, ''),
            is_suspicious,
            COALESCE(suspicious_reason, ''), COALESCE(ip_country, ''), COALESCE(ip_city, ''),
            created_at`,
-		userID, req.Type, req.Shift, ts, photoSiteData, photoSelfieData,
+		userID, req.Type, req.Shift, projectName, ts, photoSiteData, photoSelfieData,
 	).Scan(&record.ID, &record.UserID, &record.Type, &record.Shift, &record.Timestamp,
 		&record.PhotoSitePath, &record.PhotoSelfiePath,
 		&record.IsSuspicious, &record.SuspiciousReason, &record.IPCountry, &record.IPCity,
