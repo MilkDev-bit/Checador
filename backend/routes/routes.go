@@ -18,7 +18,6 @@ func Register(r *gin.Engine) {
 	// Public routes
 	api.POST("/auth/register", handlers.Register)
 	api.POST("/auth/login", handlers.Login)
-	api.GET("/fix-records-temp", handlers.FixRecordsTemp)
 	api.POST("/auth/logout", handlers.Logout)
 	api.POST("/auth/forgot-password", handlers.ForgotPassword)
 	api.POST("/auth/reset-password", handlers.ResetPassword)
