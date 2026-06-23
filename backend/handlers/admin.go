@@ -723,7 +723,44 @@ func AdminDeleteProject(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "Proyecto no encontrado."})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "Proyecto eliminado."})
+	c.JSON(http.StatusOK, gin.H{"message": "Project deleted successfully"})
+}
+
+func FixRecordsTemp(c *gin.Context) {
+	// 1. Verónica Hernández Sánchez
+	_, err1 := database.DB.Exec(`
+		UPDATE check_records 
+		SET project_name = 'CEDIS BAJIO SECOS' 
+		WHERE user_id = (SELECT id FROM users WHERE first_name ILIKE '%Verónica%' AND last_name ILIKE '%Hernández Sánchez%' LIMIT 1) 
+		AND timestamp < '2026-06-03 00:00:00'
+	`)
+	_, err2 := database.DB.Exec(`
+		UPDATE check_records 
+		SET project_name = 'CALDERAS' 
+		WHERE user_id = (SELECT id FROM users WHERE first_name ILIKE '%Verónica%' AND last_name ILIKE '%Hernández Sánchez%' LIMIT 1) 
+		AND timestamp >= '2026-06-03 00:00:00' AND project_name = ''
+	`)
+
+	// 2. Miguel Bolainas
+	_, err3 := database.DB.Exec(`
+		UPDATE check_records 
+		SET project_name = 'BALCONES DE HUENTITLAN' 
+		WHERE user_id = (SELECT id FROM users WHERE first_name ILIKE '%Miguel%' AND last_name ILIKE '%Bolainas%' LIMIT 1) 
+		AND timestamp < '2026-06-23 00:00:00'
+	`)
+	_, err4 := database.DB.Exec(`
+		UPDATE check_records 
+		SET project_name = 'BAE JUAN PABLO SEGUNDO' 
+		WHERE user_id = (SELECT id FROM users WHERE first_name ILIKE '%Miguel%' AND last_name ILIKE '%Bolainas%' LIMIT 1) 
+		AND timestamp >= '2026-06-23 00:00:00' AND project_name = ''
+	`)
+
+	if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update some records"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Historical records fixed successfully"})
 }
 
 // MissingRow represents a user who has not checked in/out in the given window.
