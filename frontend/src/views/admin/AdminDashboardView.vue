@@ -1,30 +1,15 @@
 <template>
-  <div
-    class="admin-layout min-h-screen min-h-dvh"
-    style="background-color: var(--bg)"
-  >
+  <div class="admin-layout min-h-screen min-h-dvh" style="background-color: var(--bg)">
     <!-- Sidebar Desktop -->
-    <aside
-      class="sidebar hidden lg:flex flex-col fixed left-0 top-0 h-full z-30 w-64"
-      style="
+    <aside class="sidebar hidden lg:flex flex-col fixed left-0 top-0 h-full z-30 w-64" style="
         background: var(--surface);
         border-right: 1px solid var(--border-subtle);
-      "
-    >
+      ">
       <!-- Logo -->
-      <div
-        class="px-6 py-6"
-        style="border-bottom: 1px solid var(--border-subtle)"
-      >
+      <div class="px-6 py-6" style="border-bottom: 1px solid var(--border-subtle)">
         <div class="flex items-center gap-3">
-          <div
-            class="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center text-xl"
-          >
-            <img
-              src="/checador-logo.png"
-              alt="PaseLista Logo"
-              class="w-full h-full object-cover"
-            />
+          <div class="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center text-xl">
+            <img src="/LOGOC.png" alt="PaseLista Logo" class="w-full h-full object-cover" />
           </div>
           <div></div>
         </div>
@@ -32,51 +17,31 @@
 
       <!-- Nav -->
       <nav class="flex-1 px-3 py-4 space-y-1">
-        <button
-          v-for="item in navItems"
-          :key="item.id"
-          @click="activeTab = item.id"
-          :class="
-            activeTab === item.id
-              ? 'bg-gradient-to-r from-brand-500/90 to-violet-600/90 text-white shadow-md'
-              : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--input-bg)]'
-          "
-          class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all"
-        >
+        <button v-for="item in navItems" :key="item.id" @click="activeTab = item.id" :class="activeTab === item.id
+          ? 'bg-gradient-to-r from-brand-500/90 to-violet-600/90 text-white shadow-md'
+          : 'text-[var(--text-muted)] hover:text-[var(--text)] hover:bg-[var(--input-bg)]'
+          " class="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all">
           <component :is="item.icon" class="w-5 h-5 flex-shrink-0" />
           <span>{{ item.label }}</span>
-          <div
-            v-if="activeTab === item.id"
-            class="ml-auto w-1.5 h-1.5 rounded-full bg-white/70"
-          ></div>
+          <div v-if="activeTab === item.id" class="ml-auto w-1.5 h-1.5 rounded-full bg-white/70"></div>
         </button>
-        <div
-          v-if="activeTab !== 'users' && activeTab !== 'overview'"
-          class="absolute left-64 top-0 bottom-0 w-0.5 bg-brand-500/20 pointer-events-none"
-        ></div>
+        <div v-if="activeTab !== 'users' && activeTab !== 'overview'"
+          class="absolute left-64 top-0 bottom-0 w-0.5 bg-brand-500/20 pointer-events-none"></div>
       </nav>
 
       <!-- Admin info + logout -->
       <div class="px-4 py-4" style="border-top: 1px solid var(--border-subtle)">
         <div class="flex items-center gap-3 mb-3">
-          <div
-            class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold overflow-hidden"
-            style="
+          <div class="w-9 h-9 rounded-xl flex items-center justify-center text-sm font-bold overflow-hidden" style="
               background: linear-gradient(
                 135deg,
                 rgba(99, 102, 241, 0.4),
                 rgba(139, 92, 246, 0.4)
               );
               border: 1px solid rgba(99, 102, 241, 0.3);
-            "
-          >
-            <img
-              v-if="auth.user?.avatar_url"
-              :src="auth.user.avatar_url"
-              loading="lazy"
-              class="w-full h-full object-cover"
-              alt="Perfil"
-            />
+            ">
+            <img v-if="auth.user?.avatar_url" :src="auth.user.avatar_url" loading="lazy"
+              class="w-full h-full object-cover" alt="Perfil" />
             <span v-else>{{ auth.user?.first_name?.[0] }}</span>
           </div>
           <div class="min-w-0">
@@ -88,40 +53,26 @@
             </p>
           </div>
         </div>
-        <button
-          @click="showLogoutModal = true"
-          class="btn-secondary btn-sm w-full text-rose-400 border-rose-500/20 hover:bg-rose-500/10"
-        >
+        <button @click="showLogoutModal = true"
+          class="btn-secondary btn-sm w-full text-rose-400 border-rose-500/20 hover:bg-rose-500/10">
           Cerrar Sesión
         </button>
       </div>
     </aside>
 
     <!-- Mobile top bar -->
-    <header
-      class="lg:hidden sticky top-0 z-20 px-4 py-3 safe-top flex items-center justify-between"
-      style="
+    <header class="lg:hidden sticky top-0 z-20 px-4 py-3 safe-top flex items-center justify-between" style="
         background: var(--nav-bg);
         backdrop-filter: blur(12px);
         border-bottom: 1px solid var(--border-subtle);
-      "
-    >
+      ">
       <div class="flex items-center gap-2">
-        <div
-          class="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center"
-        >
-          <img
-            src="/checador-logo.png"
-            alt="Logo"
-            class="w-full h-full object-cover"
-          />
+        <div class="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center">
+          <img src="/LOGOC.png" alt="Logo" class="w-full h-full object-cover" />
         </div>
         <span class="text-white font-bold text-sm">Admin · PaseLista</span>
       </div>
-      <button
-        @click="showLogoutModal = true"
-        class="text-rose-400 text-sm font-medium"
-      >
+      <button @click="showLogoutModal = true" class="text-rose-400 text-sm font-medium">
         Salir
       </button>
     </header>
@@ -145,36 +96,22 @@
           <div class="flex flex-wrap items-center gap-3">
             <div class="flex items-center gap-2">
               <label class="text-slate-400 text-sm">Fecha:</label>
-              <input
-                type="date"
-                v-model="filters.date_from"
-                @change="loadAll"
-                class="input text-sm py-2 w-40"
-              />
+              <input type="date" v-model="filters.date_from" @change="loadAll" class="input text-sm py-2 w-40" />
             </div>
-            <button
-              @click="setToday"
-              class="badge-blue cursor-pointer hover:opacity-80 transition-opacity"
-            >
+            <button @click="setToday" class="badge-blue cursor-pointer hover:opacity-80 transition-opacity">
               Hoy
             </button>
-            <button
-              @click="clearDate"
-              class="badge-gray cursor-pointer hover:opacity-80 transition-opacity"
-            >
+            <button @click="clearDate" class="badge-gray cursor-pointer hover:opacity-80 transition-opacity">
               Todos
             </button>
           </div>
 
           <!-- Stats grid -->
           <div class="grid grid-cols-2 lg:grid-cols-5 gap-4">
-            <div
-              class="stat-card col-span-2 lg:col-span-1"
-              style="
+            <div class="stat-card col-span-2 lg:col-span-1" style="
                 background: rgba(99, 102, 241, 0.1);
                 border-color: rgba(99, 102, 241, 0.3);
-              "
-            >
+              ">
               <p class="stat-label flex items-center gap-1">
                 <UsersIcon class="w-4 h-4 text-brand-500 dark:text-brand-400" />
                 Usuarios
@@ -183,68 +120,48 @@
                 {{ stats.total_users }}
               </p>
             </div>
-            <div
-              class="stat-card"
-              style="
+            <div class="stat-card" style="
                 background: rgba(16, 185, 129, 0.1);
                 border-color: rgba(16, 185, 129, 0.3);
-              "
-            >
+              ">
               <p class="stat-label flex items-center gap-1">
-                <MapPinIcon
-                  class="w-4 h-4 text-emerald-600 dark:text-emerald-400"
-                />
+                <MapPinIcon class="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                 Entradas
               </p>
               <p class="stat-value text-emerald-600 dark:text-emerald-400">
                 {{ stats.entries_total }}
               </p>
             </div>
-            <div
-              class="stat-card"
-              style="
+            <div class="stat-card" style="
                 background: rgba(244, 63, 94, 0.1);
                 border-color: rgba(244, 63, 94, 0.3);
-              "
-            >
+              ">
               <p class="stat-label flex items-center gap-1">
-                <ArrowRightOnRectangleIcon
-                  class="w-4 h-4 text-rose-600 dark:text-rose-400"
-                />
+                <ArrowRightOnRectangleIcon class="w-4 h-4 text-rose-600 dark:text-rose-400" />
                 Salidas
               </p>
               <p class="stat-value text-rose-600 dark:text-rose-400">
                 {{ stats.exits_total }}
               </p>
             </div>
-            <div
-              class="stat-card"
-              style="
+            <div class="stat-card" style="
                 background: rgba(251, 191, 36, 0.1);
                 border-color: rgba(251, 191, 36, 0.3);
-              "
-            >
+              ">
               <p class="stat-label flex items-center gap-1">
-                <SignalIcon
-                  class="w-4 h-4 text-amber-600 dark:text-amber-400"
-                />
+                <SignalIcon class="w-4 h-4 text-amber-600 dark:text-amber-400" />
                 Activos
               </p>
               <p class="stat-value text-amber-600 dark:text-amber-400">
                 {{ stats.active_now }}
               </p>
             </div>
-            <div
-              class="stat-card"
-              style="
+            <div class="stat-card" style="
                 background: rgba(6, 182, 212, 0.1);
                 border-color: rgba(6, 182, 212, 0.3);
-              "
-            >
+              ">
               <p class="stat-label flex items-center gap-1">
-                <ClipboardDocumentListIcon
-                  class="w-4 h-4 text-cyan-600 dark:text-cyan-400"
-                />
+                <ClipboardDocumentListIcon class="w-4 h-4 text-cyan-600 dark:text-cyan-400" />
                 Registros
               </p>
               <p class="stat-value text-cyan-600 dark:text-cyan-400">
@@ -255,17 +172,13 @@
 
           <!-- Recent records -->
           <div class="glass-card overflow-hidden">
-            <div
-              class="px-5 py-4 flex items-center justify-between"
-              style="border-bottom: 1px solid var(--border-subtle)"
-            >
+            <div class="px-5 py-4 flex items-center justify-between"
+              style="border-bottom: 1px solid var(--border-subtle)">
               <h3 class="font-semibold" style="color: var(--text)">
                 Registros recientes
               </h3>
-              <button
-                @click="activeTab = 'records'"
-                class="text-brand-600 dark:text-brand-400 text-sm hover:text-brand-700 dark:hover:text-brand-300 font-semibold transition-colors"
-              >
+              <button @click="activeTab = 'records'"
+                class="text-brand-600 dark:text-brand-400 text-sm hover:text-brand-700 dark:hover:text-brand-300 font-semibold transition-colors">
                 Ver todos →
               </button>
             </div>
@@ -284,30 +197,18 @@
                 </thead>
                 <tbody>
                   <tr v-if="records.slice(0, 8).length === 0">
-                    <td
-                      colspan="6"
-                      class="text-center py-8"
-                      style="color: var(--text-muted)"
-                    >
+                    <td colspan="6" class="text-center py-8" style="color: var(--text-muted)">
                       Sin registros
                     </td>
                   </tr>
-                  <tr
-                    v-for="r in records.slice(0, 8)"
-                    :key="r.record_id"
-                    :style="
-                      r.is_suspicious
-                        ? 'background: rgba(245,158,11,0.06);'
-                        : ''
-                    "
-                  >
+                  <tr v-for="r in records.slice(0, 8)" :key="r.record_id" :style="r.is_suspicious
+                    ? 'background: rgba(245,158,11,0.06);'
+                    : ''
+                    ">
                     <td>
                       <div class="flex items-center gap-1.5">
                         <div>
-                          <p
-                            class="font-medium text-sm"
-                            style="color: var(--text)"
-                          >
+                          <p class="font-medium text-sm" style="color: var(--text)">
                             {{ toTitleCase(r.first_name) }}
                             {{ toTitleCase(r.last_name) }}
                           </p>
@@ -315,80 +216,47 @@
                             {{ r.email }}
                           </p>
                         </div>
-                        <ExclamationTriangleIcon
-                          v-if="r.is_suspicious"
-                          class="w-4 h-4 text-amber-400 flex-shrink-0"
-                          :title="r.suspicious_reason || 'Registro sospechoso'"
-                        />
+                        <ExclamationTriangleIcon v-if="r.is_suspicious" class="w-4 h-4 text-amber-400 flex-shrink-0"
+                          :title="r.suspicious_reason || 'Registro sospechoso'" />
                       </div>
                     </td>
                     <td class="hidden sm:table-cell">
-                      <span
-                        class="text-xs line-clamp-1 max-w-[140px] block"
-                        style="color: var(--text-muted)"
-                        >{{ r.project_name }}</span
-                      >
+                      <span class="text-xs line-clamp-1 max-w-[140px] block" style="color: var(--text-muted)">{{
+                        r.project_name }}</span>
                     </td>
                     <td>
-                      <span
-                        :class="
-                          r.type === 'entry' ? 'badge-green' : 'badge-red'
-                        "
-                        class="badge whitespace-nowrap"
-                      >
+                      <span :class="r.type === 'entry' ? 'badge-green' : 'badge-red'
+                        " class="badge whitespace-nowrap">
                         {{ r.type === "entry" ? "Entrada" : "Salida" }}
                       </span>
                     </td>
                     <td>
-                      <span
-                        v-if="r.shift"
-                        :class="
-                          r.shift === 'DIURNO' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-400'
-                        "
-                        class="badge whitespace-nowrap"
-                      >
+                      <span v-if="r.shift" :class="r.shift === 'DIURNO' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-400'
+                        " class="badge whitespace-nowrap">
                         {{ r.shift }}
                       </span>
                       <span v-else class="text-xs" style="color: var(--text-dim)">-</span>
                     </td>
                     <td>
-                      <p
-                        class="text-xs whitespace-nowrap"
-                        style="color: var(--text-muted)"
-                      >
+                      <p class="text-xs whitespace-nowrap" style="color: var(--text-muted)">
                         {{ formatDate(r.timestamp) }}
                       </p>
                     </td>
                     <td class="hidden md:table-cell">
-                      <span
-                        :class="
-                          r.location_count > 0 ? 'badge-blue' : 'badge-gray'
-                        "
-                        class="badge"
-                      >
+                      <span :class="r.location_count > 0 ? 'badge-blue' : 'badge-gray'
+                        " class="badge">
                         {{ r.location_count }} pts
                       </span>
                     </td>
                     <td>
                       <div class="flex items-center gap-2">
-                        <button
-                          v-if="r.has_site_photo || r.has_selfie_photo"
-                          @click="openPhotosModal(r)"
-                          class="text-xs px-2 py-1 rounded-lg font-semibold transition-all flex-shrink-0 bg-violet-100 text-violet-700 hover:bg-violet-200 dark:bg-violet-500/15 dark:text-violet-400"
-                        >
+                        <button v-if="r.has_site_photo || r.has_selfie_photo" @click="openPhotosModal(r)"
+                          class="text-xs px-2 py-1 rounded-lg font-semibold transition-all flex-shrink-0 bg-violet-100 text-violet-700 hover:bg-violet-200 dark:bg-violet-500/15 dark:text-violet-400">
                           Fotos
                         </button>
-                        <span
-                          v-else
-                          class="text-xs"
-                          style="color: var(--text-dim)"
-                          >Sin fotos</span
-                        >
-                        <button
-                          @click="openRouteModal(r)"
-                          :disabled="r.location_count === 0"
-                          class="text-xs px-2 py-1 rounded-lg font-semibold transition-all flex-shrink-0 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-400 disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
+                        <span v-else class="text-xs" style="color: var(--text-dim)">Sin fotos</span>
+                        <button @click="openRouteModal(r)" :disabled="r.location_count === 0"
+                          class="text-xs px-2 py-1 rounded-lg font-semibold transition-all flex-shrink-0 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-400 disabled:opacity-40 disabled:cursor-not-allowed">
                           Mapa
                         </button>
                       </div>
@@ -407,60 +275,28 @@
             <!-- Fila 1: Rango de fechas + accesos rápidos -->
             <div class="flex flex-wrap items-center gap-3">
               <div class="flex items-center gap-2">
-                <CalendarIcon
-                  class="w-4 h-4 flex-shrink-0"
-                  style="color: var(--text-muted)"
-                />
-                <span
-                  class="text-xs font-medium"
-                  style="color: var(--text-muted)"
-                  >Desde</span
-                >
-                <input
-                  type="date"
-                  v-model="filters.date_from"
-                  @change="loadRecords"
-                  class="input text-sm py-2 w-40"
-                />
+                <CalendarIcon class="w-4 h-4 flex-shrink-0" style="color: var(--text-muted)" />
+                <span class="text-xs font-medium" style="color: var(--text-muted)">Desde</span>
+                <input type="date" v-model="filters.date_from" @change="loadRecords" class="input text-sm py-2 w-40" />
               </div>
               <div class="flex items-center gap-2">
-                <span
-                  class="text-xs font-medium"
-                  style="color: var(--text-muted)"
-                  >Hasta</span
-                >
-                <input
-                  type="date"
-                  v-model="filters.date_to"
-                  @change="loadRecords"
-                  class="input text-sm py-2 w-40"
-                />
+                <span class="text-xs font-medium" style="color: var(--text-muted)">Hasta</span>
+                <input type="date" v-model="filters.date_to" @change="loadRecords" class="input text-sm py-2 w-40" />
               </div>
-              <button
-                @click="setToday"
-                class="badge-blue cursor-pointer hover:opacity-80 transition-opacity text-xs px-3 py-1.5 rounded-lg"
-              >
+              <button @click="setToday"
+                class="badge-blue cursor-pointer hover:opacity-80 transition-opacity text-xs px-3 py-1.5 rounded-lg">
                 Hoy
               </button>
-              <button
-                @click="clearDate"
-                class="badge-gray cursor-pointer hover:opacity-80 transition-opacity text-xs px-3 py-1.5 rounded-lg"
-              >
+              <button @click="clearDate"
+                class="badge-gray cursor-pointer hover:opacity-80 transition-opacity text-xs px-3 py-1.5 rounded-lg">
                 Todos
               </button>
             </div>
             <!-- Fila 2: Proyecto, tipo, búsqueda, limpiar -->
             <div class="flex flex-wrap items-center gap-3">
               <div class="flex items-center gap-2 flex-1 min-w-[150px]">
-                <BuildingOffice2Icon
-                  class="w-4 h-4 flex-shrink-0"
-                  style="color: var(--text-muted)"
-                />
-                <select
-                  v-model="filters.project"
-                  @change="loadRecords"
-                  class="input text-sm py-2 flex-1"
-                >
+                <BuildingOffice2Icon class="w-4 h-4 flex-shrink-0" style="color: var(--text-muted)" />
+                <select v-model="filters.project" @change="loadRecords" class="input text-sm py-2 flex-1">
                   <option value="">Todos los proyectos</option>
                   <option v-for="p in projects" :key="p" :value="p">
                     {{ p }}
@@ -468,41 +304,21 @@
                 </select>
               </div>
               <div class="flex items-center gap-2">
-                <select
-                  v-model="filters.type"
-                  @change="loadRecords"
-                  class="input text-sm py-2 w-44"
-                >
+                <select v-model="filters.type" @change="loadRecords" class="input text-sm py-2 w-44">
                   <option value="">Entradas y salidas</option>
                   <option value="entry">Solo entradas</option>
                   <option value="exit">Solo salidas</option>
                 </select>
               </div>
               <div class="flex items-center gap-2 flex-1 min-w-[150px]">
-                <UserCircleIcon
-                  class="w-4 h-4 flex-shrink-0"
-                  style="color: var(--text-muted)"
-                />
-                <input
-                  v-model="filters.name"
-                  @input="debouncedLoad"
-                  type="text"
-                  class="input text-sm py-2 flex-1"
-                  placeholder="Buscar por nombre..."
-                />
+                <UserCircleIcon class="w-4 h-4 flex-shrink-0" style="color: var(--text-muted)" />
+                <input v-model="filters.name" @input="debouncedLoad" type="text" class="input text-sm py-2 flex-1"
+                  placeholder="Buscar por nombre..." />
               </div>
               <div class="flex items-center gap-2 flex-1 min-w-[180px]">
-                <MagnifyingGlassIcon
-                  class="w-4 h-4 flex-shrink-0"
-                  style="color: var(--text-muted)"
-                />
-                <input
-                  v-model="filters.search"
-                  @input="debouncedLoad"
-                  type="text"
-                  class="input text-sm py-2 flex-1"
-                  placeholder="Buscar por email..."
-                />
+                <MagnifyingGlassIcon class="w-4 h-4 flex-shrink-0" style="color: var(--text-muted)" />
+                <input v-model="filters.search" @input="debouncedLoad" type="text" class="input text-sm py-2 flex-1"
+                  placeholder="Buscar por email..." />
               </div>
               <button @click="clearFilters" class="btn-secondary btn-sm">
                 Limpiar
@@ -516,38 +332,19 @@
               <span style="color: var(--text); font-weight: 600">{{
                 records.length
               }}</span>
-              <span style="color: var(--text-muted)"
-                >registros encontrados</span
-              >
+              <span style="color: var(--text-muted)">registros encontrados</span>
             </p>
             <div class="flex items-center gap-3">
-              <div
-                v-if="loadingRecords"
-                class="flex items-center gap-2 text-slate-500 text-sm"
-              >
-                <div
-                  class="w-3 h-3 border border-brand-500/40 border-t-brand-500 rounded-full animate-spin"
-                ></div>
+              <div v-if="loadingRecords" class="flex items-center gap-2 text-slate-500 text-sm">
+                <div class="w-3 h-3 border border-brand-500/40 border-t-brand-500 rounded-full animate-spin"></div>
                 Cargando...
               </div>
-              <button
-                v-if="records.length > 0"
-                @click="exportExcel"
-                class="btn-secondary btn-sm flex items-center gap-1.5 text-green-400 border-green-500/20 hover:bg-green-500/10"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  class="w-4 h-4"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    stroke-width="2"
-                    d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 3v12"
-                  />
+              <button v-if="records.length > 0" @click="exportExcel"
+                class="btn-secondary btn-sm flex items-center gap-1.5 text-green-400 border-green-500/20 hover:bg-green-500/10">
+                <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                  stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                    d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 3v12" />
                 </svg>
                 Descargar Excel
               </button>
@@ -556,14 +353,8 @@
 
           <!-- Table -->
           <div class="glass-card overflow-hidden">
-            <div
-              v-if="records.length === 0 && !loadingRecords"
-              class="text-center py-16"
-            >
-              <ClipboardDocumentListIcon
-                class="w-12 h-12 mx-auto mb-3 opacity-30"
-                style="color: var(--text-muted)"
-              />
+            <div v-if="records.length === 0 && !loadingRecords" class="text-center py-16">
+              <ClipboardDocumentListIcon class="w-12 h-12 mx-auto mb-3 opacity-30" style="color: var(--text-muted)" />
               <p class="font-medium" style="color: var(--text-muted)">
                 Sin resultados
               </p>
@@ -588,22 +379,14 @@
                   </tr>
                 </thead>
                 <tbody>
-                  <tr
-                    v-for="r in paginatedRecords"
-                    :key="r.record_id"
-                    :style="
-                      r.is_suspicious
-                        ? 'background: rgba(245,158,11,0.06);'
-                        : ''
-                    "
-                  >
+                  <tr v-for="r in paginatedRecords" :key="r.record_id" :style="r.is_suspicious
+                    ? 'background: rgba(245,158,11,0.06);'
+                    : ''
+                    ">
                     <td>
                       <div class="flex items-center gap-1.5">
                         <div>
-                          <p
-                            class="font-medium text-sm"
-                            style="color: var(--text)"
-                          >
+                          <p class="font-medium text-sm" style="color: var(--text)">
                             {{ toTitleCase(r.first_name) }}
                             {{ toTitleCase(r.last_name) }}
                           </p>
@@ -612,67 +395,41 @@
                           </p>
                         </div>
                         <!-- Suspicious flag -->
-                        <button
-                          v-if="r.is_suspicious"
-                          @click="openSuspiciousModal(r)"
-                          class="flex-shrink-0 p-0.5 rounded"
-                          title="Ver detalle de alerta"
-                        >
-                          <ExclamationTriangleIcon
-                            class="w-4 h-4 text-amber-400"
-                          />
+                        <button v-if="r.is_suspicious" @click="openSuspiciousModal(r)"
+                          class="flex-shrink-0 p-0.5 rounded" title="Ver detalle de alerta">
+                          <ExclamationTriangleIcon class="w-4 h-4 text-amber-400" />
                         </button>
                       </div>
                     </td>
                     <td class="hidden sm:table-cell">
-                      <span
-                        class="text-xs line-clamp-1 max-w-[140px] block"
-                        style="color: var(--text-muted)"
-                        >{{ r.project_name }}</span
-                      >
+                      <span class="text-xs line-clamp-1 max-w-[140px] block" style="color: var(--text-muted)">{{
+                        r.project_name }}</span>
                     </td>
                     <td>
-                      <span
-                        :class="
-                          r.type === 'entry' ? 'badge-green' : 'badge-red'
-                        "
-                        class="badge whitespace-nowrap"
-                      >
+                      <span :class="r.type === 'entry' ? 'badge-green' : 'badge-red'
+                        " class="badge whitespace-nowrap">
                         {{ r.type === "entry" ? "Entrada" : "Salida" }}
                       </span>
                     </td>
                     <td>
-                      <span
-                        v-if="r.shift"
-                        :class="
-                          r.shift === 'DIURNO' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-400'
-                        "
-                        class="badge whitespace-nowrap"
-                      >
+                      <span v-if="r.shift" :class="r.shift === 'DIURNO' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-400' : 'bg-indigo-100 text-indigo-700 dark:bg-indigo-500/15 dark:text-indigo-400'
+                        " class="badge whitespace-nowrap">
                         {{ r.shift }}
                       </span>
                       <span v-else class="text-xs" style="color: var(--text-dim)">-</span>
                     </td>
                     <td>
-                      <p
-                        class="text-xs whitespace-nowrap"
-                        style="color: var(--text-muted)"
-                      >
+                      <p class="text-xs whitespace-nowrap" style="color: var(--text-muted)">
                         {{ formatDate(r.timestamp) }}
                       </p>
                     </td>
                     <!-- Horario programado -->
                     <td class="hidden lg:table-cell">
-                      <template
-                        v-if="
-                          (r.type === 'entry' && r.entry_schedule) ||
-                          (r.type === 'exit' && r.exit_schedule)
-                        "
-                      >
-                        <span
-                          class="text-xs whitespace-nowrap"
-                          style="color: var(--text-muted)"
-                        >
+                      <template v-if="
+                        (r.type === 'entry' && r.entry_schedule) ||
+                        (r.type === 'exit' && r.exit_schedule)
+                      ">
+                        <span class="text-xs whitespace-nowrap" style="color: var(--text-muted)">
                           {{
                             r.type === "entry"
                               ? r.entry_schedule
@@ -680,70 +437,36 @@
                           }}
                         </span>
                       </template>
-                      <span
-                        v-else
-                        class="text-xs"
-                        style="color: var(--text-dim)"
-                        >Sin horario</span
-                      >
+                      <span v-else class="text-xs" style="color: var(--text-dim)">Sin horario</span>
                     </td>
                     <!-- Retraso / Adelanto (calculado en frontend con zona horaria local) -->
                     <td class="hidden lg:table-cell">
                       <template v-if="computeDeviation(r) !== null">
-                        <span
-                          v-if="computeDeviation(r) === 0"
-                          class="badge badge-blue text-xs"
-                          >Puntual</span
-                        >
-                        <span
-                          v-else-if="r.type === 'entry'"
-                          :class="
-                            computeDeviation(r) > 0
-                              ? 'badge-red'
-                              : 'badge-green'
-                          "
-                          class="badge text-xs whitespace-nowrap"
-                        >
+                        <span v-if="computeDeviation(r) === 0" class="badge badge-blue text-xs">Puntual</span>
+                        <span v-else-if="r.type === 'entry'" :class="computeDeviation(r) > 0
+                          ? 'badge-red'
+                          : 'badge-green'
+                          " class="badge text-xs whitespace-nowrap">
                           {{ formatDeviation(computeDeviation(r), "entry") }}
                         </span>
-                        <span
-                          v-else
-                          :class="
-                            computeDeviation(r) < 0
-                              ? 'badge-red'
-                              : 'badge-green'
-                          "
-                          class="badge text-xs whitespace-nowrap"
-                        >
+                        <span v-else :class="computeDeviation(r) < 0
+                          ? 'badge-red'
+                          : 'badge-green'
+                          " class="badge text-xs whitespace-nowrap">
                           {{ formatDeviation(computeDeviation(r), "exit") }}
                         </span>
                       </template>
-                      <span
-                        v-else
-                        class="text-xs"
-                        style="color: var(--text-dim)"
-                        >—</span
-                      >
+                      <span v-else class="text-xs" style="color: var(--text-dim)">—</span>
                     </td>
                     <td class="hidden md:table-cell">
                       <div class="flex flex-col gap-1">
-                        <span
-                          :class="
-                            r.location_count > 0 ? 'badge-blue' : 'badge-gray'
-                          "
-                          class="badge"
-                        >
+                        <span :class="r.location_count > 0 ? 'badge-blue' : 'badge-gray'
+                          " class="badge">
                           {{ r.location_count }} pts
                         </span>
-                        <span
-                          v-if="r.gps_address"
-                          class="text-xs truncate max-w-[180px] flex items-center gap-1"
-                          style="color: var(--text-muted)"
-                          :title="r.gps_address"
-                        >
-                          <MapPinIcon
-                            class="w-3 h-3 flex-shrink-0 text-emerald-500"
-                          />
+                        <span v-if="r.gps_address" class="text-xs truncate max-w-[180px] flex items-center gap-1"
+                          style="color: var(--text-muted)" :title="r.gps_address">
+                          <MapPinIcon class="w-3 h-3 flex-shrink-0 text-emerald-500" />
                           {{ r.gps_address }}
                         </span>
                       </div>
@@ -751,61 +474,29 @@
                     <!-- Comentario del día -->
                     <td class="hidden xl:table-cell max-w-[200px]">
                       <div class="flex items-center gap-1.5">
-                        <span
-                          v-if="r.day_comment"
-                          class="text-xs truncate"
-                          style="color: var(--text-muted)"
-                          >{{ r.day_comment }}</span
-                        >
-                        <span
-                          v-else
-                          class="text-xs"
-                          style="color: var(--text-dim)"
-                          >—</span
-                        >
-                        <button
-                          @click="openCommentEditor(r)"
+                        <span v-if="r.day_comment" class="text-xs truncate" style="color: var(--text-muted)">{{
+                          r.day_comment }}</span>
+                        <span v-else class="text-xs" style="color: var(--text-dim)">—</span>
+                        <button @click="openCommentEditor(r)"
                           class="flex-shrink-0 p-0.5 rounded hover:bg-white/10 transition-colors"
-                          title="Editar comentario"
-                        >
-                          <svg
-                            xmlns="http://www.w3.org/2000/svg"
-                            class="w-3.5 h-3.5"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                            style="color: var(--text-dim)"
-                          >
-                            <path
-                              stroke-linecap="round"
-                              stroke-linejoin="round"
-                              stroke-width="2"
-                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"
-                            />
+                          title="Editar comentario">
+                          <svg xmlns="http://www.w3.org/2000/svg" class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24"
+                            stroke="currentColor" style="color: var(--text-dim)">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                              d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z" />
                           </svg>
                         </button>
                       </div>
                     </td>
                     <td>
                       <div class="flex items-center gap-2">
-                        <button
-                          v-if="r.has_site_photo || r.has_selfie_photo"
-                          @click="openPhotosModal(r)"
-                          class="text-xs px-2 py-1 rounded-lg font-semibold transition-all flex-shrink-0 bg-violet-100 text-violet-700 hover:bg-violet-200 dark:bg-violet-500/15 dark:text-violet-400"
-                        >
+                        <button v-if="r.has_site_photo || r.has_selfie_photo" @click="openPhotosModal(r)"
+                          class="text-xs px-2 py-1 rounded-lg font-semibold transition-all flex-shrink-0 bg-violet-100 text-violet-700 hover:bg-violet-200 dark:bg-violet-500/15 dark:text-violet-400">
                           Fotos
                         </button>
-                        <span
-                          v-else
-                          class="text-xs"
-                          style="color: var(--text-dim)"
-                          >Sin fotos</span
-                        >
-                        <button
-                          @click="openRouteModal(r)"
-                          :disabled="r.location_count === 0"
-                          class="text-xs px-2 py-1 rounded-lg font-semibold transition-all flex-shrink-0 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-400 disabled:opacity-40 disabled:cursor-not-allowed"
-                        >
+                        <span v-else class="text-xs" style="color: var(--text-dim)">Sin fotos</span>
+                        <button @click="openRouteModal(r)" :disabled="r.location_count === 0"
+                          class="text-xs px-2 py-1 rounded-lg font-semibold transition-all flex-shrink-0 bg-indigo-100 text-indigo-700 hover:bg-indigo-200 dark:bg-indigo-500/15 dark:text-indigo-400 disabled:opacity-40 disabled:cursor-not-allowed">
                           Mapa
                         </button>
                       </div>
@@ -816,30 +507,19 @@
             </div>
 
             <!-- Records Pagination -->
-            <div
-              v-if="totalRecordsPages > 1"
-              class="px-5 py-3 flex items-center justify-between"
-              style="
+            <div v-if="totalRecordsPages > 1" class="px-5 py-3 flex items-center justify-between" style="
                 border-top: 1px solid var(--border-subtle);
                 background: var(--surface);
-              "
-            >
+              ">
               <p class="text-xs text-slate-500">
                 Página {{ recordsPage }} de {{ totalRecordsPages }}
               </p>
               <div class="flex items-center gap-2">
-                <button
-                  class="btn-secondary text-xs px-3 py-1.5"
-                  :disabled="recordsPage === 1"
-                  @click="recordsPage--"
-                >
+                <button class="btn-secondary text-xs px-3 py-1.5" :disabled="recordsPage === 1" @click="recordsPage--">
                   Anterior
                 </button>
-                <button
-                  class="btn-secondary text-xs px-3 py-1.5"
-                  :disabled="recordsPage === totalRecordsPages"
-                  @click="recordsPage++"
-                >
+                <button class="btn-secondary text-xs px-3 py-1.5" :disabled="recordsPage === totalRecordsPages"
+                  @click="recordsPage++">
                   Siguiente
                 </button>
               </div>
@@ -850,10 +530,8 @@
         <!-- ===== OPEN SESSIONS TAB ===== -->
         <div v-if="activeTab === 'sessions'" class="space-y-5 animate-in">
           <div class="glass-card overflow-hidden">
-            <div
-              class="px-5 py-4 flex items-center justify-between"
-              style="border-bottom: 1px solid var(--border-subtle)"
-            >
+            <div class="px-5 py-4 flex items-center justify-between"
+              style="border-bottom: 1px solid var(--border-subtle)">
               <div>
                 <h3 class="font-semibold" style="color: var(--text)">
                   Sesiones sin cerrar
@@ -862,27 +540,16 @@
                   Entradas de las últimas 24 h sin salida correspondiente
                 </p>
               </div>
-              <button
-                @click="loadOpenSessions"
-                class="btn-secondary btn-sm flex items-center gap-1.5"
-                :disabled="loadingOpenSessions"
-              >
-                <span
-                  v-if="loadingOpenSessions"
-                  class="w-3 h-3 border border-brand-500/40 border-t-brand-500 rounded-full animate-spin"
-                ></span>
+              <button @click="loadOpenSessions" class="btn-secondary btn-sm flex items-center gap-1.5"
+                :disabled="loadingOpenSessions">
+                <span v-if="loadingOpenSessions"
+                  class="w-3 h-3 border border-brand-500/40 border-t-brand-500 rounded-full animate-spin"></span>
                 Actualizar
               </button>
             </div>
 
-            <div
-              v-if="openSessions.length === 0 && !loadingOpenSessions"
-              class="text-center py-14"
-            >
-              <CheckCircleIcon
-                class="w-12 h-12 mx-auto mb-3 opacity-60"
-                style="color: #10b981"
-              />
+            <div v-if="openSessions.length === 0 && !loadingOpenSessions" class="text-center py-14">
+              <CheckCircleIcon class="w-12 h-12 mx-auto mb-3 opacity-60" style="color: #10b981" />
               <p class="font-medium" style="color: #10b981">Todo en orden</p>
               <p class="text-sm mt-1" style="color: var(--text-dim)">
                 No hay sesiones abiertas en este momento
@@ -918,10 +585,7 @@
                       }}</span>
                     </td>
                     <td>
-                      <p
-                        class="text-xs whitespace-nowrap"
-                        style="color: var(--text-muted)"
-                      >
+                      <p class="text-xs whitespace-nowrap" style="color: var(--text-muted)">
                         {{ formatDate(s.entry_time) }}
                       </p>
                     </td>
@@ -931,27 +595,16 @@
                       </span>
                     </td>
                     <td>
-                      <span
-                        v-if="s.auto_expired"
-                        class="badge badge-gray text-xs"
-                        >Expirada (auto)</span
-                      >
-                      <span
-                        v-else
-                        class="badge text-xs"
-                        style="
+                      <span v-if="s.auto_expired" class="badge badge-gray text-xs">Expirada (auto)</span>
+                      <span v-else class="badge text-xs" style="
                           background: rgba(245, 158, 11, 0.12);
                           border-color: rgba(245, 158, 11, 0.35);
                           color: #d97706;
-                        "
-                        >Activa — bloquea al usuario</span
-                      >
+                        ">Activa — bloquea al usuario</span>
                     </td>
                     <td>
-                      <button
-                        @click="closeConfirm = { show: true, session: s }"
-                        class="text-xs px-2 py-1 rounded-lg font-semibold transition-all bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-500/15 dark:text-rose-400"
-                      >
+                      <button @click="closeConfirm = { show: true, session: s }"
+                        class="text-xs px-2 py-1 rounded-lg font-semibold transition-all bg-rose-100 text-rose-700 hover:bg-rose-200 dark:bg-rose-500/15 dark:text-rose-400">
                         Cerrar sesión
                       </button>
                     </td>
@@ -962,23 +615,14 @@
           </div>
 
           <!-- Info note -->
-          <div
-            class="glass-card p-4 flex items-start gap-3"
-            style="border-color: rgba(99, 102, 241, 0.2)"
-          >
-            <InformationCircleIcon
-              class="w-5 h-5 text-brand-400 flex-shrink-0 mt-0.5"
-            />
+          <div class="glass-card p-4 flex items-start gap-3" style="border-color: rgba(99, 102, 241, 0.2)">
+            <InformationCircleIcon class="w-5 h-5 text-brand-400 flex-shrink-0 mt-0.5" />
             <p class="text-sm" style="color: var(--text-muted)">
-              <span class="font-semibold" style="color: var(--text)"
-                >¿Cuándo aparece una sesión aquí?</span
-              >
+              <span class="font-semibold" style="color: var(--text)">¿Cuándo aparece una sesión aquí?</span>
               Cuando un usuario registró su entrada pero olvidó registrar la
               salida. Las sesiones con más de
               <strong>20 horas</strong> se marcan como
-              <span style="color: var(--text-muted); font-weight: 600"
-                >Expiradas</span
-              >
+              <span style="color: var(--text-muted); font-weight: 600">Expiradas</span>
               y el sistema ya les permite volver a registrar entrada
               automáticamente. Las sesiones
               <span style="color: #d97706; font-weight: 600">Activas</span>
@@ -993,33 +637,18 @@
           <!-- Filter + actions bar -->
           <div class="glass-card p-4">
             <div class="flex flex-wrap gap-3 items-center">
-              <select
-                v-model="filters.project"
-                @change="loadUsers"
-                class="input text-sm py-2 w-52"
-              >
+              <select v-model="filters.project" @change="loadUsers" class="input text-sm py-2 w-52">
                 <option value="">Todos los proyectos</option>
                 <option v-for="p in projects" :key="p" :value="p">
                   {{ p }}
                 </option>
               </select>
               <div class="flex items-center gap-2 flex-1 min-w-[220px]">
-                <UserCircleIcon
-                  class="w-4 h-4 flex-shrink-0"
-                  style="color: var(--text-muted)"
-                />
-                <input
-                  v-model="usersNameFilter"
-                  @input="debouncedLoadUsers"
-                  type="text"
-                  class="input text-sm py-2 flex-1"
-                  placeholder="Filtrar por nombre..."
-                />
+                <UserCircleIcon class="w-4 h-4 flex-shrink-0" style="color: var(--text-muted)" />
+                <input v-model="usersNameFilter" @input="debouncedLoadUsers" type="text"
+                  class="input text-sm py-2 flex-1" placeholder="Filtrar por nombre..." />
               </div>
-              <button
-                @click="openProjectsModal"
-                class="btn-secondary btn-sm flex items-center gap-1.5"
-              >
+              <button @click="openProjectsModal" class="btn-secondary btn-sm flex items-center gap-1.5">
                 <FolderPlusIcon class="w-4 h-4" />
                 Proyectos
               </button>
@@ -1027,31 +656,19 @@
                 <span style="color: var(--text); font-weight: 600">{{
                   users.length
                 }}</span>
-                <span style="color: var(--text-muted)"
-                  >&nbsp;usuarios registrados</span
-                >
+                <span style="color: var(--text-muted)">&nbsp;usuarios registrados</span>
               </p>
             </div>
           </div>
 
           <!-- Users grid -->
           <div v-if="users.length === 0" class="glass-card p-12 text-center">
-            <UserCircleIcon
-              class="w-12 h-12 mx-auto mb-3 opacity-30"
-              style="color: var(--text-muted)"
-            />
+            <UserCircleIcon class="w-12 h-12 mx-auto mb-3 opacity-30" style="color: var(--text-muted)" />
             <p style="color: var(--text-muted)">Sin usuarios registrados</p>
           </div>
-          <div
-            v-else
-            class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4"
-          >
-            <div
-              v-for="(user, i) in paginatedUsers"
-              :key="user.id"
-              class="glass-card p-5 animate-in"
-              :style="`animation-delay: ${Math.min(i * 0.03, 0.3)}s`"
-            >
+          <div v-else class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div v-for="(user, i) in paginatedUsers" :key="user.id" class="glass-card p-5 animate-in"
+              :style="`animation-delay: ${Math.min(i * 0.03, 0.3)}s`">
               <div class="flex items-start gap-3 mb-4">
                 <div
                   class="w-12 h-12 rounded-2xl overflow-hidden flex items-center justify-center text-lg font-bold flex-shrink-0"
@@ -1062,14 +679,9 @@
                       rgba(139, 92, 246, 0.3)
                     );
                     border: 1px solid rgba(99, 102, 241, 0.25);
-                  "
-                >
-                  <img
-                    v-if="user.avatar_url"
-                    :src="user.avatar_url"
-                    loading="lazy"
-                    class="w-full h-full object-cover"
-                  />
+                  ">
+                  <img v-if="user.avatar_url" :src="user.avatar_url" loading="lazy"
+                    class="w-full h-full object-cover" />
                   <span v-else>{{ userInitials(user) }}</span>
                 </div>
                 <div class="min-w-0">
@@ -1084,73 +696,43 @@
               </div>
               <div class="space-y-2">
                 <div class="flex items-center gap-2">
-                  <span class="text-xs w-16" style="color: var(--text-dim)"
-                    >Proyecto</span
-                  >
-                  <span
-                    class="text-xs truncate uppercase"
-                    style="color: var(--text)"
-                    >{{ user.project_name }}</span
-                  >
+                  <span class="text-xs w-16" style="color: var(--text-dim)">Proyecto</span>
+                  <span class="text-xs truncate uppercase" style="color: var(--text)">{{ user.project_name }}</span>
                 </div>
                 <div class="flex items-center gap-2">
-                  <span class="text-xs w-16" style="color: var(--text-dim)"
-                    >Registros</span
-                  >
+                  <span class="text-xs w-16" style="color: var(--text-dim)">Registros</span>
                   <span class="badge-blue">{{ user.total_checks }}</span>
                 </div>
                 <div class="flex items-center gap-2">
-                  <span class="text-xs w-16" style="color: var(--text-dim)"
-                    >Registro</span
-                  >
+                  <span class="text-xs w-16" style="color: var(--text-dim)">Registro</span>
                   <span class="text-xs" style="color: var(--text-muted)">{{
                     formatDateShort(user.created_at)
                   }}</span>
                 </div>
               </div>
-              <div
-                class="mt-4 pt-3"
-                style="border-top: 1px solid var(--border-subtle)"
-              >
+              <div class="mt-4 pt-3" style="border-top: 1px solid var(--border-subtle)">
                 <div class="flex gap-2 flex-wrap">
-                  <button
-                    @click="openEditUserModal(user)"
-                    class="flex-1 btn-secondary btn-sm flex items-center justify-center gap-1.5"
-                  >
+                  <button @click="openEditUserModal(user)"
+                    class="flex-1 btn-secondary btn-sm flex items-center justify-center gap-1.5">
                     <PencilSquareIcon class="w-4 h-4" />
                     Editar
                   </button>
-                  <button
-                    @click="openScheduleModal(user)"
-                    class="flex-1 btn-secondary btn-sm flex items-center justify-center gap-1.5"
-                  >
-                    <svg
-                      xmlns="http://www.w3.org/2000/svg"
-                      class="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                    >
-                      <path
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                        stroke-width="2"
-                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-                      />
+                  <button @click="openScheduleModal(user)"
+                    class="flex-1 btn-secondary btn-sm flex items-center justify-center gap-1.5">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24"
+                      stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                        d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                     Horario
                   </button>
-                  <button
-                    @click="openPwdModal(user)"
-                    class="flex-1 btn-secondary btn-sm flex items-center justify-center gap-1.5"
-                  >
+                  <button @click="openPwdModal(user)"
+                    class="flex-1 btn-secondary btn-sm flex items-center justify-center gap-1.5">
                     <LockClosedIcon class="w-4 h-4" />
                     Contraseña
                   </button>
-                  <button
-                    @click="deleteUserConfirm = { show: true, user }"
-                    class="flex-1 btn-danger btn-sm flex items-center justify-center gap-1.5"
-                  >
+                  <button @click="deleteUserConfirm = { show: true, user }"
+                    class="flex-1 btn-danger btn-sm flex items-center justify-center gap-1.5">
                     <TrashIcon class="w-4 h-4" />
                     Eliminar
                   </button>
@@ -1160,26 +742,16 @@
           </div>
 
           <!-- Users Pagination -->
-          <div
-            v-if="totalUsersPages > 1"
-            class="flex items-center justify-between mt-4"
-          >
+          <div v-if="totalUsersPages > 1" class="flex items-center justify-between mt-4">
             <p class="text-xs text-slate-500">
               Página {{ usersPage }} de {{ totalUsersPages }}
             </p>
             <div class="flex items-center gap-2">
-              <button
-                class="btn-secondary text-xs px-3 py-1.5"
-                :disabled="usersPage === 1"
-                @click="usersPage--"
-              >
+              <button class="btn-secondary text-xs px-3 py-1.5" :disabled="usersPage === 1" @click="usersPage--">
                 Anterior
               </button>
-              <button
-                class="btn-secondary text-xs px-3 py-1.5"
-                :disabled="usersPage === totalUsersPages"
-                @click="usersPage++"
-              >
+              <button class="btn-secondary text-xs px-3 py-1.5" :disabled="usersPage === totalUsersPages"
+                @click="usersPage++">
                 Siguiente
               </button>
             </div>
@@ -1191,24 +763,13 @@
           <!-- Filters -->
           <div class="glass-card p-4">
             <div class="flex flex-wrap gap-3 items-center">
-              <input
-                type="date"
-                v-model="missingFilters.date_from"
-                @change="loadMissingRecords"
-                class="input text-sm py-2 w-40"
-              />
+              <input type="date" v-model="missingFilters.date_from" @change="loadMissingRecords"
+                class="input text-sm py-2 w-40" />
               <span style="color: var(--text-muted)" class="text-sm">a</span>
-              <input
-                type="date"
-                v-model="missingFilters.date_to"
-                @change="loadMissingRecords"
-                class="input text-sm py-2 w-40"
-              />
-              <select
-                v-model="missingFilters.missing_type"
-                @change="loadMissingRecords"
-                class="input text-sm py-2 w-44"
-              >
+              <input type="date" v-model="missingFilters.date_to" @change="loadMissingRecords"
+                class="input text-sm py-2 w-40" />
+              <select v-model="missingFilters.missing_type" @change="loadMissingRecords"
+                class="input text-sm py-2 w-44">
                 <option value="both">Sin entrada y sin salida</option>
                 <option value="entry">Sin entrada</option>
                 <option value="exit">Sin salida (tienen entrada)</option>
@@ -1219,11 +780,8 @@
               <button @click="setMissingWeek" class="btn-secondary btn-sm">
                 Esta semana
               </button>
-              <button
-                @click="downloadMissingExcel"
-                class="btn-secondary btn-sm flex items-center gap-1.5 ml-auto"
-                title="Descargar Excel"
-              >
+              <button @click="downloadMissingExcel" class="btn-secondary btn-sm flex items-center gap-1.5 ml-auto"
+                title="Descargar Excel">
                 <ArrowDownTrayIcon class="w-4 h-4" />
                 Excel
               </button>
@@ -1232,17 +790,13 @@
 
           <!-- Spinner -->
           <div v-if="loadingMissing" class="glass-card p-10 text-center">
-            <div
-              class="w-8 h-8 border-4 border-brand-500/30 border-t-brand-500 rounded-full animate-spin mx-auto"
-            ></div>
+            <div class="w-8 h-8 border-4 border-brand-500/30 border-t-brand-500 rounded-full animate-spin mx-auto">
+            </div>
           </div>
 
           <template v-else>
             <!-- Sin entrada -->
-            <div
-              v-if="missingFilters.missing_type !== 'exit'"
-              class="space-y-2"
-            >
+            <div v-if="missingFilters.missing_type !== 'exit'" class="space-y-2">
               <div class="flex items-center gap-2 px-1">
                 <ExclamationCircleIcon class="w-5 h-5 text-rose-500" />
                 <h3 class="font-semibold text-sm" style="color: var(--text)">
@@ -1252,11 +806,8 @@
                   missingRecords.missing_entry.length
                 }}</span>
               </div>
-              <div
-                v-if="missingRecords.missing_entry.length === 0"
-                class="glass-card p-6 text-center text-sm"
-                style="color: var(--text-muted)"
-              >
+              <div v-if="missingRecords.missing_entry.length === 0" class="glass-card p-6 text-center text-sm"
+                style="color: var(--text-muted)">
                 Todos los usuarios registraron entrada ✓
               </div>
               <div v-else class="glass-card overflow-hidden">
@@ -1269,10 +820,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr
-                      v-for="u in missingRecords.missing_entry"
-                      :key="u.user_id"
-                    >
+                    <tr v-for="u in missingRecords.missing_entry" :key="u.user_id">
                       <td>
                         <span class="font-medium" style="color: var(--text)">
                           {{ toTitleCase(u.first_name) }}
@@ -1280,18 +828,10 @@
                         </span>
                       </td>
                       <td class="hidden sm:table-cell">
-                        <span
-                          class="text-xs uppercase"
-                          style="color: var(--text-muted)"
-                          >{{ u.project_name }}</span
-                        >
+                        <span class="text-xs uppercase" style="color: var(--text-muted)">{{ u.project_name }}</span>
                       </td>
                       <td class="hidden md:table-cell">
-                        <span
-                          class="text-xs"
-                          style="color: var(--text-muted)"
-                          >{{ u.email }}</span
-                        >
+                        <span class="text-xs" style="color: var(--text-muted)">{{ u.email }}</span>
                       </td>
                     </tr>
                   </tbody>
@@ -1300,10 +840,7 @@
             </div>
 
             <!-- Sin salida -->
-            <div
-              v-if="missingFilters.missing_type !== 'entry'"
-              class="space-y-2"
-            >
+            <div v-if="missingFilters.missing_type !== 'entry'" class="space-y-2">
               <div class="flex items-center gap-2 px-1">
                 <ExclamationTriangleIcon class="w-5 h-5 text-amber-500" />
                 <h3 class="font-semibold text-sm" style="color: var(--text)">
@@ -1313,11 +850,8 @@
                   missingRecords.missing_exit.length
                 }}</span>
               </div>
-              <div
-                v-if="missingRecords.missing_exit.length === 0"
-                class="glass-card p-6 text-center text-sm"
-                style="color: var(--text-muted)"
-              >
+              <div v-if="missingRecords.missing_exit.length === 0" class="glass-card p-6 text-center text-sm"
+                style="color: var(--text-muted)">
                 Todos los usuarios con entrada registraron salida ✓
               </div>
               <div v-else class="glass-card overflow-hidden">
@@ -1330,10 +864,7 @@
                     </tr>
                   </thead>
                   <tbody>
-                    <tr
-                      v-for="u in missingRecords.missing_exit"
-                      :key="u.user_id"
-                    >
+                    <tr v-for="u in missingRecords.missing_exit" :key="u.user_id">
                       <td>
                         <span class="font-medium" style="color: var(--text)">
                           {{ toTitleCase(u.first_name) }}
@@ -1341,18 +872,10 @@
                         </span>
                       </td>
                       <td class="hidden sm:table-cell">
-                        <span
-                          class="text-xs uppercase"
-                          style="color: var(--text-muted)"
-                          >{{ u.project_name }}</span
-                        >
+                        <span class="text-xs uppercase" style="color: var(--text-muted)">{{ u.project_name }}</span>
                       </td>
                       <td class="hidden md:table-cell">
-                        <span
-                          class="text-xs"
-                          style="color: var(--text-muted)"
-                          >{{ u.email }}</span
-                        >
+                        <span class="text-xs" style="color: var(--text-muted)">{{ u.email }}</span>
                       </td>
                     </tr>
                   </tbody>
@@ -1371,111 +894,66 @@
               <!-- Avatar + Cover card -->
               <div class="glass-card overflow-hidden">
                 <!-- Cover -->
-                <div
-                  class="relative h-36 group cursor-pointer"
-                  @click="triggerAdminCoverPick"
-                >
+                <div class="relative h-36 group cursor-pointer" @click="triggerAdminCoverPick">
                   <div class="absolute inset-0 overflow-hidden">
-                    <img
-                      v-if="adminCoverPreview || auth.user?.cover_url"
-                      :src="adminCoverPreview || auth.user?.cover_url"
-                      class="w-full h-full object-cover"
-                    />
-                    <div
-                      v-else
-                      class="w-full h-full"
-                      style="
+                    <img v-if="adminCoverPreview || auth.user?.cover_url"
+                      :src="adminCoverPreview || auth.user?.cover_url" class="w-full h-full object-cover" />
+                    <div v-else class="w-full h-full" style="
                         background: linear-gradient(
                           135deg,
                           #6366f1 0%,
                           #8b5cf6 50%,
                           #06b6d4 100%
                         );
-                      "
-                    >
-                      <div
-                        class="absolute inset-0 opacity-20"
-                        style="
+                      ">
+                      <div class="absolute inset-0 opacity-20" style="
                           background-image: radial-gradient(
                             #fff 1px,
                             transparent 1px
                           );
                           background-size: 18px 18px;
-                        "
-                      ></div>
+                        "></div>
                     </div>
                   </div>
                   <div
-                    class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-200 flex items-center justify-center"
-                  >
+                    class="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-all duration-200 flex items-center justify-center">
                     <div
-                      class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 bg-black/60 text-white text-xs font-semibold px-3 py-1.5 rounded-full"
-                    >
+                      class="opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-2 bg-black/60 text-white text-xs font-semibold px-3 py-1.5 rounded-full">
                       <CameraIcon class="w-3.5 h-3.5" /> Cambiar portada
                     </div>
                   </div>
-                  <input
-                    ref="adminCoverInput"
-                    type="file"
-                    accept="image/*"
-                    class="hidden"
-                    @change="onAdminCoverChange"
-                  />
+                  <input ref="adminCoverInput" type="file" accept="image/*" class="hidden"
+                    @change="onAdminCoverChange" />
                 </div>
 
                 <div class="px-5 pb-5">
                   <div class="flex items-end gap-4 -mt-9 mb-4">
                     <!-- Avatar -->
-                    <div
-                      class="relative flex-shrink-0 group w-[80px] h-[80px] cursor-pointer"
-                      @click="triggerAdminAvatarPick"
-                      style="filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))"
-                    >
-                      <div
-                        class="w-[80px] h-[80px] rounded-2xl overflow-hidden ring-4 ring-[var(--card-bg)]"
-                        style="
+                    <div class="relative flex-shrink-0 group w-[80px] h-[80px] cursor-pointer"
+                      @click="triggerAdminAvatarPick" style="filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3))">
+                      <div class="w-[80px] h-[80px] rounded-2xl overflow-hidden ring-4 ring-[var(--card-bg)]" style="
                           background: linear-gradient(135deg, #6366f1, #8b5cf6);
-                        "
-                      >
-                        <img
-                          v-if="adminAvatarPreview || auth.user?.avatar_url"
-                          :src="adminAvatarPreview || auth.user?.avatar_url"
-                          class="w-full h-full object-cover"
-                        />
-                        <div
-                          v-else
-                          class="w-full h-full flex items-center justify-center text-white text-2xl font-black select-none"
-                        >
+                        ">
+                        <img v-if="adminAvatarPreview || auth.user?.avatar_url"
+                          :src="adminAvatarPreview || auth.user?.avatar_url" class="w-full h-full object-cover" />
+                        <div v-else
+                          class="w-full h-full flex items-center justify-center text-white text-2xl font-black select-none">
                           {{ adminInitials }}
                         </div>
                       </div>
                       <div
-                        class="absolute inset-0 rounded-2xl bg-black/0 group-hover:bg-black/50 transition-all duration-200 flex items-center justify-center"
-                      >
-                        <CameraIcon
-                          class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity"
-                        />
+                        class="absolute inset-0 rounded-2xl bg-black/0 group-hover:bg-black/50 transition-all duration-200 flex items-center justify-center">
+                        <CameraIcon class="w-5 h-5 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
                       </div>
-                      <input
-                        ref="adminFileInput"
-                        type="file"
-                        accept="image/*"
-                        class="hidden"
-                        @change="onAdminAvatarChange"
-                      />
+                      <input ref="adminFileInput" type="file" accept="image/*" class="hidden"
+                        @change="onAdminAvatarChange" />
                     </div>
 
                     <div class="mb-1 min-w-0 flex-1 pt-10">
-                      <p
-                        class="font-black text-xl truncate leading-tight"
-                        style="color: var(--text)"
-                      >
+                      <p class="font-black text-xl truncate leading-tight" style="color: var(--text)">
                         {{ auth.user?.first_name }} {{ auth.user?.last_name }}
                       </p>
-                      <p
-                        class="text-sm truncate"
-                        style="color: var(--text-muted)"
-                      >
+                      <p class="text-sm truncate" style="color: var(--text-muted)">
                         {{ auth.user?.email }}
                       </p>
                       <span class="badge badge-blue mt-1.5">Administrador</span>
@@ -1484,33 +962,18 @@
 
                   <!-- Cover pending -->
                   <Transition name="fade">
-                    <div
-                      v-if="adminCoverPreview"
-                      class="flex gap-2 mb-3 p-3 rounded-xl"
-                      style="background: var(--input-bg)"
-                    >
-                      <div
-                        class="flex items-center gap-2 flex-1 text-sm"
-                        style="color: var(--text-muted)"
-                      >
+                    <div v-if="adminCoverPreview" class="flex gap-2 mb-3 p-3 rounded-xl"
+                      style="background: var(--input-bg)">
+                      <div class="flex items-center gap-2 flex-1 text-sm" style="color: var(--text-muted)">
                         <PhotoIcon class="w-4 h-4 flex-shrink-0" /> Nueva
                         portada lista
                       </div>
-                      <button
-                        @click="saveAdminCover"
-                        :disabled="savingAdminCover"
-                        class="btn btn-primary btn-sm"
-                      >
-                        <span
-                          v-if="savingAdminCover"
-                          class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"
-                        ></span>
+                      <button @click="saveAdminCover" :disabled="savingAdminCover" class="btn btn-primary btn-sm">
+                        <span v-if="savingAdminCover"
+                          class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                         <CheckIcon v-else class="w-3.5 h-3.5" /> Guardar
                       </button>
-                      <button
-                        @click="cancelAdminCover"
-                        class="btn btn-secondary btn-sm px-3"
-                      >
+                      <button @click="cancelAdminCover" class="btn btn-secondary btn-sm px-3">
                         <XMarkIcon class="w-3.5 h-3.5" />
                       </button>
                     </div>
@@ -1518,52 +981,33 @@
 
                   <!-- Avatar pending -->
                   <Transition name="fade">
-                    <div
-                      v-if="adminAvatarPreview"
-                      class="flex gap-2 mb-3 p-3 rounded-xl"
-                      style="background: var(--input-bg)"
-                    >
-                      <div
-                        class="flex items-center gap-2 flex-1 text-sm"
-                        style="color: var(--text-muted)"
-                      >
+                    <div v-if="adminAvatarPreview" class="flex gap-2 mb-3 p-3 rounded-xl"
+                      style="background: var(--input-bg)">
+                      <div class="flex items-center gap-2 flex-1 text-sm" style="color: var(--text-muted)">
                         <UserCircleIcon class="w-4 h-4 flex-shrink-0" /> Nueva
                         foto de perfil lista
                       </div>
-                      <button
-                        @click="saveAdminAvatar"
-                        :disabled="savingAdminAvatar"
-                        class="btn btn-primary btn-sm"
-                      >
-                        <span
-                          v-if="savingAdminAvatar"
-                          class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"
-                        ></span>
+                      <button @click="saveAdminAvatar" :disabled="savingAdminAvatar" class="btn btn-primary btn-sm">
+                        <span v-if="savingAdminAvatar"
+                          class="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                         <CheckIcon v-else class="w-3.5 h-3.5" /> Guardar
                       </button>
-                      <button
-                        @click="cancelAdminAvatar"
-                        class="btn btn-secondary btn-sm px-3"
-                      >
+                      <button @click="cancelAdminAvatar" class="btn btn-secondary btn-sm px-3">
                         <XMarkIcon class="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </Transition>
 
                   <Transition name="fade">
-                    <div
-                      v-if="adminAvatarOk"
-                      class="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-xl px-4 py-2.5 text-sm font-semibold"
-                    >
+                    <div v-if="adminAvatarOk"
+                      class="flex items-center gap-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-xl px-4 py-2.5 text-sm font-semibold">
                       <CheckCircleIcon class="w-4 h-4 flex-shrink-0" /> Foto
                       actualizada correctamente
                     </div>
                   </Transition>
                   <Transition name="fade">
-                    <div
-                      v-if="adminAvatarErr"
-                      class="flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl px-4 py-2.5 text-sm font-semibold"
-                    >
+                    <div v-if="adminAvatarErr"
+                      class="flex items-center gap-2 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-xl px-4 py-2.5 text-sm font-semibold">
                       <ExclamationTriangleIcon class="w-4 h-4 flex-shrink-0" />
                       {{ adminAvatarErr }}
                     </div>
@@ -1574,13 +1018,10 @@
               <!-- Account info -->
               <div class="glass-card p-6">
                 <div class="flex items-center gap-3 mb-5">
-                  <div
-                    class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style="
+                  <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="
                       background: rgba(6, 182, 212, 0.12);
                       border: 1px solid rgba(6, 182, 212, 0.2);
-                    "
-                  >
+                    ">
                     <InformationCircleIcon class="w-5 h-5 text-cyan-400" />
                   </div>
                   <h2 class="font-bold text-base" style="color: var(--text)">
@@ -1588,53 +1029,27 @@
                   </h2>
                 </div>
                 <div class="space-y-3">
-                  <div
-                    class="flex items-center justify-between py-2.5 px-3 rounded-xl"
-                    style="background: var(--input-bg)"
-                  >
-                    <span class="text-sm" style="color: var(--text-muted)"
-                      >Nombre</span
-                    >
-                    <span
-                      class="text-sm font-semibold"
-                      style="color: var(--text)"
-                      >{{ auth.user?.first_name }}
-                      {{ auth.user?.last_name }}</span
-                    >
+                  <div class="flex items-center justify-between py-2.5 px-3 rounded-xl"
+                    style="background: var(--input-bg)">
+                    <span class="text-sm" style="color: var(--text-muted)">Nombre</span>
+                    <span class="text-sm font-semibold" style="color: var(--text)">{{ auth.user?.first_name }}
+                      {{ auth.user?.last_name }}</span>
                   </div>
-                  <div
-                    class="flex items-center justify-between py-2.5 px-3 rounded-xl"
-                    style="background: var(--input-bg)"
-                  >
-                    <span class="text-sm" style="color: var(--text-muted)"
-                      >Correo</span
-                    >
-                    <span
-                      class="text-sm font-semibold truncate max-w-[200px]"
-                      style="color: var(--text)"
-                      >{{ auth.user?.email }}</span
-                    >
+                  <div class="flex items-center justify-between py-2.5 px-3 rounded-xl"
+                    style="background: var(--input-bg)">
+                    <span class="text-sm" style="color: var(--text-muted)">Correo</span>
+                    <span class="text-sm font-semibold truncate max-w-[200px]" style="color: var(--text)">{{
+                      auth.user?.email
+                    }}</span>
                   </div>
-                  <div
-                    class="flex items-center justify-between py-2.5 px-3 rounded-xl"
-                    style="background: var(--input-bg)"
-                  >
-                    <span class="text-sm" style="color: var(--text-muted)"
-                      >Miembro desde</span
-                    >
-                    <span
-                      class="text-sm font-semibold"
-                      style="color: var(--text)"
-                      >{{ adminMemberSince }}</span
-                    >
+                  <div class="flex items-center justify-between py-2.5 px-3 rounded-xl"
+                    style="background: var(--input-bg)">
+                    <span class="text-sm" style="color: var(--text-muted)">Miembro desde</span>
+                    <span class="text-sm font-semibold" style="color: var(--text)">{{ adminMemberSince }}</span>
                   </div>
-                  <div
-                    class="flex items-center justify-between py-2.5 px-3 rounded-xl"
-                    style="background: var(--input-bg)"
-                  >
-                    <span class="text-sm" style="color: var(--text-muted)"
-                      >Rol</span
-                    >
+                  <div class="flex items-center justify-between py-2.5 px-3 rounded-xl"
+                    style="background: var(--input-bg)">
+                    <span class="text-sm" style="color: var(--text-muted)">Rol</span>
                     <span class="badge badge-blue">Administrador</span>
                   </div>
                 </div>
@@ -1643,23 +1058,17 @@
               <!-- Appearance card -->
               <div class="glass-card p-6">
                 <div class="flex items-center gap-3 mb-5">
-                  <div
-                    class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style="
+                  <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="
                       background: rgba(245, 158, 11, 0.12);
                       border: 1px solid rgba(245, 158, 11, 0.2);
-                    "
-                  >
+                    ">
                     <SunIcon class="w-5 h-5 text-amber-400" />
                   </div>
                   <h2 class="font-bold text-base" style="color: var(--text)">
                     Apariencia
                   </h2>
                 </div>
-                <div
-                  class="flex items-center justify-between py-3 px-4 rounded-xl"
-                  style="background: var(--input-bg)"
-                >
+                <div class="flex items-center justify-between py-3 px-4 rounded-xl" style="background: var(--input-bg)">
                   <div>
                     <p class="text-sm font-semibold" style="color: var(--text)">
                       Modo Oscuro
@@ -1668,21 +1077,15 @@
                       Cambiar tema visual
                     </p>
                   </div>
-                  <button
-                    @click="theme.toggle()"
+                  <button @click="theme.toggle()"
                     class="relative inline-flex h-7 w-12 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none"
-                    :class="
-                      theme.isDark
-                        ? 'bg-brand-500'
-                        : 'bg-slate-300 dark:bg-surface-600'
-                    "
-                    role="switch"
-                    :aria-checked="theme.isDark"
-                  >
+                    :class="theme.isDark
+                      ? 'bg-brand-500'
+                      : 'bg-slate-300 dark:bg-surface-600'
+                      " role="switch" :aria-checked="theme.isDark">
                     <span
                       class="pointer-events-none inline-block h-6 w-6 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out"
-                      :class="theme.isDark ? 'translate-x-5' : 'translate-x-0'"
-                    ></span>
+                      :class="theme.isDark ? 'translate-x-5' : 'translate-x-0'"></span>
                   </button>
                 </div>
               </div>
@@ -1694,13 +1097,10 @@
               <!-- Change email -->
               <div class="glass-card p-6">
                 <div class="flex items-center gap-3 mb-5">
-                  <div
-                    class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style="
+                  <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="
                       background: rgba(99, 102, 241, 0.12);
                       border: 1px solid rgba(99, 102, 241, 0.2);
-                    "
-                  >
+                    ">
                     <EnvelopeIcon class="w-5 h-5 text-brand-400" />
                   </div>
                   <div>
@@ -1712,51 +1112,26 @@
                     </p>
                   </div>
                 </div>
-                <form
-                  @submit.prevent="handleAdminEmailUpdate"
-                  class="space-y-4"
-                >
+                <form @submit.prevent="handleAdminEmailUpdate" class="space-y-4">
                   <div>
                     <label class="input-label">Nuevo correo electrónico</label>
-                    <input
-                      v-model="adminEmailForm.newEmail"
-                      type="email"
-                      class="input"
-                      placeholder="nuevo@correo.com"
-                      required
-                      autocomplete="email"
-                    />
+                    <input v-model="adminEmailForm.newEmail" type="email" class="input" placeholder="nuevo@correo.com"
+                      required autocomplete="email" />
                   </div>
                   <Transition name="fade">
-                    <div
-                      v-if="adminEmailMsg.text"
-                      class="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold"
-                      :class="
-                        adminEmailMsg.ok
-                          ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-500'
-                          : 'bg-rose-500/10 border border-rose-500/20 text-rose-500'
-                      "
-                    >
-                      <CheckCircleIcon
-                        v-if="adminEmailMsg.ok"
-                        class="w-4 h-4 flex-shrink-0"
-                      />
-                      <ExclamationTriangleIcon
-                        v-else
-                        class="w-4 h-4 flex-shrink-0"
-                      />
+                    <div v-if="adminEmailMsg.text"
+                      class="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold" :class="adminEmailMsg.ok
+                        ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-500'
+                        : 'bg-rose-500/10 border border-rose-500/20 text-rose-500'
+                        ">
+                      <CheckCircleIcon v-if="adminEmailMsg.ok" class="w-4 h-4 flex-shrink-0" />
+                      <ExclamationTriangleIcon v-else class="w-4 h-4 flex-shrink-0" />
                       {{ adminEmailMsg.text }}
                     </div>
                   </Transition>
-                  <button
-                    type="submit"
-                    :disabled="savingAdminEmail"
-                    class="btn btn-primary btn-md w-full"
-                  >
-                    <span
-                      v-if="savingAdminEmail"
-                      class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
-                    ></span>
+                  <button type="submit" :disabled="savingAdminEmail" class="btn btn-primary btn-md w-full">
+                    <span v-if="savingAdminEmail"
+                      class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                     <CheckIcon v-else class="w-4 h-4" />
                     {{
                       savingAdminEmail ? "Guardando..." : "Actualizar correo"
@@ -1768,13 +1143,10 @@
               <!-- Change password -->
               <div class="glass-card p-6">
                 <div class="flex items-center gap-3 mb-5">
-                  <div
-                    class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                    style="
+                  <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="
                       background: rgba(139, 92, 246, 0.12);
                       border: 1px solid rgba(139, 92, 246, 0.2);
-                    "
-                  >
+                    ">
                     <LockClosedIcon class="w-5 h-5 text-violet-400" />
                   </div>
                   <div>
@@ -1790,19 +1162,11 @@
                   <div>
                     <label class="input-label">Contraseña actual</label>
                     <div class="relative">
-                      <input
-                        v-model="adminPwdForm.current"
-                        :type="showAdminCurrent ? 'text' : 'password'"
-                        class="input pr-12"
-                        placeholder="••••••••"
-                        required
-                      />
-                      <button
-                        type="button"
-                        @click="showAdminCurrent = !showAdminCurrent"
+                      <input v-model="adminPwdForm.current" :type="showAdminCurrent ? 'text' : 'password'"
+                        class="input pr-12" placeholder="••••••••" required />
+                      <button type="button" @click="showAdminCurrent = !showAdminCurrent"
                         class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-colors"
-                        style="color: var(--text-muted)"
-                      >
+                        style="color: var(--text-muted)">
                         <EyeSlashIcon v-if="showAdminCurrent" class="w-4 h-4" />
                         <EyeIcon v-else class="w-4 h-4" />
                       </button>
@@ -1811,105 +1175,57 @@
                   <div>
                     <label class="input-label">Nueva contraseña</label>
                     <div class="relative">
-                      <input
-                        v-model="adminPwdForm.newPwd"
-                        :type="showAdminNew ? 'text' : 'password'"
-                        class="input pr-12"
-                        placeholder="Mínimo 8 caracteres"
-                        required
-                        minlength="8"
-                      />
-                      <button
-                        type="button"
-                        @click="showAdminNew = !showAdminNew"
+                      <input v-model="adminPwdForm.newPwd" :type="showAdminNew ? 'text' : 'password'"
+                        class="input pr-12" placeholder="Mínimo 8 caracteres" required minlength="8" />
+                      <button type="button" @click="showAdminNew = !showAdminNew"
                         class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-colors"
-                        style="color: var(--text-muted)"
-                      >
+                        style="color: var(--text-muted)">
                         <EyeSlashIcon v-if="showAdminNew" class="w-4 h-4" />
                         <EyeIcon v-else class="w-4 h-4" />
                       </button>
                     </div>
-                    <div
-                      v-if="adminPwdForm.newPwd"
-                      class="mt-2 flex items-center gap-2"
-                    >
+                    <div v-if="adminPwdForm.newPwd" class="mt-2 flex items-center gap-2">
                       <div class="flex gap-1 flex-1">
-                        <div
-                          v-for="n in 4"
-                          :key="n"
-                          class="h-1 flex-1 rounded-full transition-all duration-300"
-                          :style="
-                            n <= adminPwdStrength.level
-                              ? `background: ${adminPwdStrength.color}`
-                              : 'background: var(--input-border)'
-                          "
-                        ></div>
+                        <div v-for="n in 4" :key="n" class="h-1 flex-1 rounded-full transition-all duration-300" :style="n <= adminPwdStrength.level
+                          ? `background: ${adminPwdStrength.color}`
+                          : 'background: var(--input-border)'
+                          "></div>
                       </div>
-                      <span
-                        class="text-xs font-semibold"
-                        :style="`color: ${adminPwdStrength.color}`"
-                        >{{ adminPwdStrength.label }}</span
-                      >
+                      <span class="text-xs font-semibold" :style="`color: ${adminPwdStrength.color}`">{{
+                        adminPwdStrength.label
+                      }}</span>
                     </div>
                   </div>
                   <div>
-                    <label class="input-label"
-                      >Confirmar nueva contraseña</label
-                    >
-                    <input
-                      v-model="adminPwdForm.confirm"
-                      type="password"
-                      class="input"
-                      :class="
-                        adminPwdForm.confirm && adminPwdMismatch
-                          ? 'ring-2 ring-rose-500/30 border-rose-500/40'
-                          : ''
-                      "
-                      placeholder="••••••••"
-                      required
-                    />
-                    <p
-                      v-if="adminPwdForm.confirm && adminPwdMismatch"
-                      class="text-xs text-rose-400 mt-1 font-semibold flex items-center gap-1"
-                    >
+                    <label class="input-label">Confirmar nueva contraseña</label>
+                    <input v-model="adminPwdForm.confirm" type="password" class="input" :class="adminPwdForm.confirm && adminPwdMismatch
+                      ? 'ring-2 ring-rose-500/30 border-rose-500/40'
+                      : ''
+                      " placeholder="••••••••" required />
+                    <p v-if="adminPwdForm.confirm && adminPwdMismatch"
+                      class="text-xs text-rose-400 mt-1 font-semibold flex items-center gap-1">
                       <ExclamationTriangleIcon class="w-3.5 h-3.5" /> Las
                       contraseñas no coinciden
                     </p>
                   </div>
                   <Transition name="fade">
-                    <div
-                      v-if="adminPwdMsg.text"
-                      class="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold"
-                      :class="
-                        adminPwdMsg.ok
-                          ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-500'
-                          : 'bg-rose-500/10 border border-rose-500/20 text-rose-500'
-                      "
-                    >
-                      <CheckCircleIcon
-                        v-if="adminPwdMsg.ok"
-                        class="w-4 h-4 flex-shrink-0"
-                      />
-                      <ExclamationTriangleIcon
-                        v-else
-                        class="w-4 h-4 flex-shrink-0"
-                      />
+                    <div v-if="adminPwdMsg.text"
+                      class="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold" :class="adminPwdMsg.ok
+                        ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-500'
+                        : 'bg-rose-500/10 border border-rose-500/20 text-rose-500'
+                        ">
+                      <CheckCircleIcon v-if="adminPwdMsg.ok" class="w-4 h-4 flex-shrink-0" />
+                      <ExclamationTriangleIcon v-else class="w-4 h-4 flex-shrink-0" />
                       {{ adminPwdMsg.text }}
                     </div>
                   </Transition>
-                  <button
-                    type="submit"
-                    :disabled="savingAdminPwd || adminPwdMismatch"
-                    class="btn w-full btn-md text-white font-bold"
-                    style="
+                  <button type="submit" :disabled="savingAdminPwd || adminPwdMismatch"
+                    class="btn w-full btn-md text-white font-bold" style="
                       background: linear-gradient(135deg, #7c3aed, #6366f1);
                       box-shadow: 0 4px 15px rgba(124, 58, 237, 0.25);
-                    "
-                  >
-                    <span
-                      v-if="savingAdminPwd"
-                      class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
-                    ></span>
+                    ">
+                    <span v-if="savingAdminPwd"
+                      class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                     <LockClosedIcon v-else class="w-4 h-4" />
                     {{ savingAdminPwd ? "Guardando..." : "Cambiar contraseña" }}
                   </button>
@@ -1924,25 +1240,15 @@
     </main>
 
     <!-- Mobile bottom nav -->
-    <nav
-      class="lg:hidden fixed bottom-0 left-0 right-0 z-20 px-2 py-2 safe-bottom flex justify-around"
-      style="
+    <nav class="lg:hidden fixed bottom-0 left-0 right-0 z-20 px-2 py-2 safe-bottom flex justify-around" style="
         background: var(--nav-bg);
         backdrop-filter: blur(12px);
         border-top: 1px solid var(--border-subtle);
-      "
-    >
-      <button
-        v-for="item in navItems"
-        :key="item.id"
-        @click="activeTab = item.id"
-        :class="
-          activeTab === item.id
-            ? 'text-brand-500 dark:text-brand-400'
-            : 'text-slate-500 dark:text-slate-500'
-        "
-        class="flex flex-col items-center gap-1 px-4 py-1 transition-colors"
-      >
+      ">
+      <button v-for="item in navItems" :key="item.id" @click="activeTab = item.id" :class="activeTab === item.id
+        ? 'text-brand-500 dark:text-brand-400'
+        : 'text-slate-500 dark:text-slate-500'
+        " class="flex flex-col items-center gap-1 px-4 py-1 transition-colors">
         <component :is="item.icon" class="w-6 h-6" />
         <span class="text-xs font-semibold">{{ item.label }}</span>
       </button>
@@ -1952,36 +1258,25 @@
     <Teleport to="body">
       <!-- Route modal -->
       <Transition name="modal">
-        <div
-          v-if="routeModal.show"
-          class="fixed inset-0 z-50 flex items-center justify-center px-3 py-4"
-          style="background: rgba(0, 0, 0, 0.88); backdrop-filter: blur(10px)"
-        >
-          <div
-            class="w-full max-w-3xl glass-card flex flex-col animate-in overflow-hidden"
-            style="
+        <div v-if="routeModal.show" class="fixed inset-0 z-50 flex items-center justify-center px-3 py-4"
+          style="background: rgba(0, 0, 0, 0.88); backdrop-filter: blur(10px)">
+          <div class="w-full max-w-3xl glass-card flex flex-col animate-in overflow-hidden" style="
               background: var(--modal-bg);
               max-height: 94vh;
               border: 1px solid rgba(99, 102, 241, 0.2);
-            "
-          >
+            ">
             <!-- Header premium -->
-            <div
-              class="flex items-center justify-between px-5 py-4 flex-shrink-0"
-              style="
+            <div class="flex items-center justify-between px-5 py-4 flex-shrink-0" style="
                 background: linear-gradient(
                   135deg,
                   rgba(99, 102, 241, 0.15),
                   rgba(139, 92, 246, 0.1)
                 );
                 border-bottom: 1px solid var(--border-subtle);
-              "
-            >
+              ">
               <div class="flex items-center gap-3">
-                <div
-                  class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                  style="background: linear-gradient(135deg, #6366f1, #8b5cf6)"
-                >
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style="background: linear-gradient(135deg, #6366f1, #8b5cf6)">
                   <MapPinIcon class="w-5 h-5 text-white" />
                 </div>
                 <div>
@@ -1994,92 +1289,56 @@
                 </div>
               </div>
               <div class="flex items-center gap-2">
-                <a
-                  v-if="routeModal.points.length > 0"
-                  :href="googleMapsUrl(routeModal.points)"
-                  target="_blank"
-                  rel="noopener"
-                  class="btn-secondary btn-sm flex items-center gap-1.5 text-xs"
-                >
+                <a v-if="routeModal.points.length > 0" :href="googleMapsUrl(routeModal.points)" target="_blank"
+                  rel="noopener" class="btn-secondary btn-sm flex items-center gap-1.5 text-xs">
                   <MapPinIcon class="w-3.5 h-3.5" /> Ver en Google Maps
                 </a>
-                <button
-                  @click="
-                    routeModal.show = false;
-                    destroyMap();
-                  "
-                  class="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:bg-white/10"
-                  style="color: var(--text-muted)"
-                >
+                <button @click="
+                  routeModal.show = false;
+                destroyMap();
+                " class="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:bg-white/10"
+                  style="color: var(--text-muted)">
                   <XMarkIcon class="w-5 h-5" />
                 </button>
               </div>
             </div>
 
             <!-- Stats bar -->
-            <div
-              v-if="routeModal.points.length > 0"
-              class="flex items-center gap-4 px-5 py-2.5 flex-shrink-0 flex-wrap"
+            <div v-if="routeModal.points.length > 0" class="flex items-center gap-4 px-5 py-2.5 flex-shrink-0 flex-wrap"
               style="
                 background: rgba(99, 102, 241, 0.05);
                 border-bottom: 1px solid var(--border-subtle);
-              "
-            >
+              ">
               <div class="flex items-center gap-1.5">
-                <div
-                  class="w-3 h-3 rounded-full bg-emerald-400 flex-shrink-0"
-                ></div>
-                <span class="text-xs" style="color: var(--text-muted)"
-                  >Inicio:</span
-                >
-                <span
-                  class="text-xs font-semibold"
-                  style="color: var(--text)"
-                  >{{ formatTimeOnly(routeModal.points[0]?.recorded_at) }}</span
-                >
+                <div class="w-3 h-3 rounded-full bg-emerald-400 flex-shrink-0"></div>
+                <span class="text-xs" style="color: var(--text-muted)">Inicio:</span>
+                <span class="text-xs font-semibold" style="color: var(--text)">{{
+                  formatTimeOnly(routeModal.points[0]?.recorded_at) }}</span>
               </div>
               <div class="flex items-center gap-1.5">
-                <div
-                  class="w-3 h-3 rounded-full bg-rose-400 flex-shrink-0"
-                ></div>
-                <span class="text-xs" style="color: var(--text-muted)"
-                  >Fin:</span
-                >
-                <span
-                  class="text-xs font-semibold"
-                  style="color: var(--text)"
-                  >{{
-                    formatTimeOnly(
-                      routeModal.points[routeModal.points.length - 1]
-                        ?.recorded_at,
-                    )
-                  }}</span
-                >
+                <div class="w-3 h-3 rounded-full bg-rose-400 flex-shrink-0"></div>
+                <span class="text-xs" style="color: var(--text-muted)">Fin:</span>
+                <span class="text-xs font-semibold" style="color: var(--text)">{{
+                  formatTimeOnly(
+                    routeModal.points[routeModal.points.length - 1]
+                      ?.recorded_at,
+                  )
+                }}</span>
               </div>
               <div class="flex items-center gap-1.5">
                 <SignalIcon class="w-3.5 h-3.5 text-brand-400" />
-                <span class="text-xs font-semibold" style="color: var(--text)"
-                  >{{ routeModal.points.length }} puntos GPS</span
-                >
+                <span class="text-xs font-semibold" style="color: var(--text)">{{ routeModal.points.length }} puntos
+                  GPS</span>
               </div>
               <div v-if="routeModal.duration" class="flex items-center gap-1.5">
-                <span class="text-xs" style="color: var(--text-muted)"
-                  >Duración:</span
-                >
-                <span
-                  class="text-xs font-semibold"
-                  style="color: var(--text)"
-                  >{{ routeModal.duration }}</span
-                >
+                <span class="text-xs" style="color: var(--text-muted)">Duración:</span>
+                <span class="text-xs font-semibold" style="color: var(--text)">{{ routeModal.duration }}</span>
               </div>
             </div>
 
             <!-- Map or empty -->
-            <div
-              v-if="routeModal.points.length === 0"
-              class="text-center py-20 text-sm"
-              style="color: var(--text-muted)"
-            >
+            <div v-if="routeModal.points.length === 0" class="text-center py-20 text-sm"
+              style="color: var(--text-muted)">
               <MapPinIcon class="w-10 h-10 mx-auto mb-3 opacity-30" />
               Sin puntos GPS registrados
             </div>
@@ -2087,53 +1346,30 @@
               <div ref="mapContainer" style="height: 420px; width: 100%"></div>
 
               <!-- Address section -->
-              <div
-                class="px-5 py-4"
-                style="border-top: 1px solid var(--border-subtle)"
-              >
+              <div class="px-5 py-4" style="border-top: 1px solid var(--border-subtle)">
                 <div class="flex items-start gap-3">
-                  <div
-                    class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
-                    style="
+                  <div class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5" style="
                       background: rgba(99, 102, 241, 0.15);
                       border: 1px solid rgba(99, 102, 241, 0.25);
-                    "
-                  >
+                    ">
                     <MapPinIcon class="w-4 h-4 text-brand-400" />
                   </div>
                   <div class="flex-1 min-w-0">
-                    <p
-                      class="text-xs font-semibold mb-1"
-                      style="color: var(--text-muted)"
-                    >
+                    <p class="text-xs font-semibold mb-1" style="color: var(--text-muted)">
                       📍 Dirección detectada (punto de inicio)
                     </p>
-                    <div
-                      v-if="routeModal.loadingAddress"
-                      class="flex items-center gap-2"
-                    >
-                      <div
-                        class="w-3 h-3 border border-brand-500/40 border-t-brand-500 rounded-full animate-spin"
-                      ></div>
-                      <span class="text-xs" style="color: var(--text-muted)"
-                        >Obteniendo dirección...</span
-                      >
+                    <div v-if="routeModal.loadingAddress" class="flex items-center gap-2">
+                      <div class="w-3 h-3 border border-brand-500/40 border-t-brand-500 rounded-full animate-spin">
+                      </div>
+                      <span class="text-xs" style="color: var(--text-muted)">Obteniendo dirección...</span>
                     </div>
-                    <p
-                      v-else-if="routeModal.address"
-                      class="text-sm font-medium"
-                      style="color: var(--text)"
-                    >
+                    <p v-else-if="routeModal.address" class="text-sm font-medium" style="color: var(--text)">
                       {{ routeModal.address }}
                     </p>
                     <p v-else class="text-xs" style="color: var(--text-dim)">
                       Dirección no disponible
                     </p>
-                    <p
-                      v-if="routeModal.points.length > 0"
-                      class="text-xs mt-1"
-                      style="color: var(--text-dim)"
-                    >
+                    <p v-if="routeModal.points.length > 0" class="text-xs mt-1" style="color: var(--text-dim)">
                       Coordenadas:
                       {{ routeModal.points[0].latitude.toFixed(6) }},
                       {{ routeModal.points[0].longitude.toFixed(6) }}
@@ -2148,45 +1384,28 @@
 
       <!-- Suspicious alert modal -->
       <Transition name="modal">
-        <div
-          v-if="suspiciousModal.show"
-          class="fixed inset-0 z-50 flex items-center justify-center px-4"
-          style="background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px)"
-        >
-          <div
-            class="w-full max-w-md glass-card animate-in"
-            style="background: var(--modal-bg)"
-          >
-            <div
-              class="flex items-center justify-between px-5 py-4"
-              style="border-bottom: 1px solid rgba(245, 158, 11, 0.3)"
-            >
+        <div v-if="suspiciousModal.show" class="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style="background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px)">
+          <div class="w-full max-w-md glass-card animate-in" style="background: var(--modal-bg)">
+            <div class="flex items-center justify-between px-5 py-4"
+              style="border-bottom: 1px solid rgba(245, 158, 11, 0.3)">
               <div class="flex items-center gap-2">
                 <ExclamationTriangleIcon class="w-5 h-5 text-amber-400" />
                 <h3 class="font-bold text-amber-400">
                   Alerta de fraude detectado
                 </h3>
               </div>
-              <button
-                @click="suspiciousModal.show = false"
-                class="w-8 h-8 rounded-lg flex items-center justify-center"
-                style="color: var(--text-muted)"
-              >
+              <button @click="suspiciousModal.show = false" class="w-8 h-8 rounded-lg flex items-center justify-center"
+                style="color: var(--text-muted)">
                 <XMarkIcon class="w-5 h-5" />
               </button>
             </div>
             <div class="p-5 space-y-4">
-              <div
-                class="rounded-xl p-4"
-                style="
+              <div class="rounded-xl p-4" style="
                   background: rgba(245, 158, 11, 0.08);
                   border: 1px solid rgba(245, 158, 11, 0.25);
-                "
-              >
-                <p
-                  class="text-sm font-semibold mb-1"
-                  style="color: var(--text)"
-                >
+                ">
+                <p class="text-sm font-semibold mb-1" style="color: var(--text)">
                   {{ suspiciousModal.user }}
                 </p>
                 <p class="text-xs" style="color: var(--text-muted)">
@@ -2201,35 +1420,22 @@
                   {{ suspiciousModal.reason }}
                 </p>
               </div>
-              <div
-                v-if="suspiciousModal.ipCountry"
-                class="flex items-center gap-2"
-              >
-                <span class="text-xs" style="color: var(--text-dim)"
-                  >IP detectada en:</span
-                >
-                <span class="text-xs font-medium" style="color: var(--text)"
-                  >{{
-                    suspiciousModal.ipCity ? suspiciousModal.ipCity + ", " : ""
-                  }}{{ suspiciousModal.ipCountry }}</span
-                >
+              <div v-if="suspiciousModal.ipCountry" class="flex items-center gap-2">
+                <span class="text-xs" style="color: var(--text-dim)">IP detectada en:</span>
+                <span class="text-xs font-medium" style="color: var(--text)">{{
+                  suspiciousModal.ipCity ? suspiciousModal.ipCity + ", " : ""
+                  }}{{ suspiciousModal.ipCountry }}</span>
               </div>
-              <div
-                class="rounded-xl p-3"
-                style="
+              <div class="rounded-xl p-3" style="
                   background: rgba(239, 68, 68, 0.07);
                   border: 1px solid rgba(239, 68, 68, 0.2);
-                "
-              >
+                ">
                 <p class="text-xs" style="color: var(--text-muted)">
                   El registro fue guardado normalmente. Esta alerta es solo
                   informativa para que el administrador investigue.
                 </p>
               </div>
-              <button
-                @click="suspiciousModal.show = false"
-                class="btn-secondary btn-md w-full"
-              >
+              <button @click="suspiciousModal.show = false" class="btn-secondary btn-md w-full">
                 Cerrar
               </button>
             </div>
@@ -2239,19 +1445,11 @@
 
       <!-- Photos modal -->
       <Transition name="modal">
-        <div
-          v-if="photosModal.show"
-          class="fixed inset-0 z-50 flex items-center justify-center px-4"
-          style="background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(8px)"
-        >
-          <div
-            class="w-full max-w-lg glass-card animate-in"
-            style="background: var(--modal-bg)"
-          >
-            <div
-              class="flex items-center justify-between px-5 py-4"
-              style="border-bottom: 1px solid var(--border-subtle)"
-            >
+        <div v-if="photosModal.show" class="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style="background: rgba(0, 0, 0, 0.9); backdrop-filter: blur(8px)">
+          <div class="w-full max-w-lg glass-card animate-in" style="background: var(--modal-bg)">
+            <div class="flex items-center justify-between px-5 py-4"
+              style="border-bottom: 1px solid var(--border-subtle)">
               <div>
                 <h3 class="font-bold" style="color: var(--text)">
                   Fotografías
@@ -2260,63 +1458,40 @@
                   {{ photosModal.user }} · {{ photosModal.date }}
                 </p>
               </div>
-              <button
-                @click="photosModal.show = false"
+              <button @click="photosModal.show = false"
                 class="w-8 h-8 rounded-lg flex items-center justify-center transition-all"
-                style="color: var(--text-muted)"
-              >
+                style="color: var(--text-muted)">
                 <XMarkIcon class="w-5 h-5" />
               </button>
             </div>
             <div class="p-5 grid grid-cols-2 gap-4">
               <div>
-                <p
-                  class="text-xs mb-2 flex items-center gap-1"
-                  style="color: var(--text-muted)"
-                >
+                <p class="text-xs mb-2 flex items-center gap-1" style="color: var(--text-muted)">
                   <BuildingOffice2Icon class="w-3 h-3" /> Fotografía del sitio
                 </p>
                 <div v-if="photosModal.site" class="rounded-xl overflow-hidden">
-                  <img
-                    :src="photosModal.site"
-                    class="w-full aspect-square object-cover"
-                  />
+                  <img :src="photosModal.site" class="w-full aspect-square object-cover" />
                 </div>
-                <div
-                  v-else
-                  class="rounded-xl flex items-center justify-center aspect-square text-slate-600 text-sm"
+                <div v-else class="rounded-xl flex items-center justify-center aspect-square text-slate-600 text-sm"
                   style="
                     background: var(--input-bg);
                     border: 1px dashed var(--input-border);
-                  "
-                >
+                  ">
                   Sin foto
                 </div>
               </div>
               <div>
-                <p
-                  class="text-xs mb-2 flex items-center gap-1"
-                  style="color: var(--text-muted)"
-                >
+                <p class="text-xs mb-2 flex items-center gap-1" style="color: var(--text-muted)">
                   <UserCircleIcon class="w-3 h-3" /> Selfie
                 </p>
-                <div
-                  v-if="photosModal.selfie"
-                  class="rounded-xl overflow-hidden"
-                >
-                  <img
-                    :src="photosModal.selfie"
-                    class="w-full aspect-square object-cover"
-                  />
+                <div v-if="photosModal.selfie" class="rounded-xl overflow-hidden">
+                  <img :src="photosModal.selfie" class="w-full aspect-square object-cover" />
                 </div>
-                <div
-                  v-else
-                  class="rounded-xl flex items-center justify-center aspect-square text-slate-600 text-sm"
+                <div v-else class="rounded-xl flex items-center justify-center aspect-square text-slate-600 text-sm"
                   style="
                     background: var(--input-bg);
                     border: 1px dashed var(--input-border);
-                  "
-                >
+                  ">
                   Sin foto
                 </div>
               </div>
@@ -2327,20 +1502,11 @@
 
       <!-- Schedule modal -->
       <Transition name="modal">
-        <div
-          v-if="scheduleModal.show"
-          class="fixed inset-0 z-50 flex items-center justify-center px-4"
-          style="background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px)"
-          @click.self="scheduleModal.show = false"
-        >
-          <div
-            class="w-full max-w-sm glass-card animate-in"
-            style="background: var(--modal-bg)"
-          >
-            <div
-              class="flex items-center justify-between px-5 pt-5 pb-3"
-              style="border-bottom: 1px solid var(--border-subtle)"
-            >
+        <div v-if="scheduleModal.show" class="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style="background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px)" @click.self="scheduleModal.show = false">
+          <div class="w-full max-w-sm glass-card animate-in" style="background: var(--modal-bg)">
+            <div class="flex items-center justify-between px-5 pt-5 pb-3"
+              style="border-bottom: 1px solid var(--border-subtle)">
               <div>
                 <h3 class="font-bold" style="color: var(--text)">
                   Horario Laboral
@@ -2350,102 +1516,50 @@
                   {{ scheduleModal.user?.last_name }}
                 </p>
               </div>
-              <button
-                @click="scheduleModal.show = false"
-                class="w-8 h-8 rounded-lg flex items-center justify-center"
-                style="color: var(--text-muted)"
-              >
+              <button @click="scheduleModal.show = false" class="w-8 h-8 rounded-lg flex items-center justify-center"
+                style="color: var(--text-muted)">
                 <XMarkIcon class="w-5 h-5" />
               </button>
             </div>
             <div class="p-5 space-y-4">
               <!-- Lunes – Viernes -->
-              <p
-                class="text-xs font-bold uppercase tracking-wider"
-                style="color: var(--text-muted)"
-              >
+              <p class="text-xs font-bold uppercase tracking-wider" style="color: var(--text-muted)">
                 Lunes – Viernes
               </p>
               <div class="grid grid-cols-2 gap-3">
                 <div>
-                  <label
-                    class="block text-xs font-semibold mb-1.5"
-                    style="color: var(--text-muted)"
-                    >Entrada</label
-                  >
-                  <input
-                    type="time"
-                    v-model="scheduleModal.entry_time"
-                    class="input w-full text-sm py-2"
-                  />
+                  <label class="block text-xs font-semibold mb-1.5" style="color: var(--text-muted)">Entrada</label>
+                  <input type="time" v-model="scheduleModal.entry_time" class="input w-full text-sm py-2" />
                 </div>
                 <div>
-                  <label
-                    class="block text-xs font-semibold mb-1.5"
-                    style="color: var(--text-muted)"
-                    >Salida</label
-                  >
-                  <input
-                    type="time"
-                    v-model="scheduleModal.exit_time"
-                    class="input w-full text-sm py-2"
-                  />
+                  <label class="block text-xs font-semibold mb-1.5" style="color: var(--text-muted)">Salida</label>
+                  <input type="time" v-model="scheduleModal.exit_time" class="input w-full text-sm py-2" />
                 </div>
               </div>
               <!-- Sábado -->
-              <div
-                style="border-top: 1px solid var(--border-subtle)"
-                class="pt-3"
-              >
-                <p
-                  class="text-xs font-bold uppercase tracking-wider mb-3"
-                  style="color: var(--text-muted)"
-                >
+              <div style="border-top: 1px solid var(--border-subtle)" class="pt-3">
+                <p class="text-xs font-bold uppercase tracking-wider mb-3" style="color: var(--text-muted)">
                   Sábado <span class="font-normal normal-case">(opcional)</span>
                 </p>
                 <div class="grid grid-cols-2 gap-3">
                   <div>
-                    <label
-                      class="block text-xs font-semibold mb-1.5"
-                      style="color: var(--text-muted)"
-                      >Entrada</label
-                    >
-                    <input
-                      type="time"
-                      v-model="scheduleModal.sat_entry_time"
-                      class="input w-full text-sm py-2"
-                    />
+                    <label class="block text-xs font-semibold mb-1.5" style="color: var(--text-muted)">Entrada</label>
+                    <input type="time" v-model="scheduleModal.sat_entry_time" class="input w-full text-sm py-2" />
                   </div>
                   <div>
-                    <label
-                      class="block text-xs font-semibold mb-1.5"
-                      style="color: var(--text-muted)"
-                      >Salida</label
-                    >
-                    <input
-                      type="time"
-                      v-model="scheduleModal.sat_exit_time"
-                      class="input w-full text-sm py-2"
-                    />
+                    <label class="block text-xs font-semibold mb-1.5" style="color: var(--text-muted)">Salida</label>
+                    <input type="time" v-model="scheduleModal.sat_exit_time" class="input w-full text-sm py-2" />
                   </div>
                 </div>
               </div>
               <div class="flex gap-3 pt-1">
-                <button
-                  @click="scheduleModal.show = false"
-                  class="btn-secondary flex-1"
-                >
+                <button @click="scheduleModal.show = false" class="btn-secondary flex-1">
                   Cancelar
                 </button>
-                <button
-                  @click="saveSchedule"
-                  :disabled="
-                    scheduleModal.saving ||
-                    !scheduleModal.entry_time ||
-                    !scheduleModal.exit_time
-                  "
-                  class="btn-primary flex-1 disabled:opacity-50"
-                >
+                <button @click="saveSchedule" :disabled="scheduleModal.saving ||
+                  !scheduleModal.entry_time ||
+                  !scheduleModal.exit_time
+                  " class="btn-primary flex-1 disabled:opacity-50">
                   {{ scheduleModal.saving ? "Guardando..." : "Guardar" }}
                 </button>
               </div>
@@ -2456,50 +1570,28 @@
 
       <!-- Comment edit modal -->
       <Transition name="modal">
-        <div
-          v-if="editingComment"
-          class="fixed inset-0 z-50 flex items-center justify-center px-4"
-          style="background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px)"
-          @click.self="editingComment = null"
-        >
-          <div
-            class="w-full max-w-md glass-card animate-in"
-            style="background: var(--modal-bg)"
-          >
-            <div
-              class="flex items-center justify-between px-5 pt-5 pb-3"
-              style="border-bottom: 1px solid var(--border-subtle)"
-            >
+        <div v-if="editingComment" class="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style="background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px)" @click.self="editingComment = null">
+          <div class="w-full max-w-md glass-card animate-in" style="background: var(--modal-bg)">
+            <div class="flex items-center justify-between px-5 pt-5 pb-3"
+              style="border-bottom: 1px solid var(--border-subtle)">
               <h3 class="font-bold" style="color: var(--text)">
                 Comentario del día · {{ editingComment?.record_date }}
               </h3>
-              <button
-                @click="editingComment = null"
-                class="w-8 h-8 rounded-lg flex items-center justify-center"
-                style="color: var(--text-muted)"
-              >
+              <button @click="editingComment = null" class="w-8 h-8 rounded-lg flex items-center justify-center"
+                style="color: var(--text-muted)">
                 <XMarkIcon class="w-5 h-5" />
               </button>
             </div>
             <div class="p-5 space-y-4">
-              <textarea
-                v-model="editingComment.text"
-                rows="4"
-                class="input w-full text-sm py-2 resize-none"
-                placeholder="Motivo de llegada tarde, salida anticipada, ausencia..."
-              ></textarea>
+              <textarea v-model="editingComment.text" rows="4" class="input w-full text-sm py-2 resize-none"
+                placeholder="Motivo de llegada tarde, salida anticipada, ausencia..."></textarea>
               <div class="flex gap-3">
-                <button
-                  @click="editingComment = null"
-                  class="btn-secondary flex-1"
-                >
+                <button @click="editingComment = null" class="btn-secondary flex-1">
                   Cancelar
                 </button>
-                <button
-                  @click="saveComment"
-                  :disabled="!editingComment.text.trim()"
-                  class="btn-primary flex-1 disabled:opacity-50"
-                >
+                <button @click="saveComment" :disabled="!editingComment.text.trim()"
+                  class="btn-primary flex-1 disabled:opacity-50">
                   Guardar
                 </button>
               </div>
@@ -2510,20 +1602,11 @@
 
       <!-- Password reset modal -->
       <Transition name="modal">
-        <div
-          v-if="pwdModal.show"
-          class="fixed inset-0 z-50 flex items-center justify-center px-4"
-          style="background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px)"
-          @click.self="pwdModal.show = false"
-        >
-          <div
-            class="w-full max-w-sm glass-card animate-in"
-            style="background: var(--modal-bg)"
-          >
-            <div
-              class="flex items-center justify-between px-5 py-4"
-              style="border-bottom: 1px solid rgba(139, 92, 246, 0.3)"
-            >
+        <div v-if="pwdModal.show" class="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style="background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px)" @click.self="pwdModal.show = false">
+          <div class="w-full max-w-sm glass-card animate-in" style="background: var(--modal-bg)">
+            <div class="flex items-center justify-between px-5 py-4"
+              style="border-bottom: 1px solid rgba(139, 92, 246, 0.3)">
               <div class="flex items-center gap-2">
                 <LockClosedIcon class="w-5 h-5 text-violet-400" />
                 <div>
@@ -2536,111 +1619,64 @@
                   </p>
                 </div>
               </div>
-              <button
-                @click="pwdModal.show = false"
-                class="w-8 h-8 rounded-lg flex items-center justify-center"
-                style="color: var(--text-muted)"
-              >
+              <button @click="pwdModal.show = false" class="w-8 h-8 rounded-lg flex items-center justify-center"
+                style="color: var(--text-muted)">
                 <XMarkIcon class="w-5 h-5" />
               </button>
             </div>
             <div class="p-5 space-y-4">
               <div>
-                <label
-                  class="block text-xs font-semibold mb-1.5"
-                  style="color: var(--text-muted)"
-                  >Nueva contraseña</label
-                >
+                <label class="block text-xs font-semibold mb-1.5" style="color: var(--text-muted)">Nueva
+                  contraseña</label>
                 <div class="relative">
-                  <input
-                    v-model="pwdModal.password"
-                    :type="pwdModal.showPwd ? 'text' : 'password'"
-                    class="input w-full pr-11"
-                    placeholder="Mínimo 8 caracteres"
-                    minlength="8"
-                    autocomplete="new-password"
-                  />
-                  <button
-                    type="button"
-                    @click="pwdModal.showPwd = !pwdModal.showPwd"
+                  <input v-model="pwdModal.password" :type="pwdModal.showPwd ? 'text' : 'password'"
+                    class="input w-full pr-11" placeholder="Mínimo 8 caracteres" minlength="8"
+                    autocomplete="new-password" />
+                  <button type="button" @click="pwdModal.showPwd = !pwdModal.showPwd"
                     class="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg transition-colors"
-                    style="color: var(--text-muted)"
-                  >
+                    style="color: var(--text-muted)">
                     <EyeSlashIcon v-if="pwdModal.showPwd" class="w-4 h-4" />
                     <EyeIcon v-else class="w-4 h-4" />
                   </button>
                 </div>
               </div>
               <div>
-                <label
-                  class="block text-xs font-semibold mb-1.5"
-                  style="color: var(--text-muted)"
-                  >Confirmar contraseña</label
-                >
-                <input
-                  v-model="pwdModal.confirm"
-                  type="password"
-                  class="input w-full"
-                  :class="
-                    pwdModal.confirm && pwdModal.password !== pwdModal.confirm
-                      ? 'ring-2 ring-rose-500/30 border-rose-500/40'
-                      : ''
-                  "
-                  placeholder="Repite la contraseña"
-                  autocomplete="new-password"
-                />
-                <p
-                  v-if="
-                    pwdModal.confirm && pwdModal.password !== pwdModal.confirm
-                  "
-                  class="text-xs text-rose-400 mt-1 font-semibold flex items-center gap-1"
-                >
+                <label class="block text-xs font-semibold mb-1.5" style="color: var(--text-muted)">Confirmar
+                  contraseña</label>
+                <input v-model="pwdModal.confirm" type="password" class="input w-full" :class="pwdModal.confirm && pwdModal.password !== pwdModal.confirm
+                  ? 'ring-2 ring-rose-500/30 border-rose-500/40'
+                  : ''
+                  " placeholder="Repite la contraseña" autocomplete="new-password" />
+                <p v-if="
+                  pwdModal.confirm && pwdModal.password !== pwdModal.confirm
+                " class="text-xs text-rose-400 mt-1 font-semibold flex items-center gap-1">
                   <ExclamationTriangleIcon class="w-3.5 h-3.5" /> Las
                   contraseñas no coinciden
                 </p>
               </div>
               <Transition name="fade">
-                <div
-                  v-if="pwdModal.msg.text"
-                  class="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold"
-                  :class="
-                    pwdModal.msg.ok
-                      ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-500'
-                      : 'bg-rose-500/10 border border-rose-500/20 text-rose-500'
-                  "
-                >
-                  <CheckCircleIcon
-                    v-if="pwdModal.msg.ok"
-                    class="w-4 h-4 flex-shrink-0"
-                  />
-                  <ExclamationTriangleIcon
-                    v-else
-                    class="w-4 h-4 flex-shrink-0"
-                  />
+                <div v-if="pwdModal.msg.text"
+                  class="flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-semibold" :class="pwdModal.msg.ok
+                    ? 'bg-emerald-500/10 border border-emerald-500/20 text-emerald-500'
+                    : 'bg-rose-500/10 border border-rose-500/20 text-rose-500'
+                    ">
+                  <CheckCircleIcon v-if="pwdModal.msg.ok" class="w-4 h-4 flex-shrink-0" />
+                  <ExclamationTriangleIcon v-else class="w-4 h-4 flex-shrink-0" />
                   {{ pwdModal.msg.text }}
                 </div>
               </Transition>
               <div class="flex gap-3 pt-1">
-                <button
-                  @click="pwdModal.show = false"
-                  class="btn-secondary flex-1"
-                >
+                <button @click="pwdModal.show = false" class="btn-secondary flex-1">
                   Cancelar
                 </button>
-                <button
-                  @click="savePwd"
-                  :disabled="
-                    pwdModal.saving ||
-                    pwdModal.password.length < 8 ||
-                    pwdModal.password !== pwdModal.confirm
+                <button @click="savePwd" :disabled="pwdModal.saving ||
+                  pwdModal.password.length < 8 ||
+                  pwdModal.password !== pwdModal.confirm
                   "
                   class="flex-1 btn-md text-white font-bold disabled:opacity-50 disabled:cursor-not-allowed rounded-xl flex items-center justify-center gap-2"
-                  style="background: linear-gradient(135deg, #7c3aed, #6366f1)"
-                >
-                  <span
-                    v-if="pwdModal.saving"
-                    class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"
-                  ></span>
+                  style="background: linear-gradient(135deg, #7c3aed, #6366f1)">
+                  <span v-if="pwdModal.saving"
+                    class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></span>
                   <LockClosedIcon v-else class="w-4 h-4" />
                   {{ pwdModal.saving ? "Guardando..." : "Cambiar contraseña" }}
                 </button>
@@ -2652,20 +1688,12 @@
 
       <!-- Close session confirmation modal -->
       <Transition name="modal">
-        <div
-          v-if="closeConfirm.show"
-          class="fixed inset-0 z-50 flex items-center justify-center px-4"
+        <div v-if="closeConfirm.show" class="fixed inset-0 z-50 flex items-center justify-center px-4"
           style="background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px)"
-          @click.self="closeConfirm = { show: false, session: null }"
-        >
-          <div
-            class="w-full max-w-sm glass-card p-6 animate-in text-center"
-            style="background: var(--modal-bg)"
-          >
-            <div
-              class="w-14 h-14 mx-auto mb-4 rounded-full flex items-center justify-center"
-              style="background: rgba(239, 68, 68, 0.1)"
-            >
+          @click.self="closeConfirm = { show: false, session: null }">
+          <div class="w-full max-w-sm glass-card p-6 animate-in text-center" style="background: var(--modal-bg)">
+            <div class="w-14 h-14 mx-auto mb-4 rounded-full flex items-center justify-center"
+              style="background: rgba(239, 68, 68, 0.1)">
               <ClockIcon class="w-7 h-7 text-rose-500" />
             </div>
             <h3 class="font-bold text-lg mb-1" style="color: var(--text)">
@@ -2680,10 +1708,7 @@
               nueva entrada de inmediato.
             </p>
             <div class="flex gap-3">
-              <button
-                @click="closeConfirm = { show: false, session: null }"
-                class="btn-secondary flex-1"
-              >
+              <button @click="closeConfirm = { show: false, session: null }" class="btn-secondary flex-1">
                 Cancelar
               </button>
               <button @click="handleCloseSession" class="btn-danger flex-1">
@@ -2696,18 +1721,11 @@
 
       <!-- Logout confirmation modal -->
       <Transition name="modal">
-        <div
-          v-if="showLogoutModal"
-          class="fixed inset-0 z-50 flex items-center justify-center px-4"
-          style="background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px)"
-        >
-          <div
-            class="w-full max-w-sm glass-card p-6 animate-in text-center"
-            style="background: var(--modal-bg)"
-          >
+        <div v-if="showLogoutModal" class="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style="background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px)">
+          <div class="w-full max-w-sm glass-card p-6 animate-in text-center" style="background: var(--modal-bg)">
             <div
-              class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-rose-500/10 text-rose-500"
-            >
+              class="w-16 h-16 mx-auto mb-4 rounded-full flex items-center justify-center bg-rose-500/10 text-rose-500">
               <ArrowRightOnRectangleIcon class="w-8 h-8" />
             </div>
             <h3 class="font-bold text-lg mb-2" style="color: var(--text)">
@@ -2718,10 +1736,7 @@
               administrativo.
             </p>
             <div class="flex gap-3">
-              <button
-                @click="showLogoutModal = false"
-                class="btn-secondary flex-1"
-              >
+              <button @click="showLogoutModal = false" class="btn-secondary flex-1">
                 Cancelar
               </button>
               <button @click="handleLogout" class="btn-danger flex-1">
@@ -2734,20 +1749,12 @@
 
       <!-- Delete user confirmation modal -->
       <Transition name="modal">
-        <div
-          v-if="deleteUserConfirm.show"
-          class="fixed inset-0 z-50 flex items-center justify-center px-4"
+        <div v-if="deleteUserConfirm.show" class="fixed inset-0 z-50 flex items-center justify-center px-4"
           style="background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px)"
-          @click.self="deleteUserConfirm = { show: false, user: null, saving: false }"
-        >
-          <div
-            class="w-full max-w-sm glass-card p-6 animate-in text-center"
-            style="background: var(--modal-bg)"
-          >
-            <div
-              class="w-14 h-14 mx-auto mb-4 rounded-full flex items-center justify-center"
-              style="background: rgba(239, 68, 68, 0.1)"
-            >
+          @click.self="deleteUserConfirm = { show: false, user: null, saving: false }">
+          <div class="w-full max-w-sm glass-card p-6 animate-in text-center" style="background: var(--modal-bg)">
+            <div class="w-14 h-14 mx-auto mb-4 rounded-full flex items-center justify-center"
+              style="background: rgba(239, 68, 68, 0.1)">
               <TrashIcon class="w-7 h-7 text-rose-500" />
             </div>
             <h3 class="font-bold text-lg mb-1" style="color: var(--text)">
@@ -2761,18 +1768,11 @@
               Esta acción es permanente y eliminará su historial de registros.
             </p>
             <div class="flex gap-3">
-              <button
-                @click="deleteUserConfirm = { show: false, user: null, saving: false }"
-                class="btn-secondary flex-1"
-                :disabled="deleteUserConfirm.saving"
-              >
+              <button @click="deleteUserConfirm = { show: false, user: null, saving: false }"
+                class="btn-secondary flex-1" :disabled="deleteUserConfirm.saving">
                 Cancelar
               </button>
-              <button
-                @click="handleDeleteUser"
-                class="btn-danger flex-1"
-                :disabled="deleteUserConfirm.saving"
-              >
+              <button @click="handleDeleteUser" class="btn-danger flex-1" :disabled="deleteUserConfirm.saving">
                 {{ deleteUserConfirm.saving ? "Eliminando..." : "Eliminar" }}
               </button>
             </div>
@@ -2782,27 +1782,15 @@
 
       <!-- ── Edit User Modal ──────────────────────────────────────────────── -->
       <Transition name="modal">
-        <div
-          v-if="editUserModal.show"
-          class="fixed inset-0 z-50 flex items-center justify-center px-4"
-          style="background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px)"
-          @click.self="editUserModal.show = false"
-        >
-          <div
-            class="w-full max-w-md glass-card animate-in"
-            style="background: var(--modal-bg)"
-          >
-            <div
-              class="flex items-center justify-between px-5 pt-5 pb-3"
-              style="border-bottom: 1px solid var(--border-subtle)"
-            >
+        <div v-if="editUserModal.show" class="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style="background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px)" @click.self="editUserModal.show = false">
+          <div class="w-full max-w-md glass-card animate-in" style="background: var(--modal-bg)">
+            <div class="flex items-center justify-between px-5 pt-5 pb-3"
+              style="border-bottom: 1px solid var(--border-subtle)">
               <h3 class="font-bold" style="color: var(--text)">
                 Editar usuario
               </h3>
-              <button
-                @click="editUserModal.show = false"
-                class="p-1 rounded-lg hover:bg-white/10"
-              >
+              <button @click="editUserModal.show = false" class="p-1 rounded-lg hover:bg-white/10">
                 <XMarkIcon class="w-5 h-5" style="color: var(--text-muted)" />
               </button>
             </div>
@@ -2810,29 +1798,18 @@
               <div class="grid grid-cols-2 gap-3">
                 <div class="space-y-1">
                   <label class="label-base text-xs">Nombre(s)</label>
-                  <input
-                    v-model="editUserModal.first_name"
-                    type="text"
-                    class="input-base text-sm"
-                    placeholder="Nombre"
-                  />
+                  <input v-model="editUserModal.first_name" type="text" class="input-base text-sm"
+                    placeholder="Nombre" />
                 </div>
                 <div class="space-y-1">
                   <label class="label-base text-xs">Apellido(s)</label>
-                  <input
-                    v-model="editUserModal.last_name"
-                    type="text"
-                    class="input-base text-sm"
-                    placeholder="Apellido"
-                  />
+                  <input v-model="editUserModal.last_name" type="text" class="input-base text-sm"
+                    placeholder="Apellido" />
                 </div>
               </div>
               <div class="space-y-1">
                 <label class="label-base text-xs">Proyecto</label>
-                <select
-                  v-model="editUserModal.project_name"
-                  class="input-base text-sm"
-                >
+                <select v-model="editUserModal.project_name" class="input-base text-sm">
                   <option value="" disabled>Selecciona un proyecto...</option>
                   <option v-for="p in projects" :key="p" :value="p">
                     {{ p }}
@@ -2841,43 +1818,26 @@
               </div>
               <div class="space-y-1">
                 <label class="label-base text-xs">Correo electrónico</label>
-                <input
-                  v-model="editUserModal.email"
-                  type="email"
-                  class="input-base text-sm"
-                  placeholder="correo@ejemplo.com"
-                />
+                <input v-model="editUserModal.email" type="email" class="input-base text-sm"
+                  placeholder="correo@ejemplo.com" />
               </div>
               <Transition name="fade">
-                <p
-                  v-if="editUserModal.msg.text"
-                  :class="
-                    editUserModal.msg.ok ? 'text-emerald-500' : 'text-rose-500'
-                  "
-                  class="text-xs font-medium"
-                >
+                <p v-if="editUserModal.msg.text" :class="editUserModal.msg.ok ? 'text-emerald-500' : 'text-rose-500'
+                  " class="text-xs font-medium">
                   {{ editUserModal.msg.text }}
                 </p>
               </Transition>
             </div>
             <div class="flex gap-3 px-5 pb-5">
-              <button
-                @click="editUserModal.show = false"
-                class="btn-secondary flex-1"
-              >
+              <button @click="editUserModal.show = false" class="btn-secondary flex-1">
                 Cancelar
               </button>
-              <button
-                @click="saveEditUser"
-                class="btn-primary flex-1"
-                :disabled="
-                  editUserModal.saving ||
-                  !editUserModal.first_name ||
-                  !editUserModal.last_name ||
-                  !editUserModal.project_name ||
-                  !editUserModal.email
-                "
-              >
+              <button @click="saveEditUser" class="btn-primary flex-1" :disabled="editUserModal.saving ||
+                !editUserModal.first_name ||
+                !editUserModal.last_name ||
+                !editUserModal.project_name ||
+                !editUserModal.email
+                ">
                 {{ editUserModal.saving ? "Guardando..." : "Guardar" }}
               </button>
             </div>
@@ -2887,62 +1847,34 @@
 
       <!-- ── Projects Management Modal ───────────────────────────────────── -->
       <Transition name="modal">
-        <div
-          v-if="projectsModal.show"
-          class="fixed inset-0 z-50 flex items-center justify-center px-4"
-          style="background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px)"
-          @click.self="projectsModal.show = false"
-        >
-          <div
-            class="w-full max-w-md glass-card animate-in"
-            style="
+        <div v-if="projectsModal.show" class="fixed inset-0 z-50 flex items-center justify-center px-4"
+          style="background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(8px)" @click.self="projectsModal.show = false">
+          <div class="w-full max-w-md glass-card animate-in" style="
               background: var(--modal-bg);
               max-height: 85vh;
               display: flex;
               flex-direction: column;
-            "
-          >
-            <div
-              class="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0"
-              style="border-bottom: 1px solid var(--border-subtle)"
-            >
+            ">
+            <div class="flex items-center justify-between px-5 pt-5 pb-3 flex-shrink-0"
+              style="border-bottom: 1px solid var(--border-subtle)">
               <h3 class="font-bold" style="color: var(--text)">
                 Gestionar proyectos
               </h3>
-              <button
-                @click="projectsModal.show = false"
-                class="p-1 rounded-lg hover:bg-white/10"
-              >
+              <button @click="projectsModal.show = false" class="p-1 rounded-lg hover:bg-white/10">
                 <XMarkIcon class="w-5 h-5" style="color: var(--text-muted)" />
               </button>
             </div>
 
             <!-- Add new project -->
-            <div
-              class="px-5 pt-4 pb-3 flex-shrink-0"
-              style="border-bottom: 1px solid var(--border-subtle)"
-            >
-              <label class="label-base text-xs mb-2 block"
-                >Agregar proyecto</label
-              >
+            <div class="px-5 pt-4 pb-3 flex-shrink-0" style="border-bottom: 1px solid var(--border-subtle)">
+              <label class="label-base text-xs mb-2 block">Agregar proyecto</label>
               <div class="flex gap-2">
-                <input
-                  v-model="projectsModal.newName"
-                  type="text"
-                  class="input-base text-sm flex-1 uppercase"
-                  placeholder="Nombre del proyecto"
-                  @keyup.enter="saveProject"
-                  @input="
+                <input v-model="projectsModal.newName" type="text" class="input-base text-sm flex-1 uppercase"
+                  placeholder="Nombre del proyecto" @keyup.enter="saveProject" @input="
                     projectsModal.newName = projectsModal.newName.toUpperCase()
-                  "
-                />
-                <button
-                  @click="saveProject"
-                  class="btn-primary px-4"
-                  :disabled="
-                    projectsModal.saving || !projectsModal.newName.trim()
-                  "
-                >
+                    " />
+                <button @click="saveProject" class="btn-primary px-4" :disabled="projectsModal.saving || !projectsModal.newName.trim()
+                  ">
                   <PlusIcon class="w-4 h-4" />
                 </button>
               </div>
@@ -2953,66 +1885,39 @@
 
             <!-- Projects list -->
             <div class="overflow-y-auto flex-1 p-3">
-              <div
-                v-if="projects.length === 0"
-                class="text-center py-6 text-sm"
-                style="color: var(--text-muted)"
-              >
+              <div v-if="projects.length === 0" class="text-center py-6 text-sm" style="color: var(--text-muted)">
                 No hay proyectos registrados
               </div>
               <div v-else class="space-y-1">
-                <div
-                  v-for="p in projects"
-                  :key="p"
-                  class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 group"
-                >
+                <div v-for="p in projects" :key="p"
+                  class="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-white/5 group">
                   <!-- Editing mode -->
                   <template v-if="projectsModal.editing === p">
-                    <input
-                      v-model="projectsModal.editName"
-                      type="text"
-                      class="input-base text-sm flex-1 uppercase py-1"
+                    <input v-model="projectsModal.editName" type="text" class="input-base text-sm flex-1 uppercase py-1"
                       @input="projectsModal.editName = projectsModal.editName.toUpperCase()"
-                      @keyup.enter="saveRenameProject(p)"
-                      @keyup.escape="projectsModal.editing = null"
-                      autofocus
-                    />
-                    <button
-                      @click="saveRenameProject(p)"
+                      @keyup.enter="saveRenameProject(p)" @keyup.escape="projectsModal.editing = null" autofocus />
+                    <button @click="saveRenameProject(p)"
                       class="p-1.5 rounded-lg text-emerald-400 hover:bg-emerald-500/10 transition-all"
-                      :disabled="projectsModal.saving"
-                      title="Guardar"
-                    >
+                      :disabled="projectsModal.saving" title="Guardar">
                       <CheckIcon class="w-4 h-4" />
                     </button>
-                    <button
-                      @click="projectsModal.editing = null"
-                      class="p-1.5 rounded-lg text-slate-400 hover:bg-white/10 transition-all"
-                      title="Cancelar"
-                    >
+                    <button @click="projectsModal.editing = null"
+                      class="p-1.5 rounded-lg text-slate-400 hover:bg-white/10 transition-all" title="Cancelar">
                       <XMarkIcon class="w-4 h-4" />
                     </button>
                   </template>
 
                   <!-- View mode -->
                   <template v-else>
-                    <span
-                      class="text-sm font-medium uppercase flex-1"
-                      style="color: var(--text)"
-                      >{{ p }}</span
-                    >
-                    <button
-                      @click="startEditProject(p)"
+                    <span class="text-sm font-medium uppercase flex-1" style="color: var(--text)">{{ p }}</span>
+                    <button @click="startEditProject(p)"
                       class="p-1.5 rounded-lg text-brand-400 opacity-0 group-hover:opacity-100 hover:bg-brand-500/10 transition-all"
-                      title="Renombrar proyecto"
-                    >
+                      title="Renombrar proyecto">
                       <PencilSquareIcon class="w-4 h-4" />
                     </button>
-                    <button
-                      @click="deleteProject(p)"
+                    <button @click="deleteProject(p)"
                       class="p-1.5 rounded-lg text-rose-400 opacity-0 group-hover:opacity-100 hover:bg-rose-500/10 transition-all"
-                      title="Eliminar proyecto"
-                    >
+                      title="Eliminar proyecto">
                       <TrashIcon class="w-4 h-4" />
                     </button>
                   </template>
@@ -3021,10 +1926,7 @@
             </div>
 
             <div class="px-5 pb-5 pt-3 flex-shrink-0">
-              <button
-                @click="projectsModal.show = false"
-                class="btn-secondary w-full"
-              >
+              <button @click="projectsModal.show = false" class="btn-secondary w-full">
                 Cerrar
               </button>
             </div>
@@ -3227,7 +2129,7 @@ async function loadStats() {
       params.date = localDateToUTCStart(filters.value.date_from);
     const { data } = await api.get("/admin/stats", { params });
     stats.value = data;
-  } catch {}
+  } catch { }
 }
 
 async function loadOpenSessions() {
@@ -3329,17 +2231,17 @@ function exportExcel() {
     const fecha = isNaN(ts)
       ? ""
       : ts.toLocaleDateString("es-MX", {
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-        });
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+      });
     const hora = isNaN(ts)
       ? ""
       : ts.toLocaleTimeString("es-MX", {
-          hour: "2-digit",
-          minute: "2-digit",
-          hour12: false,
-        });
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      });
     const horarioProg =
       r.type === "entry" ? r.entry_schedule || "—" : r.exit_schedule || "—";
     const dev = computeDeviation(r);
@@ -3381,7 +2283,7 @@ async function saveComment() {
         r.day_comment = text.trim();
       }
     });
-  } catch {}
+  } catch { }
   editingComment.value = null;
 }
 
@@ -3475,7 +2377,7 @@ async function openScheduleModal(user) {
     scheduleModal.value.exit_time = data.exit_time || "";
     scheduleModal.value.sat_entry_time = data.sat_entry_time || "";
     scheduleModal.value.sat_exit_time = data.sat_exit_time || "";
-  } catch {}
+  } catch { }
 }
 
 async function saveSchedule() {
@@ -3491,7 +2393,7 @@ async function saveSchedule() {
       sat_exit_time,
     });
     scheduleModal.value.show = false;
-  } catch {}
+  } catch { }
   scheduleModal.value.saving = false;
 }
 
@@ -3503,14 +2405,14 @@ async function loadUsers() {
     const { data } = await api.get("/admin/users", { params });
     users.value = data;
     usersPage.value = 1;
-  } catch {}
+  } catch { }
 }
 
 async function loadProjects() {
   try {
     const { data } = await api.get("/admin/projects");
     projects.value = data;
-  } catch {}
+  } catch { }
 }
 
 // ─── Edit user modal ─────────────────────────────────────────────────────────
@@ -3637,7 +2539,7 @@ async function deleteProject(name) {
   try {
     await api.delete(`/admin/projects/${encodeURIComponent(name)}`);
     projects.value = projects.value.filter((p) => p !== name);
-  } catch {}
+  } catch { }
 }
 
 // ─── Missing records ──────────────────────────────────────────────────────────
@@ -3914,7 +2816,7 @@ async function openRouteModal(record) {
       address: "",
       loadingAddress: false,
     };
-  } catch {}
+  } catch { }
 }
 
 // Suspicious modal
@@ -3957,7 +2859,7 @@ async function openPhotosModal(record) {
     const { data } = await api.get(`/admin/records/${record.record_id}/photos`);
     photosModal.value.site = data.photo_site_path || "";
     photosModal.value.selfie = data.photo_selfie_path || "";
-  } catch {}
+  } catch { }
 }
 
 function formatDate(iso) {
@@ -4186,13 +3088,16 @@ watch(activeTab, (tab) => {
 .modal-leave-active {
   transition: opacity 0.25s ease;
 }
+
 .modal-enter-from,
 .modal-leave-to {
   opacity: 0;
 }
+
 .safe-bottom {
   padding-bottom: max(8px, env(safe-area-inset-bottom));
 }
+
 .line-clamp-1 {
   display: -webkit-box;
   -webkit-line-clamp: 1;
