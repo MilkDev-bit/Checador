@@ -187,7 +187,7 @@ func AdminGetRecords(c *gin.Context) {
 	}
 
 	if projectFilter != "" {
-		where = append(where, fmt.Sprintf("LOWER(u.project_name) LIKE LOWER($%d)", argIdx))
+		where = append(where, fmt.Sprintf("LOWER(COALESCE(NULLIF(cr.project_name, ''), u.project_name)) LIKE LOWER($%d)", argIdx))
 		args = append(args, "%"+projectFilter+"%")
 		argIdx++
 	}
