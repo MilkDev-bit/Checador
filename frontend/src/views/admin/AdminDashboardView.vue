@@ -9,7 +9,7 @@
       <div class="px-6 py-6" style="border-bottom: 1px solid var(--border-subtle)">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 rounded-xl overflow-hidden flex items-center justify-center text-xl">
-            <img src="/LOGOC.png" alt="PaseLista Logo" class="w-full h-full object-cover" />
+            <img src="/LOGOC.png" alt="PaseLista Logo" class="w-full h-full object-contain" />
           </div>
           <div></div>
         </div>
@@ -68,7 +68,7 @@
       ">
       <div class="flex items-center gap-2">
         <div class="w-8 h-8 rounded-lg overflow-hidden flex items-center justify-center">
-          <img src="/LOGOC.png" alt="Logo" class="w-full h-full object-cover" />
+          <img src="/LOGOC.png" alt="Logo" class="w-full h-full object-contain" />
         </div>
         <span class="text-white font-bold text-sm">Admin · PaseLista</span>
       </div>

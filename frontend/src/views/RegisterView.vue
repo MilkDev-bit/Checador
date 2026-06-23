@@ -20,7 +20,7 @@
       <div class="text-center mb-10">
         <div
           class="inline-flex w-16 h-16 rounded-2xl overflow-hidden bg-brand-50 text-brand-600 dark:bg-brand-900/40 dark:text-brand-400 mb-4 shadow-inner-light ring-1 ring-brand-500/10 animate-bounce-subtle">
-          <img src="/LOGOC.png" alt="PaseLista Logo" class="w-full h-full object-cover" />
+          <img src="/LOGOC.png" alt="PaseLista Logo" class="w-full h-full object-contain" />
         </div>
         <h2 class="text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight mb-2">
           Crear Cuenta
