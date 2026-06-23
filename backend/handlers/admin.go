@@ -728,39 +728,53 @@ func AdminDeleteProject(c *gin.Context) {
 
 func FixRecordsTemp(c *gin.Context) {
 	// 1. Verónica Hernández Sánchez
-	_, err1 := database.DB.Exec(`
+	res1, _ := database.DB.Exec(`
 		UPDATE check_records 
 		SET project_name = 'CEDIS BAJIO SECOS' 
-		WHERE user_id = (SELECT id FROM users WHERE first_name ILIKE '%Verónica%' AND last_name ILIKE '%Hernández Sánchez%' LIMIT 1) 
+		WHERE user_id = (SELECT id FROM users WHERE first_name ILIKE '%Ver_nica%' AND last_name ILIKE '%Hern_ndez%' LIMIT 1) 
 		AND timestamp < '2026-06-03 00:00:00'
 	`)
-	_, err2 := database.DB.Exec(`
+	rows1, _ := res1.RowsAffected()
+
+	res2, _ := database.DB.Exec(`
 		UPDATE check_records 
 		SET project_name = 'CALDERAS' 
-		WHERE user_id = (SELECT id FROM users WHERE first_name ILIKE '%Verónica%' AND last_name ILIKE '%Hernández Sánchez%' LIMIT 1) 
-		AND timestamp >= '2026-06-03 00:00:00' AND project_name = ''
+		WHERE user_id = (SELECT id FROM users WHERE first_name ILIKE '%Ver_nica%' AND last_name ILIKE '%Hern_ndez%' LIMIT 1) 
+		AND timestamp >= '2026-06-03 00:00:00' AND (project_name = '' OR project_name IS NULL)
 	`)
+	rows2, _ := res2.RowsAffected()
 
 	// 2. Miguel Bolainas
-	_, err3 := database.DB.Exec(`
+	res3, _ := database.DB.Exec(`
 		UPDATE check_records 
 		SET project_name = 'BALCONES DE HUENTITLAN' 
 		WHERE user_id = (SELECT id FROM users WHERE first_name ILIKE '%Miguel%' AND last_name ILIKE '%Bolainas%' LIMIT 1) 
 		AND timestamp < '2026-06-23 00:00:00'
 	`)
-	_, err4 := database.DB.Exec(`
+	rows3, _ := res3.RowsAffected()
+
+	res4, _ := database.DB.Exec(`
 		UPDATE check_records 
 		SET project_name = 'BAE JUAN PABLO SEGUNDO' 
 		WHERE user_id = (SELECT id FROM users WHERE first_name ILIKE '%Miguel%' AND last_name ILIKE '%Bolainas%' LIMIT 1) 
-		AND timestamp >= '2026-06-23 00:00:00' AND project_name = ''
+		AND timestamp >= '2026-06-23 00:00:00' AND (project_name = '' OR project_name IS NULL)
 	`)
+	rows4, _ := res4.RowsAffected()
 
-	if err1 != nil || err2 != nil || err3 != nil || err4 != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update some records"})
-		return
-	}
+	// Check if users were actually found
+	var vId, mId string
+	database.DB.QueryRow(`SELECT id FROM users WHERE first_name ILIKE '%Ver_nica%' AND last_name ILIKE '%Hern_ndez%' LIMIT 1`).Scan(&vId)
+	database.DB.QueryRow(`SELECT id FROM users WHERE first_name ILIKE '%Miguel%' AND last_name ILIKE '%Bolainas%' LIMIT 1`).Scan(&mId)
 
-	c.JSON(http.StatusOK, gin.H{"message": "Historical records fixed successfully"})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Update attempted",
+		"veronica_id_found": vId != "",
+		"veronica_updated_old": rows1,
+		"veronica_updated_new": rows2,
+		"miguel_id_found": mId != "",
+		"miguel_updated_old": rows3,
+		"miguel_updated_new": rows4,
+	})
 }
 
 // MissingRow represents a user who has not checked in/out in the given window.
