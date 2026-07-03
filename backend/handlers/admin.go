@@ -750,27 +750,24 @@ func AdminGetMissingRecords(c *gin.Context) {
 	// Default to current day in appTZ
 	var start, end time.Time
 	if dateFrom != "" {
-		var err error
-		start, err = parseDateParam(dateFrom)
+		d, err := time.Parse("2006-01-02", dateFrom)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date_from"})
 			return
 		}
+		start = time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, appTZ)
 	} else {
 		now := time.Now().In(appTZ)
 		start = time.Date(now.Year(), now.Month(), now.Day(), 0, 0, 0, 0, appTZ)
 	}
 
 	if dateTo != "" {
-		var err error
-		end, err = parseDateParam(dateTo)
+		d, err := time.Parse("2006-01-02", dateTo)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid date_to"})
 			return
 		}
-		if !strings.ContainsRune(dateTo, 'T') {
-			end = end.Add(24 * time.Hour)
-		}
+		end = time.Date(d.Year(), d.Month(), d.Day()+1, 0, 0, 0, 0, appTZ)
 	} else {
 		end = start.Add(24 * time.Hour)
 	}
