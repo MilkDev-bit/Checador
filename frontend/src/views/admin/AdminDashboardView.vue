@@ -2565,9 +2565,9 @@ async function loadMissingRecords() {
   try {
     const params = { missing_type: missingFilters.value.missing_type };
     if (missingFilters.value.date_from)
-      params.date_from = localDateToUTCStart(missingFilters.value.date_from);
+      params.date_from = missingFilters.value.date_from;
     if (missingFilters.value.date_to)
-      params.date_to = localDateToUTCEnd(missingFilters.value.date_to);
+      params.date_to = missingFilters.value.date_to;
     const { data } = await api.get("/admin/missing-records", { params });
     missingRecords.value = data;
   } catch {
